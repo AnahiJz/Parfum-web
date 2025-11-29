@@ -1,0 +1,124 @@
+
+        /* Estilos base premium */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        }
+        
+        .font-display { font-family: 'Playfair Display', serif; }
+        
+        .icon {
+            display: inline-block;
+            vertical-align: middle;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 2;
+        }
+        
+        /* Glassmorphism Premium */
+        .glass {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Gradientes Elegantes */
+        .gradient-gold {
+            background: linear-gradient(135deg, #f9d423 0%, #e8b44c 50%, #d4af37 100%);
+        }
+        
+        /* Animaciones Sofisticadas */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(2deg); }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 0 25px rgba(249, 212, 35, 0.5),
+                            0 0 50px rgba(249, 212, 35, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(249, 212, 35, 0.8),
+                            0 0 80px rgba(249, 212, 35, 0.5);
+            }
+        }
+        
+        .animate-float { animation: float 10s ease-in-out infinite; }
+        .animate-fadeInUp, .notification-banner { animation: fadeInUp 1s ease-out forwards; }
+        .animate-pulse-glow { animation: pulse-glow 3s infinite; }
+        
+        /* Efectos Hover Premium */
+        .card-luxury { transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1); }
+        .card-luxury:hover {
+            transform: translateY(-15px) scale(1.03);
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.4);
+        }
+        
+        .btn-premium { position: relative; overflow: hidden; transition: all 0.4s ease; }
+        .btn-premium::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.6s;
+        }
+        
+        .btn-premium:hover::before { left: 100%; }
+        .btn-premium:hover { transform: scale(1.05); }
+        
+        /* Scrollbar Personalizada */
+        ::-webkit-scrollbar { width: 12px; }
+        ::-webkit-scrollbar-track { background: #1a1a2e; }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #f9d423 0%, #d4af37 100%);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #d4af37 0%, #f9d423 100%);
+        }
+        
+        .image-hover { transition: transform 0.6s ease, filter 0.6s ease; }
+        .image-hover:hover {
+            transform: scale(1.1);
+            filter: brightness(1.1);
+        }
+
+        /* Estilo específico para la tabla del administrador */
+        .admin-table th {
+            background: linear-gradient(90deg, #d4af37, #f9d423);
+            color: #1a1a2e; /* Color oscuro para el texto del encabezado */
+            font-weight: 700;
+        }
+        .admin-table td {
+            background-color: rgba(0, 0, 0, 0.2); /* Fondo oscuro transparente para las filas */
+            color: #d4af37; /* Texto ámbar */
+            border-color: rgba(249, 212, 35, 0.2); /* Borde ámbar suave */
+        }
+        .admin-table tr:nth-child(even) td {
+            background-color: rgba(0, 0, 0, 0.3); /* Un poco más oscuro para filas pares */
+        }
+
