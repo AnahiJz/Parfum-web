@@ -63,6 +63,23 @@ function html(strings, ...values) {
     return result;
 }
 
+function checkSession() {
+    const savedUser = localStorage.getItem('parfum_user');
+    if (savedUser) {
+        const user = JSON.parse(savedUser);
+        setState({
+            currentUser: user,
+            isLoggedIn: true,
+            error: `👋 ¡Hola de nuevo, ${user.name}!`
+        });
+        fetchCart(user.id);
+        if (user.role === 'admin') {
+            fetchSalesFromDB();
+            fetchUsersFromDB();
+        }
+    }
+}
+
 async function fetchProductsFromDB() {
     try {
         const response = await fetch('/api/products');
@@ -146,7 +163,12 @@ async function fetchCart(userId) {
         const response = await fetch(`/api/cart/${userId}`);
         if (response.ok) {
             const cartItems = await response.json();
-            setState({ cart: cartItems });
+            // Aseguramos que los precios sean números para los cálculos
+            const parsedItems = cartItems.map(item => ({
+                ...item,
+                price: parseFloat(item.price)
+            }));
+            setState({ cart: parsedItems });
         }
     } catch (error) {
         console.error(error);
@@ -224,6 +246,7 @@ function setCategoryFilter(categoryKey) {
 }
 
 function logout() {
+    localStorage.removeItem('parfum_user');
     setState({
         isLoggedIn: false,
         currentUser: null,
@@ -257,8 +280,11 @@ async function handleLogin(e) {
         const data = await response.json();
 
         if (data.success) {
+            const user = { id: data.user.id, name: data.user.nombre, role: data.user.rol };
+            localStorage.setItem('parfum_user', JSON.stringify(user));
+
             setState({
-                currentUser: { id: data.user.id, name: data.user.nombre, role: data.user.rol },
+                currentUser: user,
                 isLoggedIn: true,
                 currentPage: data.user.rol === 'admin' ? 'admin' : 'catalog',
                 error: `¡Bienvenido de nuevo, ${data.user.nombre}!`
@@ -308,8 +334,11 @@ async function handleRegister(e) {
         const data = await response.json();
 
         if (data.success) {
+            const user = { id: data.userId, name: name, role: 'usuario' };
+            localStorage.setItem('parfum_user', JSON.stringify(user));
+
             setState({
-                currentUser: { id: data.userId, name: name, role: 'usuario' },
+                currentUser: user,
                 isLoggedIn: true,
                 currentPage: 'catalog',
                 error: `🎉 ¡Cuenta creada con éxito! Bienvenido, ${name}.`
@@ -417,13 +446,8 @@ async function checkout() {
 
         const data = await response.json();
 
-        if (data.success) {
-            setState({ 
-                cart: [], 
-                currentPage: 'home', 
-                error: `🎉 ¡Compra exitosa! Tu número de pedido es #${data.orderId}`,
-                loading: false
-            });
+        if (data.success && data.url) {
+            window.location.href = data.url;
         } else {
             setState({ error: '❌ ' + data.message, loading: false });
         }
@@ -621,12 +645,12 @@ function LoginPage() {
                 <h2 class="text-3xl font-display font-bold text-amber-300 mb-6 text-center">Ingresar a Mi Cuenta</h2>
                 <form id="login-form" onsubmit="handleLogin(event)">
                     <div class="mb-5">
-                        <label class="block text-sm font-medium text-amber-300 mb-2">Usuario</label>
-                        <input type="text" name="username" required value="user" class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30"/>
+                        <label class="block text-sm font-medium text-amber-300 mb-2">Correo</label>
+                        <input type="text" name="username" required class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30"/>
                     </div>
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-amber-300 mb-2">Contraseña</label>
-                        <input type="password" name="password" required value="12345" class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30"/>
+                        <input type="password" name="password" required class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30"/>
                     </div>
                     <button type="submit" class="w-full gradient-gold text-gray-900 px-8 py-4 rounded-full font-bold shadow-2xl transition-all hover:scale-105 btn-premium text-lg">ACCEDER</button>
                 </form>
@@ -750,7 +774,7 @@ function CartPage() {
                         <div class="glass-dark p-6 rounded-2xl flex items-center justify-between gap-6 border border-amber-400/30">
                             <div class="flex items-center gap-6">
                                 <img src="${item.image}" class="w-20 h-20 object-cover rounded-xl"/>
-                                <div><h3 class="text-amber-200 font-bold">${item.name}</h3><p class="text-amber-300">$${item.price}</p></div>
+                                <div><h3 class="text-amber-200 font-bold">${item.name}</h3><p class="text-amber-300">$${item.price.toLocaleString('es-MX')}</p></div>
                             </div>
                             <div class="flex items-center gap-4">
                                 <input type="number" value="${item.quantity}" onchange="updateQuantity(${item.id}, this.value)" class="w-16 px-2 py-1 glass text-white rounded"/>
@@ -981,5 +1005,6 @@ function renderApp() {
 }
 
 window.onload = function() { 
+    checkSession();
     fetchProductsFromDB();
 };
