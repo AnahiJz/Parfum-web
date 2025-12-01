@@ -622,10 +622,15 @@ function Footer() {
                         </ul>
 
                         <h4 class="text-amber-400 font-semibold mb-4">Síguenos</h4>
-                        <div class="flex gap-4">
-                            <a href="#" class="glass p-2 rounded-xl hover:bg-amber-500/20 transition-all">${icons.Instagram(24, 'text-amber-300')}</a>
-                            <a href="#" class="glass p-2 rounded-xl hover:bg-amber-500/20 transition-all">${icons.Facebook(24, 'text-amber-300')}</a>
-                            <a href="#" class="glass p-2 rounded-xl hover:bg-amber-500/20 transition-all">${icons.Twitter(24, 'text-amber-300')}</a>
+                        <a href="https://instagram.com/tu_perfil" class="group glass p-2 rounded-xl hover:bg-gradient-to-br from-purple-500 to-pink-500 transition-all" target="_blank">
+                                ${icons.Instagram(24, 'text-amber-300 group-hover:text-white')}
+                            </a>
+                            <a href="https://facebook.com/tu_perfil" class="group glass p-2 rounded-xl hover:bg-gradient-to-r from-blue-500 to-blue-600 transition-all" target="_blank">
+                                ${icons.Facebook(24, 'text-amber-300 group-hover:text-white')}
+                            </a>
+                            <a href="https://twitter.com/tu_perfil" class="group glass p-2 rounded-xl hover:bg-gradient-to-r from-sky-400 to-sky-500 transition-all" target="_blank">
+                                ${icons['Twitter'](24, 'text-amber-300 group-hover:text-white')}
+                            </a>
                         </div>
                     </div>
                 </div>
