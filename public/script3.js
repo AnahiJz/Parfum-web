@@ -622,7 +622,9 @@ function Footer() {
                         </ul>
 
                         <h4 class="text-amber-400 font-semibold mb-4">Síguenos</h4>
-                        <a href="https://instagram.com/tu_perfil" class="group glass p-2 rounded-xl hover:bg-gradient-to-br from-purple-500 to-pink-500 transition-all" target="_blank">
+                        <div class="flex gap-4">
+                            <div class="flex gap-4">
+                            <a href="https://instagram.com/tu_perfil" class="group glass p-2 rounded-xl hover:bg-gradient-to-br from-purple-500 to-pink-500 transition-all" target="_blank">
                                 ${icons.Instagram(24, 'text-amber-300 group-hover:text-white')}
                             </a>
                             <a href="https://facebook.com/tu_perfil" class="group glass p-2 rounded-xl hover:bg-gradient-to-r from-blue-500 to-blue-600 transition-all" target="_blank">
