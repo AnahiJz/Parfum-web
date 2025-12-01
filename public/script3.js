@@ -42,6 +42,7 @@ let state = {
     products: [], 
     users: [],
     admins: [],
+    sales: [],
     error: null,
     loading: true
 };
@@ -117,6 +118,93 @@ async function fetchUsersFromDB() {
     }
 }
 
+async function fetchSalesFromDB() {
+    try {
+        const response = await fetch('/api/admin/sales');
+        if (!response.ok) throw new Error('Error al obtener ventas');
+        
+        const dbSales = await response.json();
+        
+        const mappedSales = dbSales.map(s => ({
+            id: s.id,
+            client: s.cliente,
+            total: parseFloat(s.total).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
+            status: s.estado.charAt(0).toUpperCase() + s.estado.slice(1), 
+            date: new Date(s.fecha_creacion).toLocaleDateString('es-MX', { 
+                day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' 
+            })
+        }));
+
+        setState({ sales: mappedSales });
+    } catch (error) {
+        console.error("Error ventas:", error);
+    }
+}
+
+async function fetchCart(userId) {
+    try {
+        const response = await fetch(`/api/cart/${userId}`);
+        if (response.ok) {
+            const cartItems = await response.json();
+            setState({ cart: cartItems });
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+async function createAdmin(e) {
+    e.preventDefault();
+    const form = document.getElementById('create-admin-form');
+    const name = form.elements.name.value;
+    const email = form.elements.email.value;
+    const password = form.elements.password.value;
+
+    if (!name || !email || !password) {
+        setState({ error: '⚠️ Completa todos los campos' });
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/admin/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, password, role: 'admin' })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            setState({ error: '✅ Administrador creado exitosamente' });
+            fetchUsersFromDB(); 
+            form.reset();
+        } else {
+            setState({ error: '❌ ' + data.message });
+        }
+    } catch (error) {
+        console.error(error);
+        setState({ error: '⚠️ Error al crear admin' });
+    }
+}
+
+async function deleteUser(id) {
+    if (!confirm('¿Estás seguro de eliminar este usuario? Esta acción borrará sus pedidos también.')) return;
+
+    try {
+        const response = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+        const data = await response.json();
+
+        if (data.success) {
+            setState({ error: '🗑️ Usuario eliminado' });
+            fetchUsersFromDB(); 
+        } else {
+            setState({ error: '❌ ' + data.message });
+        }
+    } catch (error) {
+        console.error(error);
+        setState({ error: '⚠️ Error al eliminar usuario' });
+    }
+}
+
 function startCarousel() {
     clearInterval(carouselInterval);
     carouselInterval = setInterval(() => {
@@ -175,6 +263,14 @@ async function handleLogin(e) {
                 currentPage: data.user.rol === 'admin' ? 'admin' : 'catalog',
                 error: `¡Bienvenido de nuevo, ${data.user.nombre}!`
             });
+            
+            fetchCart(data.user.id);
+
+            if (data.user.rol === 'admin') {
+                fetchSalesFromDB();
+                fetchUsersFromDB();
+            }
+
         } else {
             setState({ error: '❌ ' + data.message });
         }
@@ -236,34 +332,66 @@ function handleContact(e) {
     }
 }
 
-function addToCart(product) {
-    const existing = state.cart.find(item => item.id === product.id);
-    if (existing) {
-        const newCart = state.cart.map(item =>
-            item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-        );
-        setState({ cart: newCart, error: `✅ Añadido: ¡${product.name} tiene ahora ${existing.quantity + 1} unidades!` });
-    } else {
-        setState({ cart: [...state.cart, { ...product, quantity: 1 }], error: `✅ ¡${product.name} añadido al carrito!` });
+async function addToCart(product) {
+    if (!state.isLoggedIn || !state.currentUser) {
+        setState({ currentPage: 'login', error: '🔒 Debes iniciar sesión para comprar.' });
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/cart/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                userId: state.currentUser.id, 
+                productId: product.id, 
+                quantity: 1 
+            })
+        });
+
+        if (response.ok) {
+            await fetchCart(state.currentUser.id);
+            setState({ error: `✅ ${product.name} añadido al carrito` });
+        }
+    } catch (error) {
+        console.error(error);
     }
 }
 
-function removeFromCart(productId) {
-    const productToRemove = state.cart.find(item => item.id === productId);
-    const newCart = state.cart.filter(item => item.id !== productId);
-    setState({ cart: newCart, error: `🗑️ ${productToRemove ? productToRemove.name : 'Artículo'} eliminado.` });
+async function removeFromCart(productId) {
+    if (!state.currentUser) return;
+
+    try {
+        const response = await fetch('/api/cart/remove', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: state.currentUser.id, productId })
+        });
+
+        if (response.ok) {
+            await fetchCart(state.currentUser.id);
+        }
+    } catch (error) {
+        console.error(error);
+    }
 }
 
-function updateQuantity(productId, newQuantity) {
+async function updateQuantity(productId, newQuantity) {
+    if (!state.currentUser) return;
     const quantity = parseInt(newQuantity);
-    const product = state.cart.find(item => item.id === productId);
-    if (quantity <= 0 || isNaN(quantity)) {
-        removeFromCart(productId);
-    } else {
-        const newCart = state.cart.map(item =>
-            item.id === productId ? { ...item, quantity: quantity } : item
-        );
-        setState({ cart: newCart, error: `🔄 Cantidad de ${product.name} actualizada a ${quantity}.` });
+
+    try {
+        const response = await fetch('/api/cart/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: state.currentUser.id, productId, quantity })
+        });
+
+        if (response.ok) {
+            await fetchCart(state.currentUser.id);
+        }
+    } catch (error) {
+        console.error(error);
     }
 }
 
@@ -276,7 +404,7 @@ async function checkout() {
     const total = state.cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
     try {
-        setState({ loading: true }); // Opcional: para indicar proceso
+        setState({ loading: true }); 
         const response = await fetch('/api/checkout', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -682,18 +810,140 @@ function ContactPage() {
 }
 
 function AdminPage() {
-    if (!state.currentUser || state.currentUser.role !== 'admin') return html`<div class="text-center p-20 text-red-400 font-bold text-2xl">Acceso Denegado</div>`;
+    if (!state.currentUser || state.currentUser.role !== 'admin') {
+        return html`<div class="text-center p-20 text-red-400 font-bold text-2xl">🚫 Acceso Denegado</div>`;
+    }
+
+    const totalRevenue = state.sales.reduce((acc, sale) => {
+        const amount = parseFloat(sale.total.replace(/[^0-9.-]+/g,""));
+        return acc + amount;
+    }, 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
+
     return html`
         <div class="container mx-auto px-4 py-16">
-            <h1 class="text-4xl text-red-400 font-bold mb-8">Panel de Administración</h1>
-            <div class="glass-dark p-6 rounded-2xl border border-red-400/30">
-                <h2 class="text-2xl text-amber-200 mb-4">Usuarios Registrados (${state.users.length})</h2>
-                <ul>${state.users.map(u => html`<li class="text-amber-200/70 border-b border-red-400/20 py-2">${u.name} (${u.email})</li>`).join('')}</ul>
+            <h1 class="text-4xl text-amber-400 font-bold mb-8 flex items-center gap-3">
+                ${icons.Sparkles(32)} Panel de Administración
+            </h1>
+
+            <div class="glass-dark p-8 rounded-2xl border border-amber-400/30 mb-12">
+                <h3 class="text-2xl text-amber-200 font-bold mb-6">Crear Nuevo Administrador</h3>
+                <form id="create-admin-form" onsubmit="createAdmin(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <input type="text" name="name" placeholder="Nombre" required class="p-3 rounded-lg glass text-white"/>
+                    <input type="email" name="email" placeholder="Correo" required class="p-3 rounded-lg glass text-white"/>
+                    <input type="password" name="password" placeholder="Contraseña" required class="p-3 rounded-lg glass text-white"/>
+                    <button type="submit" class="gradient-gold text-gray-900 font-bold p-3 rounded-lg hover:scale-105 transition">Crear Admin</button>
+                </form>
             </div>
-            
-            <div class="glass-dark p-6 rounded-2xl border border-red-400/30 mt-8">
-                <h2 class="text-2xl text-amber-200 mb-4">Administradores (${state.admins.length})</h2>
-                <ul>${state.admins.map(u => html`<li class="text-amber-200/70 border-b border-red-400/20 py-2">${u.name} (${u.email})</li>`).join('')}</ul>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div class="glass-dark p-6 rounded-2xl border border-amber-400/30">
+                    <h3 class="text-amber-200 text-sm font-bold uppercase">Usuarios Registrados</h3>
+                    <p class="text-4xl font-bold text-white mt-2">${state.users.length}</p>
+                </div>
+                <div class="glass-dark p-6 rounded-2xl border border-amber-400/30">
+                    <h3 class="text-amber-200 text-sm font-bold uppercase">Ventas Totales</h3>
+                    <p class="text-4xl font-bold text-green-400 mt-2">${state.sales.length}</p>
+                </div>
+                <div class="glass-dark p-6 rounded-2xl border border-amber-400/30">
+                    <h3 class="text-amber-200 text-sm font-bold uppercase">Ingresos</h3>
+                    <p class="text-4xl font-bold text-amber-400 mt-2">${totalRevenue}</p>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-8">
+                <div class="glass-dark p-6 rounded-2xl border border-green-400/30">
+                    <h2 class="text-2xl text-green-400 mb-6 font-bold flex items-center gap-2">
+                        ${icons.ShoppingCart(24)} Historial de Ventas
+                    </h2>
+                    <div class="overflow-x-auto max-h-96">
+                        <table class="w-full text-left text-sm text-gray-300">
+                            <thead class="text-xs uppercase bg-green-900/30 text-green-300 sticky top-0">
+                                <tr>
+                                    <th class="p-3">ID</th>
+                                    <th class="p-3">Cliente</th>
+                                    <th class="p-3">Total</th>
+                                    <th class="p-3">Estado</th>
+                                    <th class="p-3">Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-700">
+                                ${state.sales.length === 0 ? 
+                                    html`<tr><td colspan="5" class="p-4 text-center text-gray-500">No hay ventas registradas aún.</td></tr>` : 
+                                    state.sales.map(sale => html`
+                                    <tr class="hover:bg-white/5 transition">
+                                        <td class="p-3 font-mono text-green-200">#${sale.id}</td>
+                                        <td class="p-3 font-medium text-white">${sale.client}</td>
+                                        <td class="p-3 text-amber-300 font-bold">${sale.total}</td>
+                                        <td class="p-3">
+                                            <span class="px-2 py-1 rounded text-xs font-bold ${sale.status === 'Pagado' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}">
+                                                ${sale.status}
+                                            </span>
+                                        </td>
+                                        <td class="p-3 text-xs text-gray-400">${sale.date}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="space-y-8">
+                    <div class="glass-dark p-6 rounded-2xl border border-blue-400/30">
+                        <h2 class="text-2xl text-blue-400 mb-6 font-bold flex items-center gap-2">
+                            ${icons.User(24)} Clientes
+                        </h2>
+                        <div class="overflow-x-auto max-h-64">
+                            <table class="w-full text-left text-sm text-gray-300">
+                                <thead class="text-xs uppercase bg-blue-900/30 text-blue-300 sticky top-0">
+                                    <tr>
+                                        <th class="p-3">Nombre</th>
+                                        <th class="p-3">Email</th>
+                                        <th class="p-3">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-700">
+                                    ${state.users.map(u => html`
+                                        <tr class="hover:bg-white/5 transition">
+                                            <td class="p-3 font-medium text-white">${u.name}</td>
+                                            <td class="p-3 text-gray-400">${u.email}</td>
+                                            <td class="p-3 text-right">
+                                                <button onclick="deleteUser(${u.id})" class="text-red-400 hover:text-red-300 hover:scale-110 transition">${icons.Trash(20)}</button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="glass-dark p-6 rounded-2xl border border-purple-400/30">
+                        <h2 class="text-2xl text-purple-400 mb-6 font-bold flex items-center gap-2">
+                            ${icons.User(24)} Administradores
+                        </h2>
+                        <div class="overflow-x-auto max-h-64">
+                            <table class="w-full text-left text-sm text-gray-300">
+                                <thead class="text-xs uppercase bg-purple-900/30 text-purple-300 sticky top-0">
+                                    <tr>
+                                        <th class="p-3">Nombre</th>
+                                        <th class="p-3">Email</th>
+                                        <th class="p-3">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-700">
+                                    ${state.admins.map(u => html`
+                                        <tr class="hover:bg-white/5 transition">
+                                            <td class="p-3 font-medium text-white">${u.name}</td>
+                                            <td class="p-3 text-gray-400">${u.email}</td>
+                                            <td class="p-3 text-right">
+                                                <button onclick="deleteUser(${u.id})" class="text-red-400 hover:text-red-300 hover:scale-110 transition">${icons.Trash(20)}</button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     `;
@@ -732,5 +982,4 @@ function renderApp() {
 
 window.onload = function() { 
     fetchProductsFromDB();
-    fetchUsersFromDB();
 };
