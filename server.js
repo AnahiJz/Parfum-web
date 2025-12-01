@@ -186,7 +186,6 @@ app.post('/api/cart/remove', async (req, res) => {
     }
 });
 
-// --- STRIPE CHECKOUT ---
 app.post('/api/checkout', async (req, res) => {
     const { userId, cart, total } = req.body;
 
@@ -199,7 +198,6 @@ app.post('/api/checkout', async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        // 1. Guardar pedido en MySQL como 'pendiente'
         const [orderResult] = await connection.query(
             'INSERT INTO pedidos (usuario_id, subtotal, total, direccion_envio, estado) VALUES (?, ?, ?, ?, ?)',
             [userId, total, total, 'Dirección por definir en pago', 'pendiente']
@@ -214,12 +212,11 @@ app.post('/api/checkout', async (req, res) => {
 
         await connection.commit();
 
-        // 2. Crear sesión de Stripe
         const line_items = cart.map(item => ({
             price_data: {
                 currency: 'mxn',
                 product_data: { name: item.name },
-                unit_amount: Math.round(item.price * 100), // Stripe usa centavos
+                unit_amount: Math.round(item.price * 100),
             },
             quantity: item.quantity,
         }));
@@ -228,12 +225,10 @@ app.post('/api/checkout', async (req, res) => {
             payment_method_types: ['card'],
             line_items: line_items,
             mode: 'payment',
-            // URLs a donde volverá el usuario
             success_url: `http://localhost:3000/success.html?orderId=${orderId}`,
             cancel_url: `http://localhost:3000/cancel.html`,
         });
 
-        // 3. Devolver la URL de Stripe al frontend
         res.json({ success: true, url: session.url });
 
     } catch (error) {
@@ -245,7 +240,6 @@ app.post('/api/checkout', async (req, res) => {
     }
 });
 
-// Actualizar estado a 'pagado' (se llama desde success.html)
 app.post('/api/order/success', async (req, res) => {
     const { orderId, userId } = req.body;
     try {
@@ -264,6 +258,77 @@ app.post('/api/order/success', async (req, res) => {
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/api/admin/catalogs', async (req, res) => {
+    try {
+        const [brands] = await db.query('SELECT * FROM marcas ORDER BY nombre');
+        const [genders] = await db.query('SELECT * FROM generos ORDER BY nombre');
+        const [types] = await db.query('SELECT * FROM tipos_perfume ORDER BY nombre');
+        const [families] = await db.query('SELECT * FROM familias_olfativas ORDER BY nombre');
+        
+        res.json({ brands, genders, types, families });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error al obtener catálogos' });
+    }
+});
+
+app.post('/api/admin/products', async (req, res) => {
+    const data = req.body;
+    try {
+        const query = `
+            INSERT INTO productos 
+            (nombre, descripcion, precio, stock, marca_id, genero_id, tipo_id, familia_id, imagen_principal, texto_insignia) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+        const values = [
+            data.name, data.description, data.price, data.stock, 
+            data.brand, data.gender, data.type, data.family, 
+            data.image, data.badge
+        ];
+        
+        await db.query(query, values);
+        res.json({ success: true, message: 'Producto creado' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Error al crear producto' });
+    }
+});
+
+app.put('/api/admin/products/:id', async (req, res) => {
+    const { id } = req.params;
+    const data = req.body;
+    try {
+        const query = `
+            UPDATE productos SET 
+            nombre=?, descripcion=?, precio=?, stock=?, marca_id=?, 
+            genero_id=?, tipo_id=?, familia_id=?, imagen_principal=?, texto_insignia=?
+            WHERE id=?
+        `;
+        const values = [
+            data.name, data.description, data.price, data.stock, 
+            data.brand, data.gender, data.type, data.family, 
+            data.image, data.badge, id
+        ];
+        
+        await db.query(query, values);
+        res.json({ success: true, message: 'Producto actualizado' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Error al actualizar' });
+    }
+});
+
+app.delete('/api/admin/products/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        await db.query('DELETE FROM productos WHERE id = ?', [id]);
+        res.json({ success: true, message: 'Producto eliminado' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Error al eliminar' });
+    }
 });
 
 app.listen(PORT, () => {

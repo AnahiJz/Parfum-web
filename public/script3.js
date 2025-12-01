@@ -22,6 +22,7 @@ const icons = {
     Facebook: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>`,
     Twitter: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>`,
     Send: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>`,
+    Award: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 10.15 15.83 14.1 11.88"/><line x1="12" x2="12" y1="16" y2="21"/><line x1="8.5" x2="15.5" y1="21" y2="21"/></svg>`,
 };
 
 let state = {
@@ -163,7 +164,6 @@ async function fetchCart(userId) {
         const response = await fetch(`/api/cart/${userId}`);
         if (response.ok) {
             const cartItems = await response.json();
-            // Aseguramos que los precios sean números para los cálculos
             const parsedItems = cartItems.map(item => ({
                 ...item,
                 price: parseFloat(item.price)
@@ -266,7 +266,7 @@ async function handleLogin(e) {
     const password = form.elements.password.value;
     
     if (!username || !password) {
-        setState({ error: '❌ Por favor, introduce usuario y contraseña.' });
+        setState({ error: '❌ Por favor, introduce correo y contraseña.' });
         return;
     }
 
@@ -586,36 +586,52 @@ function Footer() {
     return html`
         <footer class="glass-dark border-t border-amber-400/30 mt-16">
             <div class="container mx-auto px-4 py-12">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                    <div>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-8">
+                    <div class="col-span-2 md:col-span-1">
                         <div class="flex items-center gap-3 mb-4">
                             <div class="gradient-gold p-2 rounded-xl">${icons.Package(24, 'text-gray-900')}</div>
                             <span class="text-2xl font-display font-bold text-amber-300">Parfum</span>
                         </div>
                         <p class="text-amber-200/70 text-sm">Fragancias de lujo exclusivas.</p>
                     </div>
+
                     <div>
                         <h4 class="text-amber-400 font-semibold mb-4">Enlaces</h4>
                         <ul class="space-y-2 text-sm">
                             <li><a href="#" onclick="setState({currentPage: 'catalog'})" class="text-amber-200/70 hover:text-amber-400 transition">Catálogo</a></li>
+                            <li><a href="#" onclick="setState({currentPage: 'about'})" class="text-amber-200/70 hover:text-amber-400 transition">Quiénes Somos</a></li>
+                            <li><a href="#" onclick="setState({currentPage: 'location'})" class="text-amber-200/70 hover:text-amber-400 transition">Ubicación</a></li>
                             <li><a href="#" onclick="setState({currentPage: 'contact'})" class="text-amber-200/70 hover:text-amber-400 transition">Contacto</a></li>
                         </ul>
                     </div>
-                    <div>
-                        <h4 class="text-amber-400 font-semibold mb-4">Contacto</h4>
-                        <ul class="space-y-2 text-sm text-amber-200/70">
-                            <li class="flex items-center gap-2">${icons.MapPin(16, 'text-amber-400')} Av. Reforma 123</li>
-                            <li class="flex items-center gap-2">${icons.Mail(16, 'text-amber-400')} info@parfum.com</li>
+
+                    <div class="col-span-2 md:col-span-1">
+                        <h4 class="text-amber-400 font-semibold mb-4">Contáctanos</h4>
+                        <ul class="space-y-3 text-sm text-amber-200/70">
+                            <li class="flex items-center gap-3">${icons.MapPin(18, 'text-amber-400')} Av. Reforma 123, CDMX</li>
+                            <li class="flex items-center gap-3">${icons.Phone(18, 'text-amber-400')} +52 55 1234 5678</li>
+                            <li class="flex items-center gap-3">${icons.Mail(18, 'text-amber-400')} info@parfum.com</li>
                         </ul>
                     </div>
-                    <div>
+                    
+                    <div class="col-span-2 md:col-span-2">
+                         <h4 class="text-amber-400 font-semibold mb-4">Horario</h4>
+                         <ul class="space-y-3 text-sm text-amber-200/70 mb-6">
+                            <li class="flex items-center gap-3">${icons.Clock(18, 'text-amber-400')} Lunes a Viernes: 10:00 - 20:00</li>
+                            <li class="flex items-center gap-3">${icons.Clock(18, 'text-amber-400')} Sábado: 11:00 - 18:00</li>
+                        </ul>
+
                         <h4 class="text-amber-400 font-semibold mb-4">Síguenos</h4>
                         <div class="flex gap-4">
-                            <a href="#" class="glass p-3 rounded-xl hover:bg-amber-500/20 transition-all">${icons.Instagram(24, 'text-amber-300')}</a>
-                            <a href="#" class="glass p-3 rounded-xl hover:bg-amber-500/20 transition-all">${icons.Facebook(24, 'text-amber-300')}</a>
+                            <a href="#" class="glass p-2 rounded-xl hover:bg-amber-500/20 transition-all">${icons.Instagram(24, 'text-amber-300')}</a>
+                            <a href="#" class="glass p-2 rounded-xl hover:bg-amber-500/20 transition-all">${icons.Facebook(24, 'text-amber-300')}</a>
+                            <a href="#" class="glass p-2 rounded-xl hover:bg-amber-500/20 transition-all">${icons.Twitter(24, 'text-amber-300')}</a>
                         </div>
                     </div>
                 </div>
+            </div>
+            <div class="text-center py-4 border-t border-amber-400/20">
+                <p class="text-xs text-amber-200/50">© 2024 Parfum Luxury Fragrances. Todos los derechos reservados.</p>
             </div>
         </footer>
     `;
@@ -646,11 +662,11 @@ function LoginPage() {
                 <form id="login-form" onsubmit="handleLogin(event)">
                     <div class="mb-5">
                         <label class="block text-sm font-medium text-amber-300 mb-2">Correo</label>
-                        <input type="text" name="username" required class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30"/>
+                        <input type="email" name="username" required class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30" placeholder="ejemplo@correo.com"/>
                     </div>
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-amber-300 mb-2">Contraseña</label>
-                        <input type="password" name="password" required class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30"/>
+                        <input type="password" name="password" required class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30" placeholder="••••••"/>
                     </div>
                     <button type="submit" class="w-full gradient-gold text-gray-900 px-8 py-4 rounded-full font-bold shadow-2xl transition-all hover:scale-105 btn-premium text-lg">ACCEDER</button>
                 </form>
@@ -793,14 +809,70 @@ function CartPage() {
 }
 
 function AboutUsPage() {
+    const values = [
+        { name: 'Excelencia', icon: icons.Award(20) },
+        { name: 'Pasión', icon: icons.Heart(20) },
+        { name: 'Servicio', icon: icons.User(20) },
+        { name: 'Autenticidad', icon: icons.Sparkles(20) },
+    ];
+
     return html`
         <div class="container mx-auto px-4 py-16">
-            <h1 class="text-5xl text-center font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-12">Quiénes Somos</h1>
-            <div class="grid md:grid-cols-2 gap-12 items-center">
-                <div class="glass-dark p-8 rounded-3xl border border-amber-400/30">
-                    <p class="text-amber-200/80">Somos Parfum, dedicados a traer las fragancias más exclusivas.</p>
+            <h1 class="text-5xl text-center font-display font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-12">Quiénes Somos</h1>
+            
+            <div class="grid lg:grid-cols-2 gap-12 items-start">
+                
+                <div class="space-y-8">
+                    <div class="glass-dark p-4 rounded-3xl border border-amber-400/30 shadow-2xl">
+                        <img src="corporativo.png" alt="Equipo de Parfum" class="w-full h-auto max-h-[500px] object-cover rounded-2xl opacity-90"/>
+                    </div>
+                    
+                    <div class="glass-dark p-6 rounded-2xl border border-amber-400/30 shadow-xl">
+                        <h2 class="text-3xl font-bold text-amber-300 mb-3">Nuestra Historia</h2>
+                        <p class="text-amber-200/80">
+                            Parfum nació en 2018 con la visión de elevar la experiencia de compra de fragancias en México. Lo que comenzó como un pequeño proyecto de curaduría de perfumes nicho, se ha convertido en una boutique digital líder, dedicada a conectar a nuestros clientes con las esencias más exclusivas del mundo.
+                        </p>
+                    </div>
                 </div>
-                <img src="corporativo.png" class="rounded-3xl opacity-80 border border-amber-400/30"/>
+
+                <div class="space-y-8">
+                    <h2 class="text-4xl font-bold text-amber-300">Nuestra Filosofía</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="glass-dark p-6 rounded-2xl border border-amber-400/30 hover:border-amber-400/60 transition-all card-luxury">
+                            <div class="gradient-gold w-12 h-12 rounded-xl flex items-center justify-center mb-4">
+                                ${icons.Target(24, 'text-gray-900')}
+                            </div>
+                            <h3 class="text-xl font-bold text-amber-200 mb-2">Nuestra Misión</h3>
+                            <p class="text-amber-200/70 text-sm">
+                                Ser el puente de acceso a las fragancias más exclusivas del mercado, brindando un servicio personalizado y de primera clase.
+                            </p>
+                        </div>
+
+                        <div class="glass-dark p-6 rounded-2xl border border-amber-400/30 hover:border-amber-400/60 transition-all card-luxury">
+                            <div class="gradient-gold w-12 h-12 rounded-xl flex items-center justify-center mb-4">
+                                ${icons.Eye(24, 'text-gray-900')}
+                            </div>
+                            <h3 class="text-xl font-bold text-amber-200 mb-2">Nuestra Visión</h3>
+                            <p class="text-amber-200/70 text-sm">
+                                Liderar el mercado de perfumes de lujo en Latinoamérica, expandiendo nuestra presencia con la misma esencia artesanal y trato personal.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="glass-dark p-6 rounded-2xl border border-amber-400/30 shadow-xl">
+                        <h3 class="text-2xl font-bold text-amber-300 mb-4">Nuestros Valores</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            ${values.map(val => html`
+                                <div class="flex items-center text-amber-200 font-semibold text-base gap-2">
+                                    <span class="text-amber-400">${val.icon}</span>
+                                    ${val.name}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
     `;
@@ -810,9 +882,12 @@ function LocationPage() {
     return html`
         <div class="container mx-auto px-4 py-16 text-center">
             <h1 class="text-5xl font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-12">Ubicación</h1>
-            <div class="glass-dark p-12 rounded-3xl inline-block border border-amber-400/30">
+            <div class="glass-dark p-12 rounded-3xl inline-block border border-amber-400/30 w-full max-w-4xl">
                 ${icons.MapPin(48, 'text-amber-400 mx-auto mb-4')}
-                <p class="text-amber-200 text-xl">Av. Paseo de la Reforma 123, CDMX</p>
+                <p class="text-amber-200 text-xl mb-8">Av. Paseo de la Reforma 123, CDMX</p>
+                <div class="w-full h-96 rounded-2xl overflow-hidden border border-amber-400/30">
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3762.470878579899!2d-99.16278438509327!3d19.435200386882855!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85d1f92b75aa014d%3A0x17d745a3372b3892!2sP.%C2%BA%20de%20la%20Reforma%20123%2C%20Ju%C3%A1rez%2C%20Cuauht%C3%A9moc%2C%2006600%20Ciudad%20de%20M%C3%A9xico%2C%20CDMX!5e0!3m2!1ses!2smx!4v1684900000000!5m2!1ses!2smx" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
             </div>
         </div>
     `;
