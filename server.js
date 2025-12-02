@@ -244,7 +244,6 @@ app.post('/api/order/success', async (req, res) => {
     const { orderId, userId } = req.body;
     try {
         await db.query('UPDATE pedidos SET estado = "pagado" WHERE id = ?', [orderId]);
-        // Limpiar carrito
         const [cart] = await db.query('SELECT id FROM carritos WHERE usuario_id = ?', [userId]);
         if (cart.length > 0) {
             await db.query('DELETE FROM carrito_items WHERE carrito_id = ?', [cart[0].id]);
@@ -263,11 +262,7 @@ app.get('/', (req, res) => {
 app.get('/api/admin/catalogs', async (req, res) => {
     try {
         const [brands] = await db.query('SELECT * FROM marcas ORDER BY nombre');
-        const [genders] = await db.query('SELECT * FROM generos ORDER BY nombre');
-        const [types] = await db.query('SELECT * FROM tipos_perfume ORDER BY nombre');
-        const [families] = await db.query('SELECT * FROM familias_olfativas ORDER BY nombre');
-        
-        res.json({ brands, genders, types, families });
+        res.json({ brands });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Error al obtener catálogos' });
@@ -275,47 +270,56 @@ app.get('/api/admin/catalogs', async (req, res) => {
 });
 
 app.post('/api/admin/products', async (req, res) => {
-    const data = req.body;
+    const { name, price, stock, image, gender, type, rating } = req.body;
+
+    const generoId = (gender === 'hombre') ? 1 : (gender === 'mujer' ? 2 : 3);
+    const tipoId = (type === 'niche') ? 2 : 1;
+    
+    const marcaId = 1;
+    const familiaId = 1;
+    const descripcion = `Fragancia ${name} del tipo ${type}`; 
+
     try {
         const query = `
             INSERT INTO productos 
-            (nombre, descripcion, precio, stock, marca_id, genero_id, tipo_id, familia_id, imagen_principal, texto_insignia) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (nombre, descripcion, precio, stock, marca_id, genero_id, tipo_id, familia_id, imagen_principal, calificacion, texto_insignia, es_popular) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
+        
         const values = [
-            data.name, data.description, data.price, data.stock, 
-            data.brand, data.gender, data.type, data.family, 
-            data.image, data.badge
+            name, descripcion, price, stock, marcaId, 
+            generoId, tipoId, familiaId, image, rating || 5.0, 
+            '', 0
         ];
         
         await db.query(query, values);
-        res.json({ success: true, message: 'Producto creado' });
+        res.json({ success: true, message: 'Producto creado exitosamente' });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: 'Error al crear producto' });
+        console.error("Error al crear:", error);
+        res.status(500).json({ success: false, message: 'Error en BD: ' + error.message });
     }
 });
 
 app.put('/api/admin/products/:id', async (req, res) => {
     const { id } = req.params;
-    const data = req.body;
+    const { name, price, stock, image, gender, type } = req.body;
+
+    const generoId = (gender === 'hombre') ? 1 : (gender === 'mujer' ? 2 : 3);
+    const tipoId = (type === 'niche') ? 2 : 1;
+
     try {
         const query = `
             UPDATE productos SET 
-            nombre=?, descripcion=?, precio=?, stock=?, marca_id=?, 
-            genero_id=?, tipo_id=?, familia_id=?, imagen_principal=?, texto_insignia=?
+            nombre=?, precio=?, stock=?, genero_id=?, tipo_id=?, imagen_principal=?
             WHERE id=?
         `;
-        const values = [
-            data.name, data.description, data.price, data.stock, 
-            data.brand, data.gender, data.type, data.family, 
-            data.image, data.badge, id
-        ];
+        
+        const values = [name, price, stock, generoId, tipoId, image, id];
         
         await db.query(query, values);
         res.json({ success: true, message: 'Producto actualizado' });
     } catch (error) {
-        console.error(error);
+        console.error("Error al actualizar:", error);
         res.status(500).json({ success: false, message: 'Error al actualizar' });
     }
 });
@@ -323,11 +327,12 @@ app.put('/api/admin/products/:id', async (req, res) => {
 app.delete('/api/admin/products/:id', async (req, res) => {
     const { id } = req.params;
     try {
+        
         await db.query('DELETE FROM productos WHERE id = ?', [id]);
         res.json({ success: true, message: 'Producto eliminado' });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ success: false, message: 'Error al eliminar' });
+        res.status(500).json({ success: false, message: 'No se puede eliminar (puede tener ventas asociadas)' });
     }
 });
 

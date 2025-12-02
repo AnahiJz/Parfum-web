@@ -45,7 +45,9 @@ let state = {
     admins: [],
     sales: [],
     error: null,
-    loading: true
+    loading: true,
+    editingProduct: null,
+    adminSearchQuery: ''
 };
 
 let carouselInterval;
@@ -623,7 +625,6 @@ function Footer() {
 
                         <h4 class="text-amber-400 font-semibold mb-4">Síguenos</h4>
                         <div class="flex gap-4">
-                            <div class="flex gap-4">
                             <a href="https://instagram.com/tu_perfil" class="group glass p-2 rounded-xl hover:bg-gradient-to-br from-purple-500 to-pink-500 transition-all" target="_blank">
                                 ${icons.Instagram(24, 'text-amber-300 group-hover:text-white')}
                             </a>
@@ -915,6 +916,88 @@ function ContactPage() {
     `;
 }
 
+function filterAdminProducts() {
+    if (!state.adminSearchQuery) return state.products;
+    return state.products.filter(p => p.name.toLowerCase().includes(state.adminSearchQuery.toLowerCase()));
+}
+
+function prepareEditProduct(product) {
+    setState({ editingProduct: product });
+    document.getElementById('prod-name').value = product.name;
+    document.getElementById('prod-price').value = product.price;
+    document.getElementById('prod-image').value = product.image;
+    document.getElementById('prod-stock').value = product.stock;
+    document.getElementById('prod-gender').value = product.gender;
+    document.getElementById('prod-type').value = product.type;
+}
+
+function cancelEditProduct() {
+    setState({ editingProduct: null });
+    document.getElementById('product-form').reset();
+}
+
+async function saveProduct(e) {
+    e.preventDefault();
+    const form = document.getElementById('product-form');
+    
+    const productData = {
+        name: document.getElementById('prod-name').value,
+        price: parseFloat(document.getElementById('prod-price').value),
+        image: document.getElementById('prod-image').value,
+        stock: parseInt(document.getElementById('prod-stock').value),
+        gender: document.getElementById('prod-gender').value,
+        type: document.getElementById('prod-type').value,
+
+        rating: state.editingProduct ? state.editingProduct.rating : 5.0,
+        badge: '', 
+        isPopular: false 
+    };
+
+    const url = state.editingProduct 
+        ? `/api/admin/products/${state.editingProduct.id}`
+        : '/api/admin/products';
+    
+    const method = state.editingProduct ? 'PUT' : 'POST';
+
+    try {
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(productData)
+        });
+
+        const data = await response.json();
+
+        if (data.success || response.ok) {
+            setState({ error: state.editingProduct ? '✅ Producto actualizado' : '✅ Producto creado' });
+            fetchProductsFromDB();
+            cancelEditProduct();
+        } else {
+            setState({ error: '❌ Error al guardar: ' + (data.message || 'Error desconocido') });
+        }
+    } catch (error) {
+        console.error(error);
+        setState({ error: '⚠️ Error de conexión' });
+    }
+}
+
+async function deleteProduct(id) {
+    if (!confirm('¿Estás seguro de eliminar este producto del catálogo?')) return;
+
+    try {
+        const response = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
+        if (response.ok) {
+            setState({ error: '🗑️ Producto eliminado' });
+            fetchProductsFromDB();
+        } else {
+            setState({ error: '❌ No se pudo eliminar el producto' });
+        }
+    } catch (error) {
+        console.error(error);
+        setState({ error: '⚠️ Error al eliminar' });
+    }
+}
+
 function AdminPage() {
     if (!state.currentUser || state.currentUser.role !== 'admin') {
         return html`<div class="text-center p-20 text-red-400 font-bold text-2xl">🚫 Acceso Denegado</div>`;
@@ -925,20 +1008,116 @@ function AdminPage() {
         return acc + amount;
     }, 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
 
+    const filteredProducts = filterAdminProducts();
+
     return html`
         <div class="container mx-auto px-4 py-16">
             <h1 class="text-4xl text-amber-400 font-bold mb-8 flex items-center gap-3">
                 ${icons.Sparkles(32)} Panel de Administración
             </h1>
 
-            <div class="glass-dark p-8 rounded-2xl border border-amber-400/30 mb-12">
+            <div class="glass-dark p-8 rounded-2xl border border-amber-400/30 mb-8">
                 <h3 class="text-2xl text-amber-200 font-bold mb-6">Crear Nuevo Administrador</h3>
                 <form id="create-admin-form" onsubmit="createAdmin(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <input type="text" name="name" placeholder="Nombre" required class="p-3 rounded-lg glass text-white"/>
-                    <input type="email" name="email" placeholder="Correo" required class="p-3 rounded-lg glass text-white"/>
-                    <input type="password" name="password" placeholder="Contraseña" required class="p-3 rounded-lg glass text-white"/>
+                    <input type="text" name="name" placeholder="Nombre" required class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
+                    <input type="email" name="email" placeholder="Correo" required class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
+                    <input type="password" name="password" placeholder="Contraseña" required class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
                     <button type="submit" class="gradient-gold text-gray-900 font-bold p-3 rounded-lg hover:scale-105 transition">Crear Admin</button>
                 </form>
+            </div>
+
+            <div class="glass-dark p-8 rounded-2xl border border-amber-400/30 mb-12 relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">${icons.Package(100, 'text-amber-400')}</div>
+                <h3 class="text-2xl text-amber-200 font-bold mb-6 flex items-center gap-2">📦 Gestión de Inventario</h3>
+                
+                <div class="grid lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1 glass p-6 rounded-xl border border-white/10">
+                        <h4 class="text-xl text-amber-300 font-bold mb-4">${state.editingProduct ? '✏️ Editando Producto' : '✨ Agregar Nuevo Producto'}</h4>
+                        <form id="product-form" onsubmit="saveProduct(event)" class="space-y-4">
+                            <div>
+                                <label class="text-xs text-amber-200 uppercase font-bold">Nombre</label>
+                                <input id="prod-name" type="text" required class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 focus:border-amber-400 outline-none"/>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="text-xs text-amber-200 uppercase font-bold">Precio ($)</label>
+                                    <input id="prod-price" type="number" step="0.01" required class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 outline-none"/>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-amber-200 uppercase font-bold">Stock</label>
+                                    <input id="prod-stock" type="number" required class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 outline-none"/>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-xs text-amber-200 uppercase font-bold">URL Imagen</label>
+                                <input id="prod-image" type="text" required class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 outline-none"/>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="text-xs text-amber-200 uppercase font-bold">Género</label>
+                                    <select id="prod-gender" class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 outline-none">
+                                        <option value="hombre">Hombre</option>
+                                        <option value="mujer">Mujer</option>
+                                        <option value="unisex">Unisex</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-amber-200 uppercase font-bold">Tipo</label>
+                                    <select id="prod-type" class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 outline-none">
+                                        <option value="designer">Diseñador</option>
+                                        <option value="niche">Nicho</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-2 pt-2">
+                                <button type="submit" class="flex-1 gradient-gold text-gray-900 font-bold py-2 rounded shadow-lg hover:scale-105 transition">
+                                    ${state.editingProduct ? 'ACTUALIZAR' : 'GUARDAR'}
+                                </button>
+                                ${state.editingProduct ? html`
+                                    <button type="button" onclick="cancelEditProduct()" class="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/50 rounded hover:bg-red-500/40 transition">
+                                        ${icons.X(20)}
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="lg:col-span-2 flex flex-col h-[500px]">
+                        <div class="mb-4 flex gap-2">
+                            <div class="relative flex-1">
+                                <span class="absolute left-3 top-2.5 text-gray-400">${icons.Search(18)}</span>
+                                <input type="text" 
+                                    placeholder="Buscar producto por nombre..." 
+                                    value="${state.adminSearchQuery}"
+                                    oninput="setState({adminSearchQuery: this.value})"
+                                    class="w-full pl-10 pr-4 py-2 rounded-lg bg-black/40 text-white border border-amber-400/20 focus:border-amber-400 outline-none transition-all"
+                                />
+                            </div>
+                        </div>
+
+                        <div class="flex-1 overflow-y-auto pr-2 space-y-2 custom-scrollbar">
+                            ${filteredProducts.length === 0 ? html`<p class="text-center text-gray-500 py-10">No se encontraron productos.</p>` : ''}
+                            ${filteredProducts.map(p => html`
+                                <div class="glass p-3 rounded-lg border border-white/5 flex items-center gap-4 hover:bg-white/5 transition group">
+                                    <img src="${p.image}" class="w-12 h-12 rounded object-cover border border-white/10"/>
+                                    <div class="flex-1">
+                                        <h5 class="text-amber-200 font-bold text-sm leading-tight">${p.name}</h5>
+                                        <p class="text-xs text-gray-400">$${p.price} | Stock: ${p.stock}</p>
+                                    </div>
+                                    <div class="flex gap-2 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onclick='prepareEditProduct(${JSON.stringify(p)})' class="p-2 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/40 transition" title="Editar">
+                                            ${icons.Edit(16)}
+                                        </button>
+                                        <button onclick="deleteProduct(${p.id})" class="p-2 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40 transition" title="Eliminar">
+                                            ${icons.Trash(16)}
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
