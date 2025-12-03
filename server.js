@@ -3,7 +3,7 @@ const path = require('path');
 const db = require('./db');
 const stripe = require('stripe')('sk_test_51SZYglRZm8Mvgir84MxI24RdjOPVUUZbLFkrV88FiTfo10wcmp9JCAKgHE8vLtBZvEI1xj4XSrCQjumxVtjmrTiE00oL99z3Xt'); 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
