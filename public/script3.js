@@ -47,7 +47,12 @@ let state = {
     error: null,
     loading: true,
     editingProduct: null,
-    adminSearchQuery: ''
+    adminSearchQuery: '',
+    editingUser: null,
+    adminSearchQueryUsers: '',
+    clientSearchQuery: '',
+    newProductForm: { name: '', price: '', stock: '', image: '', gender: 'hombre', type: 'designer' },
+    newUserForm: { name: '', email: '', password: '' }
 };
 
 let carouselInterval;
@@ -87,9 +92,7 @@ async function fetchProductsFromDB() {
     try {
         const response = await fetch('/api/products');
         if (!response.ok) throw new Error('Error de red al obtener productos');
-        
         const dbProducts = await response.json();
-        
         const mappedProducts = dbProducts.map(p => ({
             id: p.id,
             name: p.nombre,
@@ -103,7 +106,6 @@ async function fetchProductsFromDB() {
             isNiche: p.nombre_tipo === 'Niche',
             stock: p.stock
         }));
-
         setState({ products: mappedProducts, loading: false });
     } catch (error) {
         console.error("Error cargando productos:", error);
@@ -115,9 +117,7 @@ async function fetchUsersFromDB() {
     try {
         const response = await fetch('/api/users');
         if (!response.ok) throw new Error('Error al obtener usuarios');
-        
         const dbUsers = await response.json();
-        
         const mappedUsers = dbUsers.map(u => ({
             id: u.id,
             name: u.nombre,
@@ -125,14 +125,9 @@ async function fetchUsersFromDB() {
             last_access: new Date(u.fecha_creacion).toLocaleDateString('es-MX'),
             privileges: u.rol === 'admin' ? 'Control Total' : 'Cliente'
         }));
-
         const admins = mappedUsers.filter(u => u.privileges === 'Control Total');
         const regularUsers = mappedUsers.filter(u => u.privileges === 'Cliente');
-
-        setState({ 
-            users: regularUsers, 
-            admins: admins 
-        });
+        setState({ users: regularUsers, admins: admins });
     } catch (error) {
         console.error("Error usuarios:", error);
     }
@@ -142,9 +137,7 @@ async function fetchSalesFromDB() {
     try {
         const response = await fetch('/api/admin/sales');
         if (!response.ok) throw new Error('Error al obtener ventas');
-        
         const dbSales = await response.json();
-        
         const mappedSales = dbSales.map(s => ({
             id: s.id,
             client: s.cliente,
@@ -154,7 +147,6 @@ async function fetchSalesFromDB() {
                 day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' 
             })
         }));
-
         setState({ sales: mappedSales });
     } catch (error) {
         console.error("Error ventas:", error);
@@ -177,46 +169,101 @@ async function fetchCart(userId) {
     }
 }
 
-async function createAdmin(e) {
-    e.preventDefault();
-    const form = document.getElementById('create-admin-form');
-    const name = form.elements.name.value;
-    const email = form.elements.email.value;
-    const password = form.elements.password.value;
+function filterAdminUsers() {
+    if (!state.adminSearchQueryUsers) return state.admins;
+    return state.admins.filter(u => 
+        u.name.toLowerCase().includes(state.adminSearchQueryUsers.toLowerCase()) || 
+        u.email.toLowerCase().includes(state.adminSearchQueryUsers.toLowerCase())
+    );
+}
 
-    if (!name || !email || !password) {
-        setState({ error: '⚠️ Completa todos los campos' });
+function filterClients() {
+    if (!state.clientSearchQuery) return state.users;
+    return state.users.filter(u => 
+        u.name.toLowerCase().includes(state.clientSearchQuery.toLowerCase()) || 
+        u.email.toLowerCase().includes(state.clientSearchQuery.toLowerCase())
+    );
+}
+
+function prepareEditUser(userId) {
+    const userToEdit = state.users.find(u => u.id === userId) || state.admins.find(u => u.id === userId);
+    if (userToEdit) {
+        setState({ editingUser: userToEdit });
+        const form = document.getElementById('create-admin-form');
+        if (form) form.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function cancelEditUser() {
+    setState({ editingUser: null });
+    state.newUserForm = { name: '', email: '', password: '' };
+}
+
+function handleProductInput(field, value) {
+    if (state.editingProduct) {
+        state.editingProduct[field] = value;
+    } else {
+        state.newProductForm[field] = value;
+    }
+}
+
+function handleUserInput(field, value) {
+    if (state.editingUser) {
+        state.editingUser[field] = value;
+    } else {
+        state.newUserForm[field] = value;
+    }
+}
+
+async function saveUser(e) {
+    e.preventDefault();
+    const name = document.getElementById('user-name').value;
+    const email = document.getElementById('user-email').value;
+    const password = document.getElementById('user-password').value;
+
+    if (!name || !email) {
+        setState({ error: '⚠️ Completa nombre y correo' });
+        return;
+    }
+    if (!state.editingUser && !password) {
+        setState({ error: '⚠️ La contraseña es obligatoria para nuevos usuarios' });
         return;
     }
 
-    try {
-        const response = await fetch('/api/admin/create', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, password, role: 'admin' })
-        });
+    const url = state.editingUser 
+        ? `/api/admin/users/${state.editingUser.id}`
+        : '/api/admin/create';
+    
+    const method = state.editingUser ? 'PUT' : 'POST';
+    const bodyData = { name, email };
+    if (password) bodyData.password = password;
+    if (!state.editingUser) bodyData.role = 'admin'; 
 
+    try {
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(bodyData)
+        });
         const data = await response.json();
-        if (data.success) {
-            setState({ error: '✅ Administrador creado exitosamente' });
+        if (data.success || response.ok) {
+            setState({ error: state.editingUser ? '✅ Usuario actualizado' : '✅ Administrador creado exitosamente' });
             fetchUsersFromDB(); 
-            form.reset();
+            cancelEditUser();
         } else {
-            setState({ error: '❌ ' + data.message });
+            setState({ error: '❌ ' + (data.message || 'Error en la operación') });
         }
     } catch (error) {
         console.error(error);
-        setState({ error: '⚠️ Error al crear admin' });
+        setState({ error: '⚠️ Error de conexión' });
     }
 }
 
 async function deleteUser(id) {
     if (!confirm('¿Estás seguro de eliminar este usuario? Esta acción borrará sus pedidos también.')) return;
-
     try {
         const response = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
         const data = await response.json();
-
         if (data.success) {
             setState({ error: '🗑️ Usuario eliminado' });
             fetchUsersFromDB(); 
@@ -231,11 +278,9 @@ async function deleteUser(id) {
 
 function startCarousel() {
     clearInterval(carouselInterval);
+    if (state.currentPage === 'admin') return; 
     carouselInterval = setInterval(() => {
-        const currentImages = state.currentPage === 'admin' ? 
-            ['ParfumH/savage.jpg', 'ParfumH/eros.jpg', 'ParfumH/explorer.jpg', 'ParfumH/bleu.jpg', 'ParfumH/aventus.jpg'] : 
-            state.carouselImages;
-        setState({ carouselIndex: (state.carouselIndex + 1) % currentImages.length });
+        setState({ carouselIndex: (state.carouselIndex + 1) % state.carouselImages.length });
     }, 4500);
 }
 
@@ -278,27 +323,21 @@ async function handleLogin(e) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         });
-
         const data = await response.json();
-
         if (data.success) {
             const user = { id: data.user.id, name: data.user.nombre, role: data.user.rol };
             localStorage.setItem('parfum_user', JSON.stringify(user));
-
             setState({
                 currentUser: user,
                 isLoggedIn: true,
                 currentPage: data.user.rol === 'admin' ? 'admin' : 'catalog',
                 error: `¡Bienvenido de nuevo, ${data.user.nombre}!`
             });
-            
             fetchCart(data.user.id);
-
             if (data.user.rol === 'admin') {
                 fetchSalesFromDB();
                 fetchUsersFromDB();
             }
-
         } else {
             setState({ error: '❌ ' + data.message });
         }
@@ -320,25 +359,20 @@ async function handleRegister(e) {
         setState({ error: '🚨 Las contraseñas no coinciden. Por favor, verifica.' });
         return;
     }
-
     if (!name || !email || !password) {
         setState({ error: '⚠️ Por favor, completa todos los campos.' });
         return;
     }
-
     try {
         const response = await fetch('/api/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, email, password })
         });
-
         const data = await response.json();
-
         if (data.success) {
             const user = { id: data.userId, name: name, role: 'usuario' };
             localStorage.setItem('parfum_user', JSON.stringify(user));
-
             setState({
                 currentUser: user,
                 isLoggedIn: true,
@@ -363,26 +397,28 @@ function handleContact(e) {
     }
 }
 
-async function addToCart(product) {
+async function addToCart(productId) {
+    const product = state.products.find(p => p.id === productId);
     if (!state.isLoggedIn || !state.currentUser) {
         setState({ currentPage: 'login', error: '🔒 Debes iniciar sesión para comprar.' });
         return;
     }
-
     try {
         const response = await fetch('/api/cart/add', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 userId: state.currentUser.id, 
-                productId: product.id, 
+                productId: productId, 
                 quantity: 1 
             })
         });
-
         if (response.ok) {
             await fetchCart(state.currentUser.id);
-            setState({ error: `✅ ${product.name} añadido al carrito` });
+            const nombreProd = product ? product.name : 'Producto';
+            setState({ error: `✅ ${nombreProd} añadido al carrito` });
+        } else {
+            console.error('Error en respuesta del servidor al agregar al carrito');
         }
     } catch (error) {
         console.error(error);
@@ -391,14 +427,12 @@ async function addToCart(product) {
 
 async function removeFromCart(productId) {
     if (!state.currentUser) return;
-
     try {
         const response = await fetch('/api/cart/remove', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId: state.currentUser.id, productId })
         });
-
         if (response.ok) {
             await fetchCart(state.currentUser.id);
         }
@@ -410,14 +444,12 @@ async function removeFromCart(productId) {
 async function updateQuantity(productId, newQuantity) {
     if (!state.currentUser) return;
     const quantity = parseInt(newQuantity);
-
     try {
         const response = await fetch('/api/cart/update', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId: state.currentUser.id, productId, quantity })
         });
-
         if (response.ok) {
             await fetchCart(state.currentUser.id);
         }
@@ -431,9 +463,7 @@ async function checkout() {
         setState({ error: '❌ Error: No se pudo identificar al usuario.' });
         return;
     }
-
     const total = state.cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
     try {
         setState({ loading: true }); 
         const response = await fetch('/api/checkout', {
@@ -445,9 +475,7 @@ async function checkout() {
                 total: total
             })
         });
-
         const data = await response.json();
-
         if (data.success && data.url) {
             window.location.href = data.url;
         } else {
@@ -462,11 +490,11 @@ async function checkout() {
 function NotificationBanner() {
     if (!state.error) return '';
     return html` 
-        <div id="notification-banner" class="notification-banner fixed top-0 left-1/2 transform -translate-x-1/2 mt-4 p-3 rounded-xl shadow-2xl z-[100] 
+        <div id="notification-banner" class="notification-banner fixed top-0 left-1/2 transform -translate-x-1/2 mt-4 p-3 rounded-xl shadow-2xl z-[100] max-w-sm w-full mx-4
             ${state.error.includes('❌') || state.error.includes('🚨') || state.error.includes('⚠️') || state.error.includes('🗑️') || state.error.includes('🔒') ? 'bg-red-700' : 'bg-green-600'} 
             text-white font-semibold flex items-center gap-3 border border-white/20">
             <button class="text-xl" onclick="setState({error: null})">${icons.X(18, 'text-white')}</button>
-            ${state.error}
+            <span class="flex-1 text-sm md:text-base">${state.error}</span>
         </div>
     `;
 }
@@ -522,8 +550,8 @@ function Navbar() {
                             ${icons.Package(30, 'text-gray-900')}
                         </div>
                         <div>
-                            <span class="text-3xl font-display font-bold bg-gradient-to-r from-amber-300 via-amber-200 to-amber-400 bg-clip-text text-transparent">Parfum</span>
-                            <p class="text-xs text-amber-300 font-light tracking-[0.2em] uppercase">Luxury Fragrances</p>
+                            <span class="text-xl md:text-3xl font-display font-bold bg-gradient-to-r from-amber-300 via-amber-200 to-amber-400 bg-clip-text text-transparent">Parfum</span>
+                            <p class="hidden md:block text-xs text-amber-300 font-light tracking-[0.2em] uppercase">Luxury Fragrances</p>
                         </div>
                     </div>
                     <nav class="hidden lg:flex items-center gap-8 text-sm font-semibold tracking-wide">
@@ -559,7 +587,7 @@ function Navbar() {
                                 <div onclick="setState({currentPage: 'login', categoryDropdownOpen: false})" class="hidden md:block glass-dark p-3 rounded-xl shadow-lg cursor-pointer hover:bg-amber-500/20 transition-all">
                                     ${icons.User(26, 'text-amber-300')}
                                 </div>
-                                <button onclick="setState({currentPage: 'login', categoryDropdownOpen: false})" class="gradient-gold text-gray-900 px-8 py-3 rounded-full font-bold shadow-2xl transition-all transform hover:scale-105 btn-premium">
+                                <button onclick="setState({currentPage: 'login', categoryDropdownOpen: false})" class="gradient-gold text-gray-900 px-4 md:px-8 py-2 md:py-3 rounded-full font-bold shadow-2xl transition-all transform hover:scale-105 btn-premium text-sm md:text-base">
                                     INGRESAR
                                 </button>
                             </div>
@@ -572,10 +600,14 @@ function Navbar() {
                 ${state.menuOpen ? html`
                     <div class="lg:hidden pb-4 animate-fadeInUp">
                         <nav class="flex flex-col gap-2">
-                            <button onclick="setState({currentPage: 'catalog', menuOpen: false})" class="text-amber-200 hover:text-amber-400 py-2 text-left">CATÁLOGO</button>
-                            <button onclick="setState({currentPage: 'about', menuOpen: false})" class="text-amber-200 hover:text-amber-400 py-2 text-left">NOSOTROS</button>
-                            <button onclick="setState({currentPage: 'location', menuOpen: false})" class="text-amber-200 hover:text-amber-400 py-2 text-left">UBICACIÓN</button>
-                            <button onclick="setState({currentPage: 'contact', menuOpen: false})" class="text-amber-200 hover:text-amber-400 py-2 text-left">CONTACTO</button>
+                            ${isAdmin ? html`
+                                <button onclick="setState({currentPage: 'admin', menuOpen: false})" class="text-red-400 font-bold py-2 text-left">PANEL ADMIN</button>
+                            ` : html`
+                                <button onclick="setState({currentPage: 'catalog', menuOpen: false})" class="text-amber-200 hover:text-amber-400 py-2 text-left">CATÁLOGO</button>
+                                <button onclick="setState({currentPage: 'about', menuOpen: false})" class="text-amber-200 hover:text-amber-400 py-2 text-left">NOSOTROS</button>
+                                <button onclick="setState({currentPage: 'location', menuOpen: false})" class="text-amber-200 hover:text-amber-400 py-2 text-left">UBICACIÓN</button>
+                                <button onclick="setState({currentPage: 'contact', menuOpen: false})" class="text-amber-200 hover:text-amber-400 py-2 text-left">CONTACTO</button>
+                            `}
                         </nav>
                     </div>
                 ` : ''}
@@ -588,8 +620,8 @@ function Footer() {
     return html`
         <footer class="glass-dark border-t border-amber-400/30 mt-16">
             <div class="container mx-auto px-4 py-12">
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-8">
-                    <div class="col-span-2 md:col-span-1">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-8">
+                    <div class="col-span-1 md:col-span-1">
                         <div class="flex items-center gap-3 mb-4">
                             <div class="gradient-gold p-2 rounded-xl">${icons.Package(24, 'text-gray-900')}</div>
                             <span class="text-2xl font-display font-bold text-amber-300">Parfum</span>
@@ -607,16 +639,16 @@ function Footer() {
                         </ul>
                     </div>
 
-                    <div class="col-span-2 md:col-span-1">
+                    <div class="col-span-1 md:col-span-1">
                         <h4 class="text-amber-400 font-semibold mb-4">Contáctanos</h4>
                         <ul class="space-y-3 text-sm text-amber-200/70">
                             <li class="flex items-center gap-3">${icons.MapPin(18, 'text-amber-400')} Av. Reforma 123, CDMX</li>
                             <li class="flex items-center gap-3">${icons.Phone(18, 'text-amber-400')} +52 55 1234 5678</li>
-                            <li class="flex items-center gap-3">${icons.Mail(18, 'text-amber-400')} info@parfum.com</li>
+                            <li class="flex items-center gap-3 break-all">${icons.Mail(18, 'text-amber-400')} info@parfum.com</li>
                         </ul>
                     </div>
                     
-                    <div class="col-span-2 md:col-span-2">
+                    <div class="col-span-1 md:col-span-2">
                          <h4 class="text-amber-400 font-semibold mb-4">Horario</h4>
                          <ul class="space-y-3 text-sm text-amber-200/70 mb-6">
                             <li class="flex items-center gap-3">${icons.Clock(18, 'text-amber-400')} Lunes a Viernes: 10:00 - 20:00</li>
@@ -648,14 +680,14 @@ function Footer() {
 function HomePage() {
     return html`
         <div class="container mx-auto px-4 py-16 text-center">
-            <h1 class="text-6xl font-display font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent">Bienvenido a Parfum</h1>
-            <p class="text-xl text-amber-200/80 mt-4 max-w-3xl mx-auto">Sumérgete en el mundo de las fragancias de lujo.</p>
-            <div id="carousel" class="mt-12">
-                <div class="glass-dark rounded-3xl overflow-hidden border border-amber-400/30 h-96 flex items-center justify-center">
+            <h1 class="text-4xl md:text-6xl font-display font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent">Bienvenido a Parfum</h1>
+            <p class="text-lg md:text-xl text-amber-200/80 mt-4 max-w-3xl mx-auto">Sumérgete en el mundo de las fragancias de lujo.</p>
+            <div id="carousel" class="mt-8 md:mt-12">
+                <div class="glass-dark rounded-3xl overflow-hidden border border-amber-400/30 h-64 md:h-96 flex items-center justify-center">
                     <img src="${state.carouselImages[state.carouselIndex]}" alt="Carousel Image" class="w-full h-full object-cover opacity-80 transition-opacity duration-1000"/>
                 </div>
             </div>
-            <button onclick="setCategoryFilter('all')" class="mt-12 gradient-gold text-gray-900 px-10 py-4 rounded-full font-bold shadow-2xl transition-all transform hover:scale-105 btn-premium text-xl">
+            <button onclick="setCategoryFilter('all')" class="mt-8 md:mt-12 gradient-gold text-gray-900 px-8 md:px-10 py-3 md:py-4 rounded-full font-bold shadow-2xl transition-all transform hover:scale-105 btn-premium text-lg md:text-xl">
                 ${icons.Sparkles(20, 'mr-2')} Explorar Colección
             </button>
         </div>
@@ -664,8 +696,14 @@ function HomePage() {
 
 function LoginPage() {
     return html`
-        <div class="flex items-center justify-center min-h-screen bg-gray-900/90 py-12">
-            <div class="glass-dark p-8 md:p-12 rounded-3xl shadow-2xl border border-amber-400/30 w-full max-w-md animate-fadeInUp">
+        <div class="flex items-center justify-center min-h-screen bg-gray-900/90 py-12 px-4">
+            <div class="glass-dark p-8 md:p-12 rounded-3xl shadow-2xl border border-amber-400/30 w-full max-w-md animate-fadeInUp relative">
+                <button onclick="setState({currentPage: 'home'})" class="absolute top-6 left-6 text-amber-400 hover:text-amber-200 transition-transform hover:-translate-x-1" title="Regresar al inicio">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 12H5"></path>
+                        <path d="M12 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
                 <h2 class="text-3xl font-display font-bold text-amber-300 mb-6 text-center">Ingresar a Mi Cuenta</h2>
                 <form id="login-form" onsubmit="handleLogin(event)">
                     <div class="mb-5">
@@ -688,7 +726,7 @@ function LoginPage() {
 
 function RegisterPage() {
     return html`
-        <div class="flex items-center justify-center min-h-screen bg-gray-900/90 py-12">
+        <div class="flex items-center justify-center min-h-screen bg-gray-900/90 py-12 px-4">
             <div class="glass-dark p-8 md:p-12 rounded-3xl shadow-2xl border border-amber-400/30 w-full max-w-lg animate-fadeInUp">
                 <h2 class="text-3xl font-display font-bold text-amber-300 mb-6 text-center">Crear Nueva Cuenta</h2>
                 <form id="register-form" onsubmit="handleRegister(event)">
@@ -726,7 +764,7 @@ function ProductCard(product) {
     ).join('');
     
     const buttonAction = state.isLoggedIn 
-        ? `addToCart(${JSON.stringify(product).replace(/"/g, '&quot;')})` 
+        ? `addToCart(${product.id})` 
         : `setState({ currentPage: 'login', error: '🔒 Debes iniciar sesión para añadir productos al carrito.' })`;
     
     const buttonIcon = state.isLoggedIn ? icons.ShoppingCart(20, 'text-gray-900') : icons.User(20, 'text-gray-900');
@@ -777,7 +815,7 @@ function CatalogPage() {
     return html`
         <div class="container mx-auto px-4 py-16">
             <div class="text-center mb-12">
-                <h1 class="text-5xl font-display font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-4">${title}</h1>
+                <h1 class="text-3xl md:text-5xl font-display font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-4">${title}</h1>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 ${filteredProducts.map(ProductCard).join('')}
@@ -790,17 +828,17 @@ function CartPage() {
     const subtotal = state.cart.reduce((total, item) => total + item.price * item.quantity, 0);
     return html`
         <div class="container mx-auto px-4 py-16">
-            <h1 class="text-5xl font-display font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-12">Tu Carrito</h1>
+            <h1 class="text-3xl md:text-5xl font-display font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-12">Tu Carrito</h1>
             ${state.cart.length === 0 ? html`<p class="text-center text-amber-200">Tu carrito está vacío.</p>` : 
             html`<div class="grid lg:grid-cols-3 gap-12">
                 <div class="lg:col-span-2 space-y-6">
                     ${state.cart.map(item => html`
-                        <div class="glass-dark p-6 rounded-2xl flex items-center justify-between gap-6 border border-amber-400/30">
-                            <div class="flex items-center gap-6">
+                        <div class="glass-dark p-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-6 border border-amber-400/30">
+                            <div class="flex items-center gap-6 w-full sm:w-auto">
                                 <img src="${item.image}" class="w-20 h-20 object-cover rounded-xl"/>
                                 <div><h3 class="text-amber-200 font-bold">${item.name}</h3><p class="text-amber-300">$${item.price.toLocaleString('es-MX')}</p></div>
                             </div>
-                            <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-4 w-full sm:w-auto justify-end">
                                 <input type="number" value="${item.quantity}" onchange="updateQuantity(${item.id}, this.value)" class="w-16 px-2 py-1 glass text-white rounded"/>
                                 <button onclick="removeFromCart(${item.id})" class="text-red-400">${icons.Trash(24)}</button>
                             </div>
@@ -826,7 +864,7 @@ function AboutUsPage() {
 
     return html`
         <div class="container mx-auto px-4 py-16">
-            <h1 class="text-5xl text-center font-display font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-12">Quiénes Somos</h1>
+            <h1 class="text-3xl md:text-5xl text-center font-display font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-12">Quiénes Somos</h1>
             
             <div class="grid lg:grid-cols-2 gap-12 items-start">
                 
@@ -844,7 +882,7 @@ function AboutUsPage() {
                 </div>
 
                 <div class="space-y-8">
-                    <h2 class="text-4xl font-bold text-amber-300">Nuestra Filosofía</h2>
+                    <h2 class="text-3xl md:text-4xl font-bold text-amber-300">Nuestra Filosofía</h2>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div class="glass-dark p-6 rounded-2xl border border-amber-400/30 hover:border-amber-400/60 transition-all card-luxury">
@@ -889,11 +927,11 @@ function AboutUsPage() {
 function LocationPage() {
     return html`
         <div class="container mx-auto px-4 py-16 text-center">
-            <h1 class="text-5xl font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-12">Ubicación</h1>
-            <div class="glass-dark p-12 rounded-3xl inline-block border border-amber-400/30 w-full max-w-4xl">
+            <h1 class="text-3xl md:text-5xl font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-12">Ubicación</h1>
+            <div class="glass-dark p-6 md:p-12 rounded-3xl inline-block border border-amber-400/30 w-full max-w-4xl">
                 ${icons.MapPin(48, 'text-amber-400 mx-auto mb-4')}
                 <p class="text-amber-200 text-xl mb-8">Av. Paseo de la Reforma 123, CDMX</p>
-                <div class="w-full h-96 rounded-2xl overflow-hidden border border-amber-400/30">
+                <div class="w-full h-64 md:h-96 rounded-2xl overflow-hidden border border-amber-400/30">
                     <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3762.470878579899!2d-99.16278438509327!3d19.435200386882855!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85d1f92b75aa014d%3A0x17d745a3372b3892!2sP.%C2%BA%20de%20la%20Reforma%20123%2C%20Ju%C3%A1rez%2C%20Cuauht%C3%A9moc%2C%2006600%20Ciudad%20de%20M%C3%A9xico%2C%20CDMX!5e0!3m2!1ses!2smx!4v1684900000000!5m2!1ses!2smx" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                 </div>
             </div>
@@ -904,10 +942,10 @@ function LocationPage() {
 function ContactPage() {
     return html`
         <div class="container mx-auto px-4 py-16">
-            <h1 class="text-5xl text-center font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-12">Contáctanos</h1>
+            <h1 class="text-3xl md:text-5xl text-center font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-12">Contáctanos</h1>
             <div class="max-w-2xl mx-auto glass-dark p-8 rounded-3xl border border-amber-400/30">
-                <form onsubmit="handleContact(event)">
-                    <div class="mb-4"><label class="text-amber-300">Nombre</label><input id="contactName" class="w-full glass rounded p-2 text-white"/></div>
+                <form id="contact-form" onsubmit="handleContact(event)">
+                    <div class="mb-4"><label class="text-amber-300">Nombre</label><input id="contactName" name="contactName" class="w-full glass rounded p-2 text-white"/></div>
                     <div class="mb-4"><label class="text-amber-300">Mensaje</label><textarea id="contactMessage" class="w-full glass rounded p-2 text-white"></textarea></div>
                     <button class="gradient-gold px-6 py-2 rounded-full font-bold">Enviar</button>
                 </form>
@@ -923,31 +961,42 @@ function filterAdminProducts() {
 
 function prepareEditProduct(product) {
     setState({ editingProduct: product });
-    document.getElementById('prod-name').value = product.name;
-    document.getElementById('prod-price').value = product.price;
-    document.getElementById('prod-image').value = product.image;
-    document.getElementById('prod-stock').value = product.stock;
-    document.getElementById('prod-gender').value = product.gender;
-    document.getElementById('prod-type').value = product.type;
 }
 
 function cancelEditProduct() {
     setState({ editingProduct: null });
-    document.getElementById('product-form').reset();
+    state.newProductForm = { name: '', price: '', stock: '', image: '', gender: 'hombre', type: 'designer' };
+}
+
+function handleProductInput(field, value) {
+    if (state.editingProduct) {
+        state.editingProduct[field] = value;
+    } else {
+        state.newProductForm[field] = value;
+    }
+}
+
+function handleUserInput(field, value) {
+    if (state.editingUser) {
+        state.editingUser[field] = value;
+    } else {
+        state.newUserForm[field] = value;
+    }
 }
 
 async function saveProduct(e) {
     e.preventDefault();
     const form = document.getElementById('product-form');
     
-    const productData = {
-        name: document.getElementById('prod-name').value,
-        price: parseFloat(document.getElementById('prod-price').value),
-        image: document.getElementById('prod-image').value,
-        stock: parseInt(document.getElementById('prod-stock').value),
-        gender: document.getElementById('prod-gender').value,
-        type: document.getElementById('prod-type').value,
+    const name = document.getElementById('prod-name').value;
+    const price = parseFloat(document.getElementById('prod-price').value);
+    const image = document.getElementById('prod-image').value;
+    const stock = parseInt(document.getElementById('prod-stock').value);
+    const gender = document.getElementById('prod-gender').value;
+    const type = document.getElementById('prod-type').value;
 
+    const productData = {
+        name, price, image, stock, gender, type,
         rating: state.editingProduct ? state.editingProduct.rating : 5.0,
         badge: '', 
         isPopular: false 
@@ -1009,26 +1058,51 @@ function AdminPage() {
     }, 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
 
     const filteredProducts = filterAdminProducts();
+    const filteredAdmins = filterAdminUsers();
+    const filteredClients = filterClients();
+
+    const productData = state.editingProduct || state.newProductForm;
+    const userData = state.editingUser || state.newUserForm;
 
     return html`
         <div class="container mx-auto px-4 py-16">
-            <h1 class="text-4xl text-amber-400 font-bold mb-8 flex items-center gap-3">
+            <h1 class="text-3xl md:text-4xl text-amber-400 font-bold mb-8 flex items-center gap-3">
                 ${icons.Sparkles(32)} Panel de Administración
             </h1>
 
-            <div class="glass-dark p-8 rounded-2xl border border-amber-400/30 mb-8">
-                <h3 class="text-2xl text-amber-200 font-bold mb-6">Crear Nuevo Administrador</h3>
-                <form id="create-admin-form" onsubmit="createAdmin(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <input type="text" name="name" placeholder="Nombre" required class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
-                    <input type="email" name="email" placeholder="Correo" required class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
-                    <input type="password" name="password" placeholder="Contraseña" required class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
-                    <button type="submit" class="gradient-gold text-gray-900 font-bold p-3 rounded-lg hover:scale-105 transition">Crear Admin</button>
+            <div class="glass-dark p-6 md:p-8 rounded-2xl border border-amber-400/30 mb-8">
+                <h3 class="text-xl md:text-2xl text-amber-200 font-bold mb-6">
+                    ${state.editingUser ? '✏️ Editar Usuario' : 'Crear Nuevo Administrador'}
+                </h3>
+                <form id="create-admin-form" onsubmit="saveUser(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <input type="text" id="user-name" placeholder="Nombre" 
+                        value="${userData.name}"
+                        oninput="handleUserInput('name', this.value)"
+                        required class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
+                    <input type="email" id="user-email" placeholder="Correo" 
+                        value="${userData.email}"
+                        oninput="handleUserInput('email', this.value)"
+                        required class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
+                    <input type="password" id="user-password" placeholder="${state.editingUser ? 'Dejar vacío para mantener' : 'Contraseña'}" 
+                        oninput="handleUserInput('password', this.value)"
+                        ${state.editingUser ? '' : 'required'} class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
+                    
+                    <div class="flex gap-2">
+                        <button type="submit" class="flex-1 gradient-gold text-gray-900 font-bold p-3 rounded-lg hover:scale-105 transition">
+                            ${state.editingUser ? 'Actualizar' : 'Crear Admin'}
+                        </button>
+                        ${state.editingUser ? html`
+                            <button type="button" onclick="cancelEditUser()" class="p-3 bg-red-500/20 text-red-400 border border-red-500/50 rounded-lg hover:bg-red-500/40 transition">
+                                ${icons.X(20)}
+                            </button>
+                        ` : ''}
+                    </div>
                 </form>
             </div>
 
-            <div class="glass-dark p-8 rounded-2xl border border-amber-400/30 mb-12 relative overflow-hidden">
+            <div class="glass-dark p-6 md:p-8 rounded-2xl border border-amber-400/30 mb-12 relative overflow-hidden">
                 <div class="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">${icons.Package(100, 'text-amber-400')}</div>
-                <h3 class="text-2xl text-amber-200 font-bold mb-6 flex items-center gap-2">📦 Gestión de Inventario</h3>
+                <h3 class="text-xl md:text-2xl text-amber-200 font-bold mb-6 flex items-center gap-2">📦 Gestión de Inventario</h3>
                 
                 <div class="grid lg:grid-cols-3 gap-8">
                     <div class="lg:col-span-1 glass p-6 rounded-xl border border-white/10">
@@ -1036,36 +1110,50 @@ function AdminPage() {
                         <form id="product-form" onsubmit="saveProduct(event)" class="space-y-4">
                             <div>
                                 <label class="text-xs text-amber-200 uppercase font-bold">Nombre</label>
-                                <input id="prod-name" type="text" required class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 focus:border-amber-400 outline-none"/>
+                                <input id="prod-name" type="text" required 
+                                    value="${productData.name}"
+                                    oninput="handleProductInput('name', this.value)"
+                                    class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 focus:border-amber-400 outline-none"/>
                             </div>
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
                                     <label class="text-xs text-amber-200 uppercase font-bold">Precio ($)</label>
-                                    <input id="prod-price" type="number" step="0.01" required class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 outline-none"/>
+                                    <input id="prod-price" type="number" step="0.01" required 
+                                        value="${productData.price}"
+                                        oninput="handleProductInput('price', this.value)"
+                                        class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 outline-none"/>
                                 </div>
                                 <div>
                                     <label class="text-xs text-amber-200 uppercase font-bold">Stock</label>
-                                    <input id="prod-stock" type="number" required class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 outline-none"/>
+                                    <input id="prod-stock" type="number" required 
+                                        value="${productData.stock}"
+                                        oninput="handleProductInput('stock', this.value)"
+                                        class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 outline-none"/>
                                 </div>
                             </div>
                             <div>
                                 <label class="text-xs text-amber-200 uppercase font-bold">URL Imagen</label>
-                                <input id="prod-image" type="text" required class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 outline-none"/>
+                                <input id="prod-image" type="text" required 
+                                    value="${productData.image}"
+                                    oninput="handleProductInput('image', this.value)"
+                                    class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 outline-none"/>
                             </div>
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
                                     <label class="text-xs text-amber-200 uppercase font-bold">Género</label>
-                                    <select id="prod-gender" class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 outline-none">
-                                        <option value="hombre">Hombre</option>
-                                        <option value="mujer">Mujer</option>
-                                        <option value="unisex">Unisex</option>
+                                    <select id="prod-gender" class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 outline-none"
+                                        onchange="handleProductInput('gender', this.value)">
+                                        <option value="hombre" ${productData.gender === 'hombre' ? 'selected' : ''}>Hombre</option>
+                                        <option value="mujer" ${productData.gender === 'mujer' ? 'selected' : ''}>Mujer</option>
+                                        <option value="unisex" ${productData.gender === 'unisex' ? 'selected' : ''}>Unisex</option>
                                     </select>
                                 </div>
                                 <div>
                                     <label class="text-xs text-amber-200 uppercase font-bold">Tipo</label>
-                                    <select id="prod-type" class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 outline-none">
-                                        <option value="designer">Diseñador</option>
-                                        <option value="niche">Nicho</option>
+                                    <select id="prod-type" class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 outline-none"
+                                        onchange="handleProductInput('type', this.value)">
+                                        <option value="designer" ${productData.type === 'designer' ? 'selected' : ''}>Diseñador</option>
+                                        <option value="niche" ${productData.type === 'niche' ? 'selected' : ''}>Nicho</option>
                                     </select>
                                 </div>
                             </div>
@@ -1088,6 +1176,7 @@ function AdminPage() {
                             <div class="relative flex-1">
                                 <span class="absolute left-3 top-2.5 text-gray-400">${icons.Search(18)}</span>
                                 <input type="text" 
+                                    id="prod-search"
                                     placeholder="Buscar producto por nombre..." 
                                     value="${state.adminSearchQuery}"
                                     oninput="setState({adminSearchQuery: this.value})"
@@ -1137,11 +1226,11 @@ function AdminPage() {
 
             <div class="grid lg:grid-cols-2 gap-8">
                 <div class="glass-dark p-6 rounded-2xl border border-green-400/30">
-                    <h2 class="text-2xl text-green-400 mb-6 font-bold flex items-center gap-2">
+                    <h2 class="text-xl md:text-2xl text-green-400 mb-6 font-bold flex items-center gap-2">
                         ${icons.ShoppingCart(24)} Historial de Ventas
                     </h2>
                     <div class="overflow-x-auto max-h-96">
-                        <table class="w-full text-left text-sm text-gray-300">
+                        <table class="w-full text-left text-sm text-gray-300 min-w-[600px]">
                             <thead class="text-xs uppercase bg-green-900/30 text-green-300 sticky top-0">
                                 <tr>
                                     <th class="p-3">ID</th>
@@ -1174,25 +1263,43 @@ function AdminPage() {
 
                 <div class="space-y-8">
                     <div class="glass-dark p-6 rounded-2xl border border-blue-400/30">
-                        <h2 class="text-2xl text-blue-400 mb-6 font-bold flex items-center gap-2">
-                            ${icons.User(24)} Clientes
-                        </h2>
+                        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                            <h2 class="text-xl md:text-2xl text-blue-400 font-bold flex items-center gap-2">
+                                ${icons.User(24)} Clientes
+                            </h2>
+                            <div class="relative w-full md:w-48">
+                                <span class="absolute left-2 top-2 text-gray-400">${icons.Search(14)}</span>
+                                <input type="text" 
+                                    id="client-search"
+                                    placeholder="Buscar cliente..." 
+                                    value="${state.clientSearchQuery}"
+                                    oninput="setState({clientSearchQuery: this.value})"
+                                    class="w-full pl-8 pr-2 py-1 text-sm rounded-lg bg-black/40 text-white border border-blue-400/20 focus:border-blue-400 outline-none"
+                                />
+                            </div>
+                        </div>
                         <div class="overflow-x-auto max-h-64">
-                            <table class="w-full text-left text-sm text-gray-300">
+                            <table class="w-full text-left text-sm text-gray-300 min-w-[500px]">
                                 <thead class="text-xs uppercase bg-blue-900/30 text-blue-300 sticky top-0">
                                     <tr>
                                         <th class="p-3">Nombre</th>
                                         <th class="p-3">Email</th>
-                                        <th class="p-3">Acción</th>
+                                        <th class="p-3 text-right">Acción</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-700">
-                                    ${state.users.map(u => html`
+                                    ${filteredClients.length === 0 ? html`<tr><td colspan="3" class="p-4 text-center text-gray-500">No se encontraron clientes.</td></tr>` : ''}
+                                    ${filteredClients.map(u => html`
                                         <tr class="hover:bg-white/5 transition">
                                             <td class="p-3 font-medium text-white">${u.name}</td>
                                             <td class="p-3 text-gray-400">${u.email}</td>
-                                            <td class="p-3 text-right">
-                                                <button onclick="deleteUser(${u.id})" class="text-red-400 hover:text-red-300 hover:scale-110 transition">${icons.Trash(20)}</button>
+                                            <td class="p-3 text-right flex justify-end gap-2">
+                                                <button onclick="prepareEditUser(${u.id})" class="text-blue-400 hover:text-blue-300 hover:scale-110 transition" title="Editar">
+                                                    ${icons.Edit(20)}
+                                                </button>
+                                                <button onclick="deleteUser(${u.id})" class="text-red-400 hover:text-red-300 hover:scale-110 transition" title="Eliminar">
+                                                    ${icons.Trash(20)}
+                                                </button>
                                             </td>
                                         </tr>
                                     `).join('')}
@@ -1202,25 +1309,43 @@ function AdminPage() {
                     </div>
 
                     <div class="glass-dark p-6 rounded-2xl border border-purple-400/30">
-                        <h2 class="text-2xl text-purple-400 mb-6 font-bold flex items-center gap-2">
-                            ${icons.User(24)} Administradores
-                        </h2>
+                        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                            <h2 class="text-xl md:text-2xl text-purple-400 font-bold flex items-center gap-2">
+                                ${icons.User(24)} Administradores
+                            </h2>
+                            <div class="relative w-full md:w-48">
+                                <span class="absolute left-2 top-2 text-gray-400">${icons.Search(14)}</span>
+                                <input type="text" 
+                                    id="admin-search"
+                                    placeholder="Buscar admin..." 
+                                    value="${state.adminSearchQueryUsers}"
+                                    oninput="setState({adminSearchQueryUsers: this.value})"
+                                    class="w-full pl-8 pr-2 py-1 text-sm rounded-lg bg-black/40 text-white border border-purple-400/20 focus:border-purple-400 outline-none"
+                                />
+                            </div>
+                        </div>
                         <div class="overflow-x-auto max-h-64">
-                            <table class="w-full text-left text-sm text-gray-300">
+                            <table class="w-full text-left text-sm text-gray-300 min-w-[500px]">
                                 <thead class="text-xs uppercase bg-purple-900/30 text-purple-300 sticky top-0">
                                     <tr>
                                         <th class="p-3">Nombre</th>
                                         <th class="p-3">Email</th>
-                                        <th class="p-3">Acción</th>
+                                        <th class="p-3 text-right">Acción</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-700">
-                                    ${state.admins.map(u => html`
+                                    ${filteredAdmins.length === 0 ? html`<tr><td colspan="3" class="p-4 text-center text-gray-500">No se encontraron administradores.</td></tr>` : ''}
+                                    ${filteredAdmins.map(u => html`
                                         <tr class="hover:bg-white/5 transition">
                                             <td class="p-3 font-medium text-white">${u.name}</td>
                                             <td class="p-3 text-gray-400">${u.email}</td>
-                                            <td class="p-3 text-right">
-                                                <button onclick="deleteUser(${u.id})" class="text-red-400 hover:text-red-300 hover:scale-110 transition">${icons.Trash(20)}</button>
+                                            <td class="p-3 text-right flex justify-end gap-2">
+                                                <button onclick="prepareEditUser(${u.id})" class="text-blue-400 hover:text-blue-300 hover:scale-110 transition" title="Editar">
+                                                    ${icons.Edit(20)}
+                                                </button>
+                                                <button onclick="deleteUser(${u.id})" class="text-red-400 hover:text-red-300 hover:scale-110 transition" title="Eliminar">
+                                                    ${icons.Trash(20)}
+                                                </button>
                                             </td>
                                         </tr>
                                     `).join('')}
@@ -1237,6 +1362,10 @@ function AdminPage() {
 function renderApp() {
     clearInterval(carouselInterval);
     const appContainer = document.getElementById('app-container');
+    
+    const activeId = document.activeElement ? document.activeElement.id : null;
+    const selectionStart = document.activeElement ? document.activeElement.selectionStart : null;
+
     let pageContent = '';
 
     if (state.categoryDropdownOpen || state.adminMenuOpen) state.menuOpen = false;
@@ -1263,6 +1392,16 @@ function renderApp() {
     }
 
     if (state.currentPage === 'home' || state.currentPage === 'admin') startCarousel();
+
+    if (activeId) {
+        const element = document.getElementById(activeId);
+        if (element) {
+            element.focus();
+            if (selectionStart !== null) {
+                element.setSelectionRange(selectionStart, selectionStart);
+            }
+        }
+    }
 }
 
 window.onload = function() { 
