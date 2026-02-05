@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0EYR0L3Y0T"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-0EYR0L3Y0T');
+</script>
+
     <meta charset="UTF-8">
     <title>Pago Exitoso - Parfum</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -17,12 +28,10 @@
     </div>
 
     <script>
-        // Al cargar, confirmamos el pago al servidor
         window.onload = async () => {
             const urlParams = new URLSearchParams(window.location.search);
             const orderId = urlParams.get('orderId');
             
-            // Recuperar usuario del LocalStorage para saber de quién es el carrito a borrar
             const savedUser = localStorage.getItem('parfum_user');
             if (savedUser && orderId) {
                 const user = JSON.parse(savedUser);
