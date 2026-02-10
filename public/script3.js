@@ -220,7 +220,6 @@ async function saveUser(e) {
     const name = document.getElementById('user-name').value;
     const email = document.getElementById('user-email').value;
     const password = document.getElementById('user-password').value;
-
     if (!name || !email) {
         setState({ error: '⚠️ Completa nombre y correo' });
         return;
@@ -229,16 +228,13 @@ async function saveUser(e) {
         setState({ error: '⚠️ La contraseña es obligatoria para nuevos usuarios' });
         return;
     }
-
     const url = state.editingUser 
         ? `/api/admin/users/${state.editingUser.id}`
         : '/api/admin/create';
-    
     const method = state.editingUser ? 'PUT' : 'POST';
     const bodyData = { name, email };
     if (password) bodyData.password = password;
     if (!state.editingUser) bodyData.role = 'admin'; 
-
     try {
         const response = await fetch(url, {
             method: method,
@@ -311,12 +307,10 @@ async function handleLogin(e) {
     const form = document.getElementById('login-form');
     const username = form.elements.username.value;
     const password = form.elements.password.value;
-    
     if (!username || !password) {
         setState({ error: '❌ Por favor, introduce correo y contraseña.' });
         return;
     }
-
     try {
         const response = await fetch('/api/login', {
             method: 'POST',
@@ -354,7 +348,6 @@ async function handleRegister(e) {
     const email = form.elements.email.value;
     const password = form.elements.password.value;
     const confirmPassword = form.elements.confirmPassword.value;
-    
     if (password !== confirmPassword) {
         setState({ error: '🚨 Las contraseñas no coinciden. Por favor, verifica.' });
         return;
@@ -407,11 +400,7 @@ async function addToCart(productId) {
         const response = await fetch('/api/cart/add', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                userId: state.currentUser.id, 
-                productId: productId, 
-                quantity: 1 
-            })
+            body: JSON.stringify({ userId: state.currentUser.id, productId: productId, quantity: 1 })
         });
         if (response.ok) {
             await fetchCart(state.currentUser.id);
@@ -508,9 +497,7 @@ function CategoryDropdown() {
         { name: 'Más Populares', key: 'popular' },
         { name: 'De Diseñador', key: 'designer' }
     ];
-    
     const activeCategory = categories.find(cat => cat.key === state.currentCategory) || categories[0];
-
     return html`
         <div class="relative">
             <button onclick="setState({categoryDropdownOpen: !state.categoryDropdownOpen})" 
@@ -628,7 +615,6 @@ function Footer() {
                         </div>
                         <p class="text-amber-200/70 text-sm">Fragancias de lujo exclusivas.</p>
                     </div>
-
                     <div>
                         <h4 class="text-amber-400 font-semibold mb-4">Enlaces</h4>
                         <ul class="space-y-2 text-sm">
@@ -638,7 +624,6 @@ function Footer() {
                             <li><a href="#" onclick="setState({currentPage: 'contact'})" class="text-amber-200/70 hover:text-amber-400 transition">Contacto</a></li>
                         </ul>
                     </div>
-
                     <div class="col-span-1 md:col-span-1">
                         <h4 class="text-amber-400 font-semibold mb-4">Contáctanos</h4>
                         <ul class="space-y-3 text-sm text-amber-200/70">
@@ -647,14 +632,12 @@ function Footer() {
                             <li class="flex items-center gap-3 break-all">${icons.Mail(18, 'text-amber-400')} info@parfum.com</li>
                         </ul>
                     </div>
-                    
                     <div class="col-span-1 md:col-span-2">
                          <h4 class="text-amber-400 font-semibold mb-4">Horario</h4>
                          <ul class="space-y-3 text-sm text-amber-200/70 mb-6">
                             <li class="flex items-center gap-3">${icons.Clock(18, 'text-amber-400')} Lunes a Viernes: 10:00 - 20:00</li>
                             <li class="flex items-center gap-3">${icons.Clock(18, 'text-amber-400')} Sábado: 11:00 - 18:00</li>
                         </ul>
-
                         <h4 class="text-amber-400 font-semibold mb-4">Síguenos</h4>
                         <div class="flex gap-4">
                             <a href="https://instagram.com/tu_perfil" class="group glass p-2 rounded-xl hover:bg-gradient-to-br from-purple-500 to-pink-500 transition-all" target="_blank">
@@ -762,15 +745,10 @@ function ProductCard(product) {
         i < product.rating ? icons.Star(18, 'text-yellow-400 fill-current') : 
         icons.Star(18, 'text-gray-600')
     ).join('');
-    
-    const buttonAction = state.isLoggedIn 
-        ? `addToCart(${product.id})` 
-        : `setState({ currentPage: 'login', error: '🔒 Debes iniciar sesión para añadir productos al carrito.' })`;
-    
+    const buttonAction = state.isLoggedIn ? `addToCart(${product.id})` : `setState({ currentPage: 'login', error: '🔒 Debes iniciar sesión para añadir productos al carrito.' })`;
     const buttonIcon = state.isLoggedIn ? icons.ShoppingCart(20, 'text-gray-900') : icons.User(20, 'text-gray-900');
     const buttonText = state.isLoggedIn ? 'Añadir al Carrito' : 'Iniciar Sesión';
     const buttonClasses = state.isLoggedIn ? 'gradient-gold hover:ring-2 hover:ring-yellow-400' : 'bg-red-500 hover:bg-red-600 text-white';
-    
     return html`
         <div class="glass-dark rounded-2xl p-6 shadow-2xl border border-amber-400/30 flex flex-col transform hover:scale-[1.02] transition-all duration-300">
             <div class="relative mb-4">
@@ -793,16 +771,10 @@ function ProductCard(product) {
 
 function CatalogPage() {
     if (state.loading) {
-        return html`
-            <div class="container mx-auto px-4 py-32 text-center">
-                <h2 class="text-3xl text-amber-300 animate-pulse">Cargando catálogo de lujo...</h2>
-            </div>
-        `;
+        return html`<div class="container mx-auto px-4 py-32 text-center"><h2 class="text-3xl text-amber-300 animate-pulse">Cargando catálogo de lujo...</h2></div>`;
     }
-
     let filteredProducts = state.products;
     let title = 'Catálogo de Fragancias';
-    
     switch (state.currentCategory) {
         case 'hombre': filteredProducts = state.products.filter(p => p.gender === 'hombre'); title = 'Para Hombre'; break;
         case 'mujer': filteredProducts = state.products.filter(p => p.gender === 'mujer'); title = 'Para Mujer'; break;
@@ -811,7 +783,6 @@ function CatalogPage() {
         case 'designer': filteredProducts = state.products.filter(p => p.type === 'designer'); title = 'De Diseñador'; break;
         default: break;
     }
-
     return html`
         <div class="container mx-auto px-4 py-16">
             <div class="text-center mb-12">
@@ -861,51 +832,33 @@ function AboutUsPage() {
         { name: 'Servicio', icon: icons.User(20) },
         { name: 'Autenticidad', icon: icons.Sparkles(20) },
     ];
-
     return html`
         <div class="container mx-auto px-4 py-16">
             <h1 class="text-3xl md:text-5xl text-center font-display font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-12">Quiénes Somos</h1>
-            
             <div class="grid lg:grid-cols-2 gap-12 items-start">
-                
                 <div class="space-y-8">
                     <div class="glass-dark p-4 rounded-3xl border border-amber-400/30 shadow-2xl">
                         <img src="corporativo.png" alt="Equipo de Parfum" class="w-full h-auto max-h-[500px] object-cover rounded-2xl opacity-90"/>
                     </div>
-                    
                     <div class="glass-dark p-6 rounded-2xl border border-amber-400/30 shadow-xl">
                         <h2 class="text-3xl font-bold text-amber-300 mb-3">Nuestra Historia</h2>
-                        <p class="text-amber-200/80">
-                            Parfum nació en 2018 con la visión de elevar la experiencia de compra de fragancias en México. Lo que comenzó como un pequeño proyecto de curaduría de perfumes nicho, se ha convertido en una boutique digital líder, dedicada a conectar a nuestros clientes con las esencias más exclusivas del mundo.
-                        </p>
+                        <p class="text-amber-200/80">Parfum nació en 2018 con la visión de elevar la experiencia de compra de fragancias en México. Lo que comenzó como un pequeño proyecto de curaduría de perfumes nicho, se ha convertido en una boutique digital líder, dedicada a conectar a nuestros clientes con las esencias más exclusivas del mundo.</p>
                     </div>
                 </div>
-
                 <div class="space-y-8">
                     <h2 class="text-3xl md:text-4xl font-bold text-amber-300">Nuestra Filosofía</h2>
-                    
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div class="glass-dark p-6 rounded-2xl border border-amber-400/30 hover:border-amber-400/60 transition-all card-luxury">
-                            <div class="gradient-gold w-12 h-12 rounded-xl flex items-center justify-center mb-4">
-                                ${icons.Target(24, 'text-gray-900')}
-                            </div>
+                            <div class="gradient-gold w-12 h-12 rounded-xl flex items-center justify-center mb-4">${icons.Target(24, 'text-gray-900')}</div>
                             <h3 class="text-xl font-bold text-amber-200 mb-2">Nuestra Misión</h3>
-                            <p class="text-amber-200/70 text-sm">
-                                Ser el puente de acceso a las fragancias más exclusivas del mercado, brindando un servicio personalizado y de primera clase.
-                            </p>
+                            <p class="text-amber-200/70 text-sm">Ser el puente de acceso a las fragancias más exclusivas del mercado, brindando un servicio personalizado y de primera clase.</p>
                         </div>
-
                         <div class="glass-dark p-6 rounded-2xl border border-amber-400/30 hover:border-amber-400/60 transition-all card-luxury">
-                            <div class="gradient-gold w-12 h-12 rounded-xl flex items-center justify-center mb-4">
-                                ${icons.Eye(24, 'text-gray-900')}
-                            </div>
+                            <div class="gradient-gold w-12 h-12 rounded-xl flex items-center justify-center mb-4">${icons.Eye(24, 'text-gray-900')}</div>
                             <h3 class="text-xl font-bold text-amber-200 mb-2">Nuestra Visión</h3>
-                            <p class="text-amber-200/70 text-sm">
-                                Liderar el mercado de perfumes de lujo en Latinoamérica, expandiendo nuestra presencia con la misma esencia artesanal y trato personal.
-                            </p>
+                            <p class="text-amber-200/70 text-sm">Liderar el mercado de perfumes de lujo en Latinoamérica, expandiendo nuestra presencia con la misma esencia artesanal y trato personal.</p>
                         </div>
                     </div>
-
                     <div class="glass-dark p-6 rounded-2xl border border-amber-400/30 shadow-xl">
                         <h3 class="text-2xl font-bold text-amber-300 mb-4">Nuestros Valores</h3>
                         <div class="grid grid-cols-2 gap-4">
@@ -917,7 +870,6 @@ function AboutUsPage() {
                             `).join('')}
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -954,6 +906,37 @@ function ContactPage() {
     `;
 }
 
+function NotFoundPage() {
+    setTimeout(() => {
+        if (state.currentPage !== 'home' && !['login', 'register', 'catalog', 'cart', 'admin', 'about', 'location', 'contact'].includes(state.currentPage)) {
+            setState({ currentPage: 'home' });
+        }
+    }, 5000);
+    return html`
+        <div class="container mx-auto px-4 py-20 min-h-[60vh] flex flex-col items-center justify-center text-center">
+            <div class="relative mb-8 animate-float">
+                <h1 class="text-[10rem] md:text-[15rem] font-display font-bold opacity-10 text-white">404</h1>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    ${icons.Sparkles(80, 'text-amber-400 opacity-50')}
+                </div>
+            </div>
+            <h2 class="text-4xl md:text-5xl font-display font-bold text-amber-300 mb-6" style="background: linear-gradient(to bottom, #f9d423, #d4af37); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                Nuestra fragancia es débil
+            </h2>
+            <p class="text-amber-200/70 text-lg md:text-xl max-w-lg mx-auto mb-6">
+                Parece que el aroma que buscabas se ha evaporado en el aire. La esencia de esta página ya no existe o nunca fue destilada.
+            </p>
+            <p class="text-amber-400/50 text-sm mb-10 animate-pulse">
+                Redirigiendo a la colección principal en unos segundos...
+            </p>
+            <button onclick="setState({currentPage: 'home'})" 
+                    class="gradient-gold text-gray-900 px-10 py-4 rounded-full font-bold shadow-2xl transition-all transform hover:scale-105 btn-premium text-lg">
+                VOLVER A LA COLECCIÓN
+            </button>
+        </div>
+    `;
+}
+
 function filterAdminProducts() {
     if (!state.adminSearchQuery) return state.products;
     return state.products.filter(p => p.name.toLowerCase().includes(state.adminSearchQuery.toLowerCase()));
@@ -968,55 +951,20 @@ function cancelEditProduct() {
     state.newProductForm = { name: '', price: '', stock: '', image: '', gender: 'hombre', type: 'designer' };
 }
 
-function handleProductInput(field, value) {
-    if (state.editingProduct) {
-        state.editingProduct[field] = value;
-    } else {
-        state.newProductForm[field] = value;
-    }
-}
-
-function handleUserInput(field, value) {
-    if (state.editingUser) {
-        state.editingUser[field] = value;
-    } else {
-        state.newUserForm[field] = value;
-    }
-}
-
 async function saveProduct(e) {
     e.preventDefault();
-    const form = document.getElementById('product-form');
-    
     const name = document.getElementById('prod-name').value;
     const price = parseFloat(document.getElementById('prod-price').value);
     const image = document.getElementById('prod-image').value;
     const stock = parseInt(document.getElementById('prod-stock').value);
     const gender = document.getElementById('prod-gender').value;
     const type = document.getElementById('prod-type').value;
-
-    const productData = {
-        name, price, image, stock, gender, type,
-        rating: state.editingProduct ? state.editingProduct.rating : 5.0,
-        badge: '', 
-        isPopular: false 
-    };
-
-    const url = state.editingProduct 
-        ? `/api/admin/products/${state.editingProduct.id}`
-        : '/api/admin/products';
-    
+    const productData = { name, price, image, stock, gender, type, rating: state.editingProduct ? state.editingProduct.rating : 5.0, badge: '', isPopular: false };
+    const url = state.editingProduct ? `/api/admin/products/${state.editingProduct.id}` : '/api/admin/products';
     const method = state.editingProduct ? 'PUT' : 'POST';
-
     try {
-        const response = await fetch(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(productData)
-        });
-
+        const response = await fetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(productData) });
         const data = await response.json();
-
         if (data.success || response.ok) {
             setState({ error: state.editingProduct ? '✅ Producto actualizado' : '✅ Producto creado' });
             fetchProductsFromDB();
@@ -1032,7 +980,6 @@ async function saveProduct(e) {
 
 async function deleteProduct(id) {
     if (!confirm('¿Estás seguro de eliminar este producto del catálogo?')) return;
-
     try {
         const response = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
         if (response.ok) {
@@ -1051,308 +998,74 @@ function AdminPage() {
     if (!state.currentUser || state.currentUser.role !== 'admin') {
         return html`<div class="text-center p-20 text-red-400 font-bold text-2xl">🚫 Acceso Denegado</div>`;
     }
-
     const totalRevenue = state.sales.reduce((acc, sale) => {
         const amount = parseFloat(sale.total.replace(/[^0-9.-]+/g,""));
         return acc + amount;
     }, 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
-
     const filteredProducts = filterAdminProducts();
     const filteredAdmins = filterAdminUsers();
     const filteredClients = filterClients();
-
     const productData = state.editingProduct || state.newProductForm;
     const userData = state.editingUser || state.newUserForm;
-
     return html`
         <div class="container mx-auto px-4 py-16">
-            <h1 class="text-3xl md:text-4xl text-amber-400 font-bold mb-8 flex items-center gap-3">
-                ${icons.Sparkles(32)} Panel de Administración
-            </h1>
-
+            <h1 class="text-3xl md:text-4xl text-amber-400 font-bold mb-8 flex items-center gap-3">${icons.Sparkles(32)} Panel de Administración</h1>
             <div class="glass-dark p-6 md:p-8 rounded-2xl border border-amber-400/30 mb-8">
-                <h3 class="text-xl md:text-2xl text-amber-200 font-bold mb-6">
-                    ${state.editingUser ? '✏️ Editar Usuario' : 'Crear Nuevo Administrador'}
-                </h3>
+                <h3 class="text-xl md:text-2xl text-amber-200 font-bold mb-6">${state.editingUser ? '✏️ Editar Usuario' : 'Crear Nuevo Administrador'}</h3>
                 <form id="create-admin-form" onsubmit="saveUser(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                    <input type="text" id="user-name" placeholder="Nombre" 
-                        value="${userData.name}"
-                        oninput="handleUserInput('name', this.value)"
-                        required class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
-                    <input type="email" id="user-email" placeholder="Correo" 
-                        value="${userData.email}"
-                        oninput="handleUserInput('email', this.value)"
-                        required class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
-                    <input type="password" id="user-password" placeholder="${state.editingUser ? 'Dejar vacío para mantener' : 'Contraseña'}" 
-                        oninput="handleUserInput('password', this.value)"
-                        ${state.editingUser ? '' : 'required'} class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
-                    
+                    <input type="text" id="user-name" placeholder="Nombre" value="${userData.name}" oninput="handleUserInput('name', this.value)" required class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
+                    <input type="email" id="user-email" placeholder="Correo" value="${userData.email}" oninput="handleUserInput('email', this.value)" required class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
+                    <input type="password" id="user-password" placeholder="${state.editingUser ? 'Dejar vacío para mantener' : 'Contraseña'}" oninput="handleUserInput('password', this.value)" ${state.editingUser ? '' : 'required'} class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
                     <div class="flex gap-2">
-                        <button type="submit" class="flex-1 gradient-gold text-gray-900 font-bold p-3 rounded-lg hover:scale-105 transition">
-                            ${state.editingUser ? 'Actualizar' : 'Crear Admin'}
-                        </button>
-                        ${state.editingUser ? html`
-                            <button type="button" onclick="cancelEditUser()" class="p-3 bg-red-500/20 text-red-400 border border-red-500/50 rounded-lg hover:bg-red-500/40 transition">
-                                ${icons.X(20)}
-                            </button>
-                        ` : ''}
+                        <button type="submit" class="flex-1 gradient-gold text-gray-900 font-bold p-3 rounded-lg hover:scale-105 transition">${state.editingUser ? 'Actualizar' : 'Crear Admin'}</button>
+                        ${state.editingUser ? html`<button type="button" onclick="cancelEditUser()" class="p-3 bg-red-500/20 text-red-400 border border-red-500/50 rounded-lg hover:bg-red-500/40 transition">${icons.X(20)}</button>` : ''}
                     </div>
                 </form>
             </div>
-
             <div class="glass-dark p-6 md:p-8 rounded-2xl border border-amber-400/30 mb-12 relative overflow-hidden">
                 <div class="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">${icons.Package(100, 'text-amber-400')}</div>
                 <h3 class="text-xl md:text-2xl text-amber-200 font-bold mb-6 flex items-center gap-2">📦 Gestión de Inventario</h3>
-                
                 <div class="grid lg:grid-cols-3 gap-8">
                     <div class="lg:col-span-1 glass p-6 rounded-xl border border-white/10">
                         <h4 class="text-xl text-amber-300 font-bold mb-4">${state.editingProduct ? '✏️ Editando Producto' : '✨ Agregar Nuevo Producto'}</h4>
                         <form id="product-form" onsubmit="saveProduct(event)" class="space-y-4">
-                            <div>
-                                <label class="text-xs text-amber-200 uppercase font-bold">Nombre</label>
-                                <input id="prod-name" type="text" required 
-                                    value="${productData.name}"
-                                    oninput="handleProductInput('name', this.value)"
-                                    class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 focus:border-amber-400 outline-none"/>
-                            </div>
+                            <div><label class="text-xs text-amber-200 uppercase font-bold">Nombre</label><input id="prod-name" type="text" required value="${productData.name}" oninput="handleProductInput('name', this.value)" class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 focus:border-amber-400 outline-none"/></div>
                             <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="text-xs text-amber-200 uppercase font-bold">Precio ($)</label>
-                                    <input id="prod-price" type="number" step="0.01" required 
-                                        value="${productData.price}"
-                                        oninput="handleProductInput('price', this.value)"
-                                        class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 outline-none"/>
-                                </div>
-                                <div>
-                                    <label class="text-xs text-amber-200 uppercase font-bold">Stock</label>
-                                    <input id="prod-stock" type="number" required 
-                                        value="${productData.stock}"
-                                        oninput="handleProductInput('stock', this.value)"
-                                        class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 outline-none"/>
-                                </div>
+                                <div><label class="text-xs text-amber-200 uppercase font-bold">Precio ($)</label><input id="prod-price" type="number" step="0.01" required value="${productData.price}" oninput="handleProductInput('price', this.value)" class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 outline-none"/></div>
+                                <div><label class="text-xs text-amber-200 uppercase font-bold">Stock</label><input id="prod-stock" type="number" required value="${productData.stock}" oninput="handleProductInput('stock', this.value)" class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 outline-none"/></div>
                             </div>
-                            <div>
-                                <label class="text-xs text-amber-200 uppercase font-bold">URL Imagen</label>
-                                <input id="prod-image" type="text" required 
-                                    value="${productData.image}"
-                                    oninput="handleProductInput('image', this.value)"
-                                    class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 outline-none"/>
-                            </div>
+                            <div><label class="text-xs text-amber-200 uppercase font-bold">URL Imagen</label><input id="prod-image" type="text" required value="${productData.image}" oninput="handleProductInput('image', this.value)" class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 outline-none"/></div>
                             <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="text-xs text-amber-200 uppercase font-bold">Género</label>
-                                    <select id="prod-gender" class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 outline-none"
-                                        onchange="handleProductInput('gender', this.value)">
-                                        <option value="hombre" ${productData.gender === 'hombre' ? 'selected' : ''}>Hombre</option>
-                                        <option value="mujer" ${productData.gender === 'mujer' ? 'selected' : ''}>Mujer</option>
-                                        <option value="unisex" ${productData.gender === 'unisex' ? 'selected' : ''}>Unisex</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="text-xs text-amber-200 uppercase font-bold">Tipo</label>
-                                    <select id="prod-type" class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 outline-none"
-                                        onchange="handleProductInput('type', this.value)">
-                                        <option value="designer" ${productData.type === 'designer' ? 'selected' : ''}>Diseñador</option>
-                                        <option value="niche" ${productData.type === 'niche' ? 'selected' : ''}>Nicho</option>
-                                    </select>
-                                </div>
+                                <div><label class="text-xs text-amber-200 uppercase font-bold">Género</label><select id="prod-gender" class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 outline-none" onchange="handleProductInput('gender', this.value)"><option value="hombre" ${productData.gender === 'hombre' ? 'selected' : ''}>Hombre</option><option value="mujer" ${productData.gender === 'mujer' ? 'selected' : ''}>Mujer</option><option value="unisex" ${productData.gender === 'unisex' ? 'selected' : ''}>Unisex</option></select></div>
+                                <div><label class="text-xs text-amber-200 uppercase font-bold">Tipo</label><select id="prod-type" class="w-full p-2 rounded bg-black/40 text-white border border-amber-400/20 outline-none" onchange="handleProductInput('type', this.value)"><option value="designer" ${productData.type === 'designer' ? 'selected' : ''}>Diseñador</option><option value="niche" ${productData.type === 'niche' ? 'selected' : ''}>Nicho</option></select></div>
                             </div>
-                            
-                            <div class="flex gap-2 pt-2">
-                                <button type="submit" class="flex-1 gradient-gold text-gray-900 font-bold py-2 rounded shadow-lg hover:scale-105 transition">
-                                    ${state.editingProduct ? 'ACTUALIZAR' : 'GUARDAR'}
-                                </button>
-                                ${state.editingProduct ? html`
-                                    <button type="button" onclick="cancelEditProduct()" class="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/50 rounded hover:bg-red-500/40 transition">
-                                        ${icons.X(20)}
-                                    </button>
-                                ` : ''}
+                            <div class="flex gap-2 pt-2"><button type="submit" class="flex-1 gradient-gold text-gray-900 font-bold py-2 rounded shadow-lg hover:scale-105 transition">${state.editingProduct ? 'ACTUALIZAR' : 'GUARDAR'}</button>
+                                ${state.editingProduct ? html`<button type="button" onclick="cancelEditProduct()" class="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/50 rounded hover:bg-red-500/40 transition">${icons.X(20)}</button>` : ''}
                             </div>
                         </form>
                     </div>
-
                     <div class="lg:col-span-2 flex flex-col h-[500px]">
-                        <div class="mb-4 flex gap-2">
-                            <div class="relative flex-1">
-                                <span class="absolute left-3 top-2.5 text-gray-400">${icons.Search(18)}</span>
-                                <input type="text" 
-                                    id="prod-search"
-                                    placeholder="Buscar producto por nombre..." 
-                                    value="${state.adminSearchQuery}"
-                                    oninput="setState({adminSearchQuery: this.value})"
-                                    class="w-full pl-10 pr-4 py-2 rounded-lg bg-black/40 text-white border border-amber-400/20 focus:border-amber-400 outline-none transition-all"
-                                />
-                            </div>
-                        </div>
-
+                        <div class="mb-4 flex gap-2"><div class="relative flex-1"><span class="absolute left-3 top-2.5 text-gray-400">${icons.Search(18)}</span><input type="text" id="prod-search" placeholder="Buscar producto por nombre..." value="${state.adminSearchQuery}" oninput="setState({adminSearchQuery: this.value})" class="w-full pl-10 pr-4 py-2 rounded-lg bg-black/40 text-white border border-amber-400/20 focus:border-amber-400 outline-none transition-all"/></div></div>
                         <div class="flex-1 overflow-y-auto pr-2 space-y-2 custom-scrollbar">
                             ${filteredProducts.length === 0 ? html`<p class="text-center text-gray-500 py-10">No se encontraron productos.</p>` : ''}
-                            ${filteredProducts.map(p => html`
-                                <div class="glass p-3 rounded-lg border border-white/5 flex items-center gap-4 hover:bg-white/5 transition group">
-                                    <img src="${p.image}" class="w-12 h-12 rounded object-cover border border-white/10"/>
-                                    <div class="flex-1">
-                                        <h5 class="text-amber-200 font-bold text-sm leading-tight">${p.name}</h5>
-                                        <p class="text-xs text-gray-400">$${p.price} | Stock: ${p.stock}</p>
-                                    </div>
-                                    <div class="flex gap-2 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onclick='prepareEditProduct(${JSON.stringify(p)})' class="p-2 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/40 transition" title="Editar">
-                                            ${icons.Edit(16)}
-                                        </button>
-                                        <button onclick="deleteProduct(${p.id})" class="p-2 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40 transition" title="Eliminar">
-                                            ${icons.Trash(16)}
-                                        </button>
-                                    </div>
-                                </div>
-                            `).join('')}
+                            ${filteredProducts.map(p => html`<div class="glass p-3 rounded-lg border border-white/5 flex items-center gap-4 hover:bg-white/5 transition group"><img src="${p.image}" class="w-12 h-12 rounded object-cover border border-white/10"/><div class="flex-1"><h5 class="text-amber-200 font-bold text-sm leading-tight">${p.name}</h5><p class="text-xs text-gray-400">$${p.price} | Stock: ${p.stock}</p></div><div class="flex gap-2 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity"><button onclick='prepareEditProduct(${JSON.stringify(p)})' class="p-2 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/40 transition" title="Editar">${icons.Edit(16)}</button><button onclick="deleteProduct(${p.id})" class="p-2 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40 transition" title="Eliminar">${icons.Trash(16)}</button></div></div>`).join('')}
                         </div>
                     </div>
                 </div>
             </div>
-
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                <div class="glass-dark p-6 rounded-2xl border border-amber-400/30">
-                    <h3 class="text-amber-200 text-sm font-bold uppercase">Usuarios Registrados</h3>
-                    <p class="text-4xl font-bold text-white mt-2">${state.users.length}</p>
-                </div>
-                <div class="glass-dark p-6 rounded-2xl border border-amber-400/30">
-                    <h3 class="text-amber-200 text-sm font-bold uppercase">Ventas Totales</h3>
-                    <p class="text-4xl font-bold text-green-400 mt-2">${state.sales.length}</p>
-                </div>
-                <div class="glass-dark p-6 rounded-2xl border border-amber-400/30">
-                    <h3 class="text-amber-200 text-sm font-bold uppercase">Ingresos</h3>
-                    <p class="text-4xl font-bold text-amber-400 mt-2">${totalRevenue}</p>
-                </div>
+                <div class="glass-dark p-6 rounded-2xl border border-amber-400/30"><h3 class="text-amber-200 text-sm font-bold uppercase">Usuarios Registrados</h3><p class="text-4xl font-bold text-white mt-2">${state.users.length}</p></div>
+                <div class="glass-dark p-6 rounded-2xl border border-amber-400/30"><h3 class="text-amber-200 text-sm font-bold uppercase">Ventas Totales</h3><p class="text-4xl font-bold text-green-400 mt-2">${state.sales.length}</p></div>
+                <div class="glass-dark p-6 rounded-2xl border border-amber-400/30"><h3 class="text-amber-200 text-sm font-bold uppercase">Ingresos</h3><p class="text-4xl font-bold text-amber-400 mt-2">${totalRevenue}</p></div>
             </div>
-
             <div class="grid lg:grid-cols-2 gap-8">
                 <div class="glass-dark p-6 rounded-2xl border border-green-400/30">
-                    <h2 class="text-xl md:text-2xl text-green-400 mb-6 font-bold flex items-center gap-2">
-                        ${icons.ShoppingCart(24)} Historial de Ventas
-                    </h2>
-                    <div class="overflow-x-auto max-h-96">
-                        <table class="w-full text-left text-sm text-gray-300 min-w-[600px]">
-                            <thead class="text-xs uppercase bg-green-900/30 text-green-300 sticky top-0">
-                                <tr>
-                                    <th class="p-3">ID</th>
-                                    <th class="p-3">Cliente</th>
-                                    <th class="p-3">Total</th>
-                                    <th class="p-3">Estado</th>
-                                    <th class="p-3">Fecha</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-700">
-                                ${state.sales.length === 0 ? 
-                                    html`<tr><td colspan="5" class="p-4 text-center text-gray-500">No hay ventas registradas aún.</td></tr>` : 
-                                    state.sales.map(sale => html`
-                                    <tr class="hover:bg-white/5 transition">
-                                        <td class="p-3 font-mono text-green-200">#${sale.id}</td>
-                                        <td class="p-3 font-medium text-white">${sale.client}</td>
-                                        <td class="p-3 text-amber-300 font-bold">${sale.total}</td>
-                                        <td class="p-3">
-                                            <span class="px-2 py-1 rounded text-xs font-bold ${sale.status === 'Pagado' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}">
-                                                ${sale.status}
-                                            </span>
-                                        </td>
-                                        <td class="p-3 text-xs text-gray-400">${sale.date}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                    <h2 class="text-xl md:text-2xl text-green-400 mb-6 font-bold flex items-center gap-2">${icons.ShoppingCart(24)} Historial de Ventas</h2>
+                    <div class="overflow-x-auto max-h-96"><table class="w-full text-left text-sm text-gray-300 min-w-[600px]"><thead class="text-xs uppercase bg-green-900/30 text-green-300 sticky top-0"><tr><th class="p-3">ID</th><th class="p-3">Cliente</th><th class="p-3">Total</th><th class="p-3">Estado</th><th class="p-3">Fecha</th></tr></thead><tbody class="divide-y divide-gray-700">${state.sales.length === 0 ? html`<tr><td colspan="5" class="p-4 text-center text-gray-500">No hay ventas registradas aún.</td></tr>` : state.sales.map(sale => html`<tr class="hover:bg-white/5 transition"><td class="p-3 font-mono text-green-200">#${sale.id}</td><td class="p-3 font-medium text-white">${sale.client}</td><td class="p-3 text-amber-300 font-bold">${sale.total}</td><td class="p-3"><span class="px-2 py-1 rounded text-xs font-bold ${sale.status === 'Pagado' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}">${sale.status}</span></td><td class="p-3 text-xs text-gray-400">${sale.date}</td></tr>`).join('')}</tbody></table></div>
                 </div>
-
                 <div class="space-y-8">
-                    <div class="glass-dark p-6 rounded-2xl border border-blue-400/30">
-                        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                            <h2 class="text-xl md:text-2xl text-blue-400 font-bold flex items-center gap-2">
-                                ${icons.User(24)} Clientes
-                            </h2>
-                            <div class="relative w-full md:w-48">
-                                <span class="absolute left-2 top-2 text-gray-400">${icons.Search(14)}</span>
-                                <input type="text" 
-                                    id="client-search"
-                                    placeholder="Buscar cliente..." 
-                                    value="${state.clientSearchQuery}"
-                                    oninput="setState({clientSearchQuery: this.value})"
-                                    class="w-full pl-8 pr-2 py-1 text-sm rounded-lg bg-black/40 text-white border border-blue-400/20 focus:border-blue-400 outline-none"
-                                />
-                            </div>
-                        </div>
-                        <div class="overflow-x-auto max-h-64">
-                            <table class="w-full text-left text-sm text-gray-300 min-w-[500px]">
-                                <thead class="text-xs uppercase bg-blue-900/30 text-blue-300 sticky top-0">
-                                    <tr>
-                                        <th class="p-3">Nombre</th>
-                                        <th class="p-3">Email</th>
-                                        <th class="p-3 text-right">Acción</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-700">
-                                    ${filteredClients.length === 0 ? html`<tr><td colspan="3" class="p-4 text-center text-gray-500">No se encontraron clientes.</td></tr>` : ''}
-                                    ${filteredClients.map(u => html`
-                                        <tr class="hover:bg-white/5 transition">
-                                            <td class="p-3 font-medium text-white">${u.name}</td>
-                                            <td class="p-3 text-gray-400">${u.email}</td>
-                                            <td class="p-3 text-right flex justify-end gap-2">
-                                                <button onclick="prepareEditUser(${u.id})" class="text-blue-400 hover:text-blue-300 hover:scale-110 transition" title="Editar">
-                                                    ${icons.Edit(20)}
-                                                </button>
-                                                <button onclick="deleteUser(${u.id})" class="text-red-400 hover:text-red-300 hover:scale-110 transition" title="Eliminar">
-                                                    ${icons.Trash(20)}
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="glass-dark p-6 rounded-2xl border border-purple-400/30">
-                        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                            <h2 class="text-xl md:text-2xl text-purple-400 font-bold flex items-center gap-2">
-                                ${icons.User(24)} Administradores
-                            </h2>
-                            <div class="relative w-full md:w-48">
-                                <span class="absolute left-2 top-2 text-gray-400">${icons.Search(14)}</span>
-                                <input type="text" 
-                                    id="admin-search"
-                                    placeholder="Buscar admin..." 
-                                    value="${state.adminSearchQueryUsers}"
-                                    oninput="setState({adminSearchQueryUsers: this.value})"
-                                    class="w-full pl-8 pr-2 py-1 text-sm rounded-lg bg-black/40 text-white border border-purple-400/20 focus:border-purple-400 outline-none"
-                                />
-                            </div>
-                        </div>
-                        <div class="overflow-x-auto max-h-64">
-                            <table class="w-full text-left text-sm text-gray-300 min-w-[500px]">
-                                <thead class="text-xs uppercase bg-purple-900/30 text-purple-300 sticky top-0">
-                                    <tr>
-                                        <th class="p-3">Nombre</th>
-                                        <th class="p-3">Email</th>
-                                        <th class="p-3 text-right">Acción</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-700">
-                                    ${filteredAdmins.length === 0 ? html`<tr><td colspan="3" class="p-4 text-center text-gray-500">No se encontraron administradores.</td></tr>` : ''}
-                                    ${filteredAdmins.map(u => html`
-                                        <tr class="hover:bg-white/5 transition">
-                                            <td class="p-3 font-medium text-white">${u.name}</td>
-                                            <td class="p-3 text-gray-400">${u.email}</td>
-                                            <td class="p-3 text-right flex justify-end gap-2">
-                                                <button onclick="prepareEditUser(${u.id})" class="text-blue-400 hover:text-blue-300 hover:scale-110 transition" title="Editar">
-                                                    ${icons.Edit(20)}
-                                                </button>
-                                                <button onclick="deleteUser(${u.id})" class="text-red-400 hover:text-red-300 hover:scale-110 transition" title="Eliminar">
-                                                    ${icons.Trash(20)}
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                    <div class="glass-dark p-6 rounded-2xl border border-blue-400/30"><div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4"><h2 class="text-xl md:text-2xl text-blue-400 font-bold flex items-center gap-2">${icons.User(24)} Clientes</h2><div class="relative w-full md:w-48"><span class="absolute left-2 top-2 text-gray-400">${icons.Search(14)}</span><input type="text" id="client-search" placeholder="Buscar cliente..." value="${state.clientSearchQuery}" oninput="setState({clientSearchQuery: this.value})" class="w-full pl-8 pr-2 py-1 text-sm rounded-lg bg-black/40 text-white border border-blue-400/20 focus:border-blue-400 outline-none"/></div></div><div class="overflow-x-auto max-h-64"><table class="w-full text-left text-sm text-gray-300 min-w-[500px]"><thead class="text-xs uppercase bg-blue-900/30 text-blue-300 sticky top-0"><tr><th class="p-3">Nombre</th><th class="p-3">Email</th><th class="p-3 text-right">Acción</th></tr></thead><tbody class="divide-y divide-gray-700">${filteredClients.length === 0 ? html`<tr><td colspan="3" class="p-4 text-center text-gray-500">No se encontraron clientes.</td></tr>` : filteredClients.map(u => html`<tr class="hover:bg-white/5 transition"><td class="p-3 font-medium text-white">${u.name}</td><td class="p-3 text-gray-400">${u.email}</td><td class="p-3 text-right flex justify-end gap-2"><button onclick="prepareEditUser(${u.id})" class="text-blue-400 hover:text-blue-300 hover:scale-110 transition" title="Editar">${icons.Edit(20)}</button><button onclick="deleteUser(${u.id})" class="text-red-400 hover:text-red-300 hover:scale-110 transition" title="Eliminar">${icons.Trash(20)}</button></td></tr>`).join('')}</tbody></table></div></div>
+                    <div class="glass-dark p-6 rounded-2xl border border-purple-400/30"><div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4"><h2 class="text-xl md:text-2xl text-purple-400 font-bold flex items-center gap-2">${icons.User(24)} Administradores</h2><div class="relative w-full md:w-48"><span class="absolute left-2 top-2 text-gray-400">${icons.Search(14)}</span><input type="text" id="admin-search" placeholder="Buscar admin..." value="${state.adminSearchQueryUsers}" oninput="setState({adminSearchQueryUsers: this.value})" class="w-full pl-8 pr-2 py-1 text-sm rounded-lg bg-black/40 text-white border border-purple-400/20 focus:border-purple-400 outline-none"/></div></div><div class="overflow-x-auto max-h-64"><table class="w-full text-left text-sm text-gray-300 min-w-[500px]"><thead class="text-xs uppercase bg-purple-900/30 text-purple-300 sticky top-0"><tr><th class="p-3">Nombre</th><th class="p-3">Email</th><th class="p-3 text-right">Acción</th></tr></thead><tbody class="divide-y divide-gray-700">${filteredAdmins.length === 0 ? html`<tr><td colspan="3" class="p-4 text-center text-gray-500">No se encontraron administradores.</td></tr>` : filteredAdmins.map(u => html`<tr class="hover:bg-white/5 transition"><td class="p-3 font-medium text-white">${u.name}</td><td class="p-3 text-gray-400">${u.email}</td><td class="p-3 text-right flex justify-end gap-2"><button onclick="prepareEditUser(${u.id})" class="text-blue-400 hover:text-blue-300 hover:scale-110 transition" title="Editar">${icons.Edit(20)}</button><button onclick="deleteUser(${u.id})" class="text-red-400 hover:text-red-300 hover:scale-110 transition" title="Eliminar">${icons.Trash(20)}</button></td></tr>`).join('')}</tbody></table></div></div>
                 </div>
             </div>
         </div>
@@ -1362,14 +1075,10 @@ function AdminPage() {
 function renderApp() {
     clearInterval(carouselInterval);
     const appContainer = document.getElementById('app-container');
-    
     const activeId = document.activeElement ? document.activeElement.id : null;
     const selectionStart = document.activeElement ? document.activeElement.selectionStart : null;
-
     let pageContent = '';
-
     if (state.categoryDropdownOpen || state.adminMenuOpen) state.menuOpen = false;
-
     switch (state.currentPage) {
         case 'home': pageContent = HomePage(); break;
         case 'login': pageContent = LoginPage(); break;
@@ -1380,9 +1089,8 @@ function renderApp() {
         case 'about': pageContent = AboutUsPage(); break;
         case 'location': pageContent = LocationPage(); break;
         case 'contact': pageContent = ContactPage(); break;
-        default: pageContent = HomePage();
+        default: pageContent = NotFoundPage();
     }
-
     if (['login', 'register'].includes(state.currentPage)) {
         appContainer.innerHTML = NotificationBanner() + pageContent;
     } else if (state.currentPage === 'admin') {
@@ -1390,9 +1098,7 @@ function renderApp() {
     } else {
         appContainer.innerHTML = NotificationBanner() + Navbar() + '<main class="pb-16">' + pageContent + '</main>' + Footer();
     }
-
     if (state.currentPage === 'home' || state.currentPage === 'admin') startCarousel();
-
     if (activeId) {
         const element = document.getElementById(activeId);
         if (element) {
