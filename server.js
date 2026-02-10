@@ -363,18 +363,24 @@ app.delete('/api/admin/users/:id', async (req, res) => {
     }
 });
 
+// --- MANEJO DE RUTAS Y ERRORES ---
+
+// Ruta principal: Sirve tu aplicación Parfum
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.use((req, res, next) => {
-    res.status(404).send("Lo sentimos, no podemos encontrar esa página.");
+// MIDDLEWARE DE ERROR 404 (Debe ser la penúltima pieza de código)
+// Si llegamos aquí, es que ninguna ruta de arriba coincidió
+app.use((req, res) => {
+    res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
 
+// INICIO DEL SERVIDOR (Siempre al final)
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+    console.log(`Visita: http://localhost:${PORT}`);
 });
-
 
 
 
