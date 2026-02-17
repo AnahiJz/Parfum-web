@@ -400,7 +400,7 @@ app.post('/api/contact', async (req, res) => {
 
         res.json({ success: true, message: 'Mensaje enviado correctamente' });
     } catch (error) {
-        console.error(error);
+        console.error('Error enviando el correo de contacto:', error);
         res.status(500).json({ success: false, message: 'Hubo un error al enviar el mensaje' });
     }
 });
