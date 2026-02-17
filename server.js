@@ -363,6 +363,9 @@ app.delete('/api/admin/users/:id', async (req, res) => {
     }
 });
 
+// --- MANEJO DE RUTAS Y ERRORES ---
+
+// Ruta principal: Sirve tu aplicación Parfum
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -407,4 +410,8 @@ app.post('/api/contact', async (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+    console.log(`Visita: http://localhost:${PORT}`);
 });
+
+
+
