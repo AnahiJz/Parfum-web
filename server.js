@@ -367,6 +367,44 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+app.post('/api/contact', async (req, res) => {
+    const { contactName, contactEmail, contactMessage, destinationEmail } = req.body;
+
+    if (!contactName || !contactEmail || !contactMessage || !destinationEmail) {
+        return res.status(400).json({ success: false, message: 'Faltan campos por completar' });
+    }
+
+    try {
+        const emailHtml = `
+            <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 20px;">
+                <div style="background-color: #d4af37; padding: 20px; text-align: center; color: white;">
+                    <h1 style="margin: 0;">Nuevo Mensaje de Contacto - ParfumWeb</h1>
+                </div>
+                <div style="padding: 20px;">
+                    <p><strong>De:</strong> ${contactName} (${contactEmail})</p>
+                    <p><strong>Asunto:</strong> Quejas y Sugerencias</p>
+                    <hr style="border: 1px solid #eee; margin: 20px 0;">
+                    <h3 style="color: #d4af37;">Mensaje:</h3>
+                    <p style="white-space: pre-wrap; background: #f9f9f9; padding: 15px; border-left: 4px solid #d4af37;">${contactMessage}</p>
+                </div>
+            </div>
+        `;
+
+        await transporter.sendMail({
+            from: `"Parfum Web Contacto" <${process.env.EMAIL_USER}>`,
+            to: destinationEmail,
+            replyTo: contactEmail,
+            subject: `Nuevo mensaje de ${contactName} - Parfum Contacto`,
+            html: emailHtml
+        });
+
+        res.json({ success: true, message: 'Mensaje enviado correctamente' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Hubo un error al enviar el mensaje' });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
