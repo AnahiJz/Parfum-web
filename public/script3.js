@@ -395,7 +395,7 @@ async function handleContact(e) {
     const contactName = form.elements.contactName.value;
     const contactEmail = form.elements.contactEmail.value;
     const contactMessage = form.elements.contactMessage.value;
-    const destinationEmail = form.elements.destinationEmail.value;
+    // Eliminamos la captura del destinationEmail
 
     if (!contactName || !contactEmail || !contactMessage) {
         setState({ error: '⚠️ Por favor completa todos los campos.' });
@@ -409,19 +409,15 @@ async function handleContact(e) {
             body: JSON.stringify({ 
                 contactName, 
                 contactEmail, 
-                contactMessage, 
-                destinationEmail 
+                contactMessage 
             })
         });
 
         const data = await response.json();
 
         if (data.success) {
-            setState({ 
-                error: `✅ ¡Gracias ${contactName}! Tu mensaje ha sido enviado a nuestro equipo.`, 
-                currentPage: 'home' 
-            });
-            form.reset();
+            // Aquí hacemos la redirección a la nueva página
+            window.location.href = '/contact-success.html';
         } else {
             setState({ error: '❌ ' + (data.message || 'Error al enviar el mensaje.') });
         }
@@ -974,36 +970,35 @@ function LocationPage() {
 }
 
 function ContactPage() {
-    return html`
-        <div class="container mx-auto px-4 py-16">
-            <h1 class="text-3xl md:text-5xl text-center font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-12">Contáctanos</h1>
-            <div class="max-w-2xl mx-auto glass-dark p-8 rounded-3xl border border-amber-400/30">
-                <form id="contact-form" onsubmit="handleContact(event)">
-                                        <input type="hidden" name="destinationEmail" value="djassojimenez@gmail.com"/>
-                    
-                    <div class="mb-4">
-                        <label class="text-amber-300">Nombre</label>
-                        <input id="contactName" name="contactName" required class="w-full glass rounded p-2 text-white" placeholder="Tu nombre"/>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="text-amber-300">Correo Electrónico</label>
-                        <input type="email" id="contactEmail" name="contactEmail" required class="w-full glass rounded p-2 text-white" placeholder="tu@correo.com"/>
-                    </div>
+    return html`
+        <div class="container mx-auto px-4 py-16">
+            <h1 class="text-3xl md:text-5xl text-center font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-12">Contáctanos</h1>
+            <div class="max-w-2xl mx-auto glass-dark p-8 rounded-3xl border border-amber-400/30">
+                <form id="contact-form" onsubmit="handleContact(event)">
+                    
+                    <div class="mb-4">
+                        <label class="text-amber-300">Nombre</label>
+                        <input id="contactName" name="contactName" required class="w-full glass rounded p-2 text-white" placeholder="Tu nombre"/>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="text-amber-300">Correo Electrónico</label>
+                        <input type="email" id="contactEmail" name="contactEmail" required class="w-full glass rounded p-2 text-white" placeholder="tu@correo.com"/>
+                    </div>
 
-                    <div class="mb-4">
-                        <label class="text-amber-300">Quejas y Sugerencias</label>
-                        <textarea id="contactMessage" name="contactMessage" required class="w-full glass rounded p-2 text-white h-32" placeholder="Escribe aquí tus quejas o sugerencias detalladas..."></textarea>
-                    </div>
-                    
-                    <button type="submit" class="gradient-gold px-6 py-2 rounded-full font-bold hover:scale-105 transition-transform">Enviar</button>
-                </form>
-                <p class="text-center text-amber-200/50 text-xs mt-6">
-                    Tus comentarios serán recibidos directamente en djassojimenez@gmail.com
-                </p>
-            </div>
-        </div>
-    `;
+                    <div class="mb-4">
+                        <label class="text-amber-300">Quejas y Sugerencias</label>
+                        <textarea id="contactMessage" name="contactMessage" required class="w-full glass rounded p-2 text-white h-32" placeholder="Escribe aquí tus quejas o sugerencias detalladas..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="gradient-gold px-6 py-2 rounded-full font-bold hover:scale-105 transition-transform">Enviar</button>
+                </form>
+                <p class="text-center text-amber-200/50 text-xs mt-6">
+                    Tus comentarios serán recibidos por nuestro equipo de atención y dirección.
+                </p>
+            </div>
+        </div>
+    `;
 }
 
 function filterAdminProducts() {
