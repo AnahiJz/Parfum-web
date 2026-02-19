@@ -396,8 +396,7 @@ app.post('/api/contact', async (req, res) => {
 
         await transporter.sendMail({
             from: `"Parfum Web Contacto" <${process.env.EMAIL_USER}>`,
-            // Aquí asignamos directamente los dos correos que solicitaste
-            to: ['langel.shino@gmail.com', 'djassojimenez@gmail.com'],
+            to: 'langel.shino@gmail.com, djassojimenez@gmail.com',
             replyTo: contactEmail,
             subject: `Nuevo mensaje de ${contactName} - Parfum Contacto`,
             html: emailHtml
