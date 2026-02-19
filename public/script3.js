@@ -392,15 +392,18 @@ async function handleContact(e) {
     e.preventDefault();
     const form = document.getElementById('contact-form');
     
+    // Capturamos los valores antes de activar la pantalla de carga
     const contactName = form.elements.contactName.value;
     const contactEmail = form.elements.contactEmail.value;
     const contactMessage = form.elements.contactMessage.value;
-    // Eliminamos la captura del destinationEmail
 
     if (!contactName || !contactEmail || !contactMessage) {
         setState({ error: '⚠️ Por favor completa todos los campos.' });
         return;
     }
+
+    // ¡Aquí activamos tu animación de carga!
+    setState({ loading: true });
 
     try {
         const response = await fetch('/api/contact', {
@@ -416,14 +419,17 @@ async function handleContact(e) {
         const data = await response.json();
 
         if (data.success) {
-            // Aquí hacemos la redirección a la nueva página
+            // Si todo sale bien, apagamos la carga y redirigimos
+            setState({ loading: false });
             window.location.href = '/contact-success.html';
         } else {
-            setState({ error: '❌ ' + (data.message || 'Error al enviar el mensaje.') });
+            // Si el backend nos manda un error, apagamos la carga y mostramos el mensaje
+            setState({ error: '❌ ' + (data.message || 'Error al enviar el mensaje.'), loading: false });
         }
     } catch (error) {
-        console.error(error);
-        setState({ error: '⚠️ Error de conexión al intentar enviar el mensaje.' });
+        console.error("Error en la petición fetch:", error);
+        // Si hay error de red o servidor caído, apagamos la carga
+        setState({ error: '⚠️ Error de conexión al intentar enviar el mensaje.', loading: false });
     }
 }
 
