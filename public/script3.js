@@ -973,7 +973,16 @@ function ContactPage() {
     return html`
         <div class="container mx-auto px-4 py-16">
             <h1 class="text-3xl md:text-5xl text-center font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-12">Contáctanos</h1>
-            <div class="max-w-2xl mx-auto glass-dark p-8 rounded-3xl border border-amber-400/30">
+            
+            <div class="max-w-2xl mx-auto glass-dark p-8 rounded-3xl border border-amber-400/30 relative overflow-hidden">
+                
+                ${state.loading ? html`
+                    <div class="absolute inset-0 bg-gray-900/80 flex flex-col items-center justify-center z-50 backdrop-blur-sm">
+                        <div class="w-12 h-12 border-4 border-amber-400 border-t-transparent rounded-full animate-spin mb-4"></div>
+                        <p class="text-amber-300 font-bold text-lg animate-pulse">Enviando mensaje...</p>
+                    </div>
+                ` : ''}
+
                 <form id="contact-form" onsubmit="handleContact(event)">
                     
                     <div class="mb-4">
