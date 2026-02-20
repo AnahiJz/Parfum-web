@@ -906,7 +906,16 @@ function AboutUsPage() {
                 
                 <div class="space-y-8">
                     <div class="glass-dark p-4 rounded-3xl border border-amber-400/30 shadow-2xl">
-                        <img src="corporativo.png" alt="Equipo de Parfum" class="w-full h-auto max-h-[500px] object-cover rounded-2xl opacity-90"/>
+                        <video 
+                            src="video.mp4" 
+                            class="w-full h-auto max-h-[500px] object-cover rounded-2xl opacity-90"
+                            controls 
+                            autoplay 
+                            muted 
+                            loop 
+                            playsinline>
+                            Tu navegador no soporta la reproducción de videos.
+                        </video>
                     </div>
                     
                     <div class="glass-dark p-6 rounded-2xl border border-amber-400/30 shadow-xl">
