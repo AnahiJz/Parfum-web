@@ -409,6 +409,81 @@ app.post('/api/contact', async (req, res) => {
     }
 });
 
+
+// --- CONFIGURACIÓN DE PAYPAL ---
+const PAYPAL_CLIENT_ID = "AYfcX2GEGPlyJv0EAWiVsaVyVWO60-ljpDrwb3bVe6GQBE_KrvLOS4ZQPAvWZ5EdT8lC-JGOrvc1KPKV";
+const PAYPAL_APP_SECRET = "EKqqNF1sH3x9UBmOfSCkBbkbofd3CODBn91K91tUN6Uy6piZjiAWizGH9F3l3wN1iFSCBZ0S3I4ZJP1S";
+const PAYPAL_BASE_URL = "https://api-m.sandbox.paypal.com"; // Entorno Sandbox de pruebas
+
+async function generateAccessToken() {
+  const auth = Buffer.from(PAYPAL_CLIENT_ID + ":" + PAYPAL_APP_SECRET).toString("base64");
+  const response = await fetch(`${PAYPAL_BASE_URL}/v1/oauth2/token`, {
+    method: "POST",
+    body: "grant_type=client_credentials",
+    headers: {
+      Authorization: `Basic ${auth}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+  });
+  const data = await response.json();
+  return data.access_token;
+}
+
+app.post("/create-paypal-order", async (req, res) => {
+  try {
+    const { totalAmount } = req.body; 
+    const accessToken = await generateAccessToken();
+    const payload = {
+      intent: "CAPTURE",
+      purchase_units: [
+        {
+          amount: {
+            currency_code: "MXN",
+            value: totalAmount.toString(),
+          },
+        },
+      ],
+    };
+
+    const response = await fetch(`${PAYPAL_BASE_URL}/v2/checkout/orders`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error("Error al crear orden PayPal:", error);
+    res.status(500).json({ error: "Error al crear la orden" });
+  }
+});
+
+app.post("/capture-paypal-order", async (req, res) => {
+  try {
+    const { orderID } = req.body;
+    const accessToken = await generateAccessToken();
+    
+    const response = await fetch(`${PAYPAL_BASE_URL}/v2/checkout/orders/${orderID}/capture`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error("Error al capturar orden PayPal:", error);
+    res.status(500).json({ error: "Error al capturar el pago" });
+  }
+});
+// --- FIN CONFIGURACIÓN DE PAYPAL ---
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Visita: http://localhost:${PORT}`);
