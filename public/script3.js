@@ -890,6 +890,9 @@ function CartPage() {
     `;
 }
 
+<div id="paypal-button-container" style="margin-top: 15px; width: 100%;"></div>
+
+
 function AboutUsPage() {
     const values = [
         { name: 'Excelencia', icon: icons.Award(20) },
