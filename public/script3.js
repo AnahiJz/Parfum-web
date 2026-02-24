@@ -888,6 +888,7 @@ function CartPage() {
             </div>`}
         </div>
         <div id="paypal-button-container" style="margin-top: 15px; width: 100%;"></div>
+        
     `;
 }
 
@@ -1483,58 +1484,3 @@ window.onload = function() {
     checkSession();
     fetchProductsFromDB();
 };
-
-// --- INICIO INTEGRACIÓN PAYPAL ---
-document.addEventListener("DOMContentLoaded", function() {
-    // Solo dibujamos el botón si la caja (div) de PayPal existe en la pantalla
-    if (document.getElementById('paypal-button-container')) {
-        
-        paypal.Buttons({
-            style: {
-                layout: 'vertical',
-                color:  'gold',   // Color amarillo clásico de PayPal
-                shape:  'rect',
-                label:  'pay'
-            },
-            
-            // 1. Aquí le decimos a PayPal cuánto cobrar
-            createOrder: function(data, actions) {
-                // AQUÍ ESTÁ EL TRUCO: Necesitamos el total de tu carrito.
-                // Si tienes un elemento en tu HTML que muestra el total (por ejemplo un span con id="total-precio"),
-                // podemos leerlo así:
-                
-                let totalAPagar = '100.00'; // <- VALOR POR DEFECTO PARA PRUEBAS
-                
-                // Ejemplo de cómo leer el total real de tu carrito (ajusta el selector según tu HTML):
-                // let textoTotal = document.getElementById('total-precio').innerText; 
-                // totalAPagar = textoTotal.replace('$', '').replace(',', '');
-                
-                return actions.order.create({
-                    purchase_units: [{
-                        amount: {
-                            value: totalAPagar // Le enviamos el total a PayPal
-                        }
-                    }]
-                });
-            },
-            
-            // 2. ¿Qué pasa cuando el cliente paga con éxito?
-            onApprove: function(data, actions) {
-                return actions.order.capture().then(function(details) {
-                    console.log('Pago exitoso realizado por:', details.payer.name.given_name);
-                    
-                    // Aquí mandamos al usuario a tu pantalla de éxito existente
-                    window.location.href = "/success.html"; 
-                });
-            },
-            
-            // 3. ¿Qué pasa si hay un error?
-            onError: function (err) {
-                console.error('Error en el pago:', err);
-                alert('Ocurrió un error con el pago de PayPal.');
-            }
-            
-        }).render('#paypal-button-container');
-    }
-});
-// --- FIN INTEGRACIÓN PAYPAL ---
