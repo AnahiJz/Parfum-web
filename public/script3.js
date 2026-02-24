@@ -886,8 +886,9 @@ function CartPage() {
                     <button onclick="checkout()" class="w-full gradient-gold text-gray-900 px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform">PAGAR</button>
                 </div>
             </div>`}
-        </div>
+            
         <div id="paypal-button-container" style="margin-top: 15px; width: 100%;"></div>
+        </div>
         
     `;
 }
