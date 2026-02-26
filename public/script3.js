@@ -60,6 +60,15 @@ let carouselInterval;
 function setState(newState) {
     state = { ...state, ...newState };
     renderApp();
+
+    // Si el nuevo estado tiene un mensaje de error/notificación
+    if (newState.error) {
+        // Esperar 4 segundos y luego quitar la notificación
+        setTimeout(() => {
+            state.error = null;
+            renderApp();
+        }, 4000); // 4000 milisegundos = 4 segundos
+    }
 }
 
 function html(strings, ...values) {
