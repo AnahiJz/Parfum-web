@@ -81,3 +81,14 @@ body {
 .admin-table td {
     background-color: rgba(0, 0, 0, 0.1);
 }
+/* Animación para que aparezca y desaparezca suavemente */
+.notification-banner {
+    animation: fadeInOut 4s ease-in-out forwards;
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translate(-50%, -20px); }
+    10% { opacity: 1; transform: translate(-50%, 0); }
+    85% { opacity: 1; transform: translate(-50%, 0); }
+    100% { opacity: 0; transform: translate(-50%, -20px); }
+}
