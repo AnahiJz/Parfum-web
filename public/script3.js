@@ -1505,12 +1505,7 @@ function renderApp() {
     }
 }
 
-window.onload = function() { 
-    checkSession();
-    fetchProductsFromDB();
-};
 
-// --- LÓGICA DE INTEGRACIÓN PAYPAL ---
 function renderizarPayPal(montoTotal) {
     const contenedor = document.getElementById('paypal-button-container');
     
@@ -1539,3 +1534,12 @@ function renderizarPayPal(montoTotal) {
         }).render('#paypal-button-container');
     }
 }
+
+
+
+window.onload = function() { 
+    checkSession();
+    fetchProductsFromDB();
+};
+
+// --- LÓGICA DE INTEGRACIÓN PAYPAL ---
