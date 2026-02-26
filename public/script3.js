@@ -523,8 +523,22 @@ async function checkout() {
     }
 }
 
+// Variable para llevar el control del tiempo y evitar conflictos
+let timeoutNotificacion;
+
 function NotificationBanner() {
     if (!state.error) return '';
+
+    // Limpiamos cualquier temporizador anterior (por si salen varias notificaciones seguidas)
+    clearTimeout(timeoutNotificacion);
+    
+    // Agregamos el temporizador de 5 segundos (5000 milisegundos)
+    timeoutNotificacion = setTimeout(() => {
+        if (state.error) {
+            setState({ error: null }); // Oculta la notificación
+        }
+    }, 5000);
+
     return html` 
         <div id="notification-banner" class="notification-banner fixed top-0 left-1/2 transform -translate-x-1/2 mt-4 p-3 rounded-xl shadow-2xl z-[100] max-w-sm w-full mx-4
             ${state.error.includes('❌') || state.error.includes('🚨') || state.error.includes('⚠️') || state.error.includes('🗑️') || state.error.includes('🔒') ? 'bg-red-700' : 'bg-green-600'} 
