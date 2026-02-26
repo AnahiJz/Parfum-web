@@ -524,33 +524,9 @@ async function checkout() {
 }
 
 
-
-// Agrega esta variable justo arriba de la función
-let timeoutNotificacion;
-
 function NotificationBanner() {
-    // Si no hay mensaje (ni de error ni de éxito verde), no mostramos nada
     if (!state.error) return '';
-
-    // Limpiamos el contador por si salen varias notificaciones seguidas
-    clearTimeout(timeoutNotificacion);
-    
-    // Aquí está la magia: después de 5 segundos (5000 ms), la notificación verde (o roja) desaparecerá sola
-    timeoutNotificacion = setTimeout(() => {
-        if (state.error) {
-            setState({ error: null }); 
-        }
-    }, 5000);
-
     return html` 
-        <div id="notification-banner" class="notification-banner fixed top-0 left-1/2 transform -translate-x-1/2 mt-4 p-3 rounded-xl shadow-2xl z-[100] max-w-sm w-full mx-4
-            ${state.error.includes('❌') || state.error.includes('🚨') || state.error.includes('⚠️') || state.error.includes('🗑️') || state.error.includes('🔒') ? 'bg-red-700' : 'bg-green-600'} 
-            text-white font-semibold flex items-center gap-3 border border-white/20">
-            <button class="text-xl" onclick="setState({error: null})">${icons.X(18, 'text-white')}</button>
-            <span class="flex-1 text-sm md:text-base">${state.error}</span>
-        </div>
-    `;
-}    return html` 
         <div id="notification-banner" class="notification-banner fixed top-0 left-1/2 transform -translate-x-1/2 mt-4 p-3 rounded-xl shadow-2xl z-[100] max-w-sm w-full mx-4
             ${state.error.includes('❌') || state.error.includes('🚨') || state.error.includes('⚠️') || state.error.includes('🗑️') || state.error.includes('🔒') ? 'bg-red-700' : 'bg-green-600'} 
             text-white font-semibold flex items-center gap-3 border border-white/20">
@@ -560,6 +536,8 @@ function NotificationBanner() {
     `;
 }
 
+
+    
 function CategoryDropdown() {
     const categories = [
         { name: 'Todos los Productos', key: 'all' },
