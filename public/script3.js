@@ -195,11 +195,18 @@ function filterClients() {
 }
 
 function prepareEditUser(userId) {
-    const userToEdit = state.users.find(u => u.id === userId) || state.admins.find(u => u.id === userId);
-    if (userToEdit) {
-        setState({ editingUser: userToEdit });
-        const form = document.getElementById('create-admin-form');
-        if (form) form.scrollIntoView({ behavior: 'smooth' });
+    const user = state.users.find(u => u.id === userId);
+    if (user) {
+        setState({
+            editingUser: { ...user },
+            newUserForm: { name: '', email: '', password: '' }
+        });
+
+        // Esta línea hace que la pantalla se deslice suavemente al formulario
+        const formElement = document.querySelector('form[onsubmit="saveUser(event)"]');
+        if (formElement) {
+            formElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
     }
 }
 
