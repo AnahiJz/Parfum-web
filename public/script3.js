@@ -611,9 +611,9 @@ function AccountSideMenu() {
     if (!state.accountMenuOpen || !state.currentUser) return '';
 
     return html`
-        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] transition-opacity" onclick="setState({ accountMenuOpen: false })"></div>
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" style="z-index: 9998;" onclick="setState({ accountMenuOpen: false })"></div>
 
-        <div class="fixed top-0 right-0 h-full w-80 max-w-[80vw] glass-dark z-[101] border-l border-amber-400/30 shadow-2xl transform transition-transform duration-300 flex flex-col">
+        <div class="fixed top-0 right-0 h-full w-80 glass-dark border-l border-amber-400/30 shadow-2xl flex flex-col transition-all duration-300" style="z-index: 9999; max-width: 80vw;">
             
             <div class="p-6 border-b border-amber-400/20 flex justify-between items-center bg-black/20">
                 <div class="flex items-center gap-3">
@@ -654,7 +654,6 @@ function AccountSideMenu() {
         </div>
     `;
 }
-
 
 
 function Navbar() {
