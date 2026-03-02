@@ -1424,8 +1424,7 @@ function AdminPage() {
                 </div>
             </div>
 
-            <div class="grid lg:grid-cols-2 gap-8">
-                <div class="glass-dark p-6 rounded-2xl border border-purple-400/30">
+<div class="glass-dark p-6 rounded-2xl border border-purple-400/30">
                     <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                         <h2 class="text-xl md:text-2xl text-purple-400 font-bold flex items-center gap-2">
                             ${icons.User(24)} Administradores
