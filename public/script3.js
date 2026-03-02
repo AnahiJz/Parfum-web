@@ -608,49 +608,58 @@ function AdminNavbarDropdown() {
 
 
 function AccountSideMenu() {
+    // Si el menú no está abierto o no hay usuario, no dibujamos nada
     if (!state.accountMenuOpen || !state.currentUser) return '';
 
     return html`
-        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" style="z-index: 9998;" onclick="setState({ accountMenuOpen: false })"></div>
+        <div onclick="setState({ accountMenuOpen: false })" 
+             style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.7); z-index: 999998; backdrop-filter: blur(5px); cursor: pointer;">
+        </div>
 
-        <div class="fixed top-0 right-0 h-full w-80 glass-dark border-l border-amber-400/30 shadow-2xl flex flex-col transition-all duration-300" style="z-index: 9999; max-width: 80vw;">
+        <div style="position: fixed; top: 0; right: 0; width: 340px; max-width: 85vw; height: 100vh; background-color: #0f172a; z-index: 999999; border-left: 2px solid rgba(249, 212, 35, 0.4); box-shadow: -10px 0 30px rgba(0,0,0,0.8); display: flex; flex-direction: column; animation: slideIn 0.3s ease-out;">
             
-            <div class="p-6 border-b border-amber-400/20 flex justify-between items-center bg-black/20">
-                <div class="flex items-center gap-3">
-                    <div class="gradient-gold p-3 rounded-full text-gray-900 shadow-lg">
+            <div style="padding: 24px; border-bottom: 1px solid rgba(249, 212, 35, 0.2); background-color: rgba(0,0,0,0.3); display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="background: linear-gradient(135deg, #f9d423 0%, #e8a600 100%); padding: 12px; border-radius: 50%; color: #1a1a2e; box-shadow: 0 4px 10px rgba(249, 212, 35, 0.3);">
                         ${icons.User(24)}
                     </div>
                     <div>
-                        <h3 class="text-amber-300 font-bold text-lg leading-tight">${state.currentUser.name}</h3>
-                        <p class="text-gray-400 text-xs">${state.currentUser.role === 'admin' ? 'Administrador' : 'Cliente VIP'}</p>
+                        <h3 style="color: #fde047; font-weight: bold; font-size: 1.1rem; margin: 0;">${state.currentUser.name}</h3>
+                        <p style="color: #9ca3af; font-size: 0.75rem; margin: 0; margin-top: 2px;">${state.currentUser.role === 'admin' ? 'Administrador' : 'Cliente VIP'}</p>
                     </div>
                 </div>
-                <button onclick="setState({ accountMenuOpen: false })" class="text-gray-400 hover:text-red-400 transition-colors">
+                <button onclick="setState({ accountMenuOpen: false })" style="background: transparent; border: none; color: #9ca3af; cursor: pointer; padding: 4px;">
                     ${icons.X(24)}
                 </button>
             </div>
 
-            <div class="flex-1 overflow-y-auto p-4 space-y-2">
-                <button class="w-full flex items-center gap-3 p-4 rounded-xl hover:bg-amber-500/20 text-amber-100 transition-all text-left group border border-transparent hover:border-amber-400/30">
-                    ${icons.ShoppingCart(20, 'text-amber-400 group-hover:scale-110 transition-transform')}
-                    <span class="font-medium">Historial de Compras</span>
+            <div style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;">
+                <button style="display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px; background-color: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; color: #fef3c7; cursor: pointer; text-align: left; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(249,212,35,0.1)'; this.style.borderColor='rgba(249,212,35,0.3)'" onmouseout="this.style.backgroundColor='rgba(255,255,255,0.03)'; this.style.borderColor='rgba(255,255,255,0.05)'">
+                    <span style="color: #f9d423;">${icons.ShoppingCart(20)}</span>
+                    Historial de Compras
                 </button>
-                <button class="w-full flex items-center gap-3 p-4 rounded-xl hover:bg-amber-500/20 text-amber-100 transition-all text-left group border border-transparent hover:border-amber-400/30">
-                    ${icons.Heart(20, 'text-amber-400 group-hover:scale-110 transition-transform')}
-                    <span class="font-medium">Mis Favoritos</span>
+                <button style="display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px; background-color: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; color: #fef3c7; cursor: pointer; text-align: left; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(249,212,35,0.1)'; this.style.borderColor='rgba(249,212,35,0.3)'" onmouseout="this.style.backgroundColor='rgba(255,255,255,0.03)'; this.style.borderColor='rgba(255,255,255,0.05)'">
+                    <span style="color: #f9d423;">${icons.Heart(20)}</span>
+                    Mis Favoritos
                 </button>
-                <button class="w-full flex items-center gap-3 p-4 rounded-xl hover:bg-amber-500/20 text-amber-100 transition-all text-left group border border-transparent hover:border-amber-400/30">
-                    ${icons.Edit(20, 'text-amber-400 group-hover:scale-110 transition-transform')}
-                    <span class="font-medium">Mis Datos y Envíos</span>
+                <button style="display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px; background-color: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; color: #fef3c7; cursor: pointer; text-align: left; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(249,212,35,0.1)'; this.style.borderColor='rgba(249,212,35,0.3)'" onmouseout="this.style.backgroundColor='rgba(255,255,255,0.03)'; this.style.borderColor='rgba(255,255,255,0.05)'">
+                    <span style="color: #f9d423;">${icons.Edit(20)}</span>
+                    Mis Datos y Envíos
                 </button>
             </div>
 
-            <div class="p-6 border-t border-amber-400/20 bg-black/20">
-                <button onclick="logout()" class="w-full flex items-center justify-center gap-2 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-400 py-3 rounded-xl font-bold transition-all">
-                    ${icons.LogOut(20)}
-                    Cerrar Sesión
+            <div style="padding: 24px; border-top: 1px solid rgba(249, 212, 35, 0.2); background-color: rgba(0,0,0,0.3);">
+                <button onclick="logout()" style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 14px; background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; color: #ef4444; font-weight: bold; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(239,68,68,0.2)'" onmouseout="this.style.backgroundColor='rgba(239,68,68,0.1)'">
+                    ${icons.LogOut(20)} Cerrar Sesión
                 </button>
             </div>
+
+            <style>
+                @keyframes slideIn {
+                    from { transform: translateX(100%); }
+                    to { transform: translateX(0); }
+                }
+            </style>
         </div>
     `;
 }
