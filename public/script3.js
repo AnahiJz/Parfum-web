@@ -1470,6 +1470,7 @@ function AdminPage() {
                     </div>
                 </div>
 
+                
                 <div class="glass-dark p-6 md:p-8 rounded-2xl border border-amber-400/30 h-fit">
                     <h3 class="text-xl md:text-2xl text-amber-200 font-bold mb-6">
                         ${state.editingUser ? '✏️ Editar Usuario' : 'Crear Nuevo Administrador'}
