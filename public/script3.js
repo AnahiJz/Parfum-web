@@ -1463,12 +1463,13 @@ function renderApp() {
         default: pageContent = HomePage();
     }
 
+    // 🔥 AQUÍ ESTABA EL ERROR: Faltaba sumar AccountSideMenu() a la interfaz 🔥
     if (['login', 'register'].includes(state.currentPage)) {
         appContainer.innerHTML = NotificationBanner() + pageContent;
     } else if (state.currentPage === 'admin') {
-        appContainer.innerHTML = NotificationBanner() + Navbar() + '<main class="pb-16">' + pageContent + '</main>';
+        appContainer.innerHTML = NotificationBanner() + Navbar() + AccountSideMenu() + '<main class="pb-16">' + pageContent + '</main>';
     } else {
-        appContainer.innerHTML = NotificationBanner() + Navbar() + '<main class="pb-16">' + pageContent + '</main>' + Footer();
+        appContainer.innerHTML = NotificationBanner() + Navbar() + AccountSideMenu() + '<main class="pb-16">' + pageContent + '</main>' + Footer();
     }
 
     if (state.currentPage === 'home' || state.currentPage === 'admin') startCarousel();
