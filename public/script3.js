@@ -1169,7 +1169,7 @@ function AdminPage() {
     const filteredAdmins = filterAdminUsers();
     const filteredClients = filterClients();
 
-    // Simulación de mensajes
+    // Simulación de bandeja de mensajes (Nuevo apartado)
     const filteredMessages = state.messages || [
         { id: 1, contactName: 'Diana Jasso', contactEmail: 'djassojimenez@gmail.com', contactMessage: '¿Tienen stock de Aventus de 100ml?', fecha: new Date() }
     ];
@@ -1424,7 +1424,8 @@ function AdminPage() {
                 </div>
             </div>
 
-<div class="glass-dark p-6 rounded-2xl border border-purple-400/30">
+            <div class="grid lg:grid-cols-2 gap-8">
+                <div class="glass-dark p-6 rounded-2xl border border-purple-400/30">
                     <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                         <h2 class="text-xl md:text-2xl text-purple-400 font-bold flex items-center gap-2">
                             ${icons.User(24)} Administradores
@@ -1470,7 +1471,6 @@ function AdminPage() {
                     </div>
                 </div>
 
-                
                 <div class="glass-dark p-6 md:p-8 rounded-2xl border border-amber-400/30 h-fit">
                     <h3 class="text-xl md:text-2xl text-amber-200 font-bold mb-6">
                         ${state.editingUser ? '✏️ Editar Usuario' : 'Crear Nuevo Administrador'}
