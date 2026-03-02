@@ -32,7 +32,8 @@ let state = {
     cart: [],
     menuOpen: false,
     categoryDropdownOpen: false, 
-    adminMenuOpen: false, 
+    adminMenuOpen: false,
+    accountMenuOpen: false,
     carouselIndex: 0,
     carouselImages: [
         'ParfumH/aventus.jpg', 'ParfumH/bleu.jpg', 'ParfumH/Allure.jpg',
@@ -605,6 +606,57 @@ function AdminNavbarDropdown() {
     `;
 }
 
+
+function AccountSideMenu() {
+    if (!state.accountMenuOpen || !state.currentUser) return '';
+
+    return html`
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] transition-opacity" onclick="setState({ accountMenuOpen: false })"></div>
+
+        <div class="fixed top-0 right-0 h-full w-80 max-w-[80vw] glass-dark z-[101] border-l border-amber-400/30 shadow-2xl transform transition-transform duration-300 flex flex-col">
+            
+            <div class="p-6 border-b border-amber-400/20 flex justify-between items-center bg-black/20">
+                <div class="flex items-center gap-3">
+                    <div class="gradient-gold p-3 rounded-full text-gray-900 shadow-lg">
+                        ${icons.User(24)}
+                    </div>
+                    <div>
+                        <h3 class="text-amber-300 font-bold text-lg leading-tight">${state.currentUser.name}</h3>
+                        <p class="text-gray-400 text-xs">${state.currentUser.role === 'admin' ? 'Administrador' : 'Cliente VIP'}</p>
+                    </div>
+                </div>
+                <button onclick="setState({ accountMenuOpen: false })" class="text-gray-400 hover:text-red-400 transition-colors">
+                    ${icons.X(24)}
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-4 space-y-2">
+                <button class="w-full flex items-center gap-3 p-4 rounded-xl hover:bg-amber-500/20 text-amber-100 transition-all text-left group border border-transparent hover:border-amber-400/30">
+                    ${icons.ShoppingCart(20, 'text-amber-400 group-hover:scale-110 transition-transform')}
+                    <span class="font-medium">Historial de Compras</span>
+                </button>
+                <button class="w-full flex items-center gap-3 p-4 rounded-xl hover:bg-amber-500/20 text-amber-100 transition-all text-left group border border-transparent hover:border-amber-400/30">
+                    ${icons.Heart(20, 'text-amber-400 group-hover:scale-110 transition-transform')}
+                    <span class="font-medium">Mis Favoritos</span>
+                </button>
+                <button class="w-full flex items-center gap-3 p-4 rounded-xl hover:bg-amber-500/20 text-amber-100 transition-all text-left group border border-transparent hover:border-amber-400/30">
+                    ${icons.Edit(20, 'text-amber-400 group-hover:scale-110 transition-transform')}
+                    <span class="font-medium">Mis Datos y Envíos</span>
+                </button>
+            </div>
+
+            <div class="p-6 border-t border-amber-400/20 bg-black/20">
+                <button onclick="logout()" class="w-full flex items-center justify-center gap-2 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-400 py-3 rounded-xl font-bold transition-all">
+                    ${icons.LogOut(20)}
+                    Cerrar Sesión
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+
+
 function Navbar() {
     const cartCount = state.cart.reduce((total, item) => total + item.quantity, 0);
     const isAdmin = state.currentUser && state.currentUser.role === 'admin';
@@ -641,8 +693,10 @@ function Navbar() {
                         ` : ''}
                         ${state.isLoggedIn ? html`
                             <div class="flex items-center gap-2">
-                                <div class="hidden md:block glass-dark p-3 rounded-xl shadow-lg">${icons.User(26, 'text-amber-300')}</div>
-                                <button class="hidden md:block text-amber-100 font-medium glass-dark px-4 py-3 rounded-xl hover:bg-amber-500/20 transition-all">
+                                <div onclick="setState({ accountMenuOpen: true })" class="hidden md:block glass-dark p-3 rounded-xl shadow-lg cursor-pointer hover:bg-amber-500/20 transition-all">
+                                    ${icons.User(26, 'text-amber-300')}
+                                </div>
+                                <button onclick="setState({ accountMenuOpen: true })" class="hidden md:block text-amber-100 font-medium glass-dark px-4 py-3 rounded-xl hover:bg-amber-500/20 transition-all">
                                     ${isAdmin ? 'ADMIN' : 'MI CUENTA'}
                                 </button>
                             </div>
@@ -669,7 +723,11 @@ function Navbar() {
                         <nav class="flex flex-col gap-2">
                             ${isAdmin ? html`
                                 <button onclick="setState({currentPage: 'admin', menuOpen: false})" class="text-red-400 font-bold py-2 text-left">PANEL ADMIN</button>
+                                <button onclick="setState({ accountMenuOpen: true, menuOpen: false })" class="text-amber-200 font-bold py-2 text-left">MI CUENTA</button>
                             ` : html`
+                                ${state.isLoggedIn ? html`
+                                    <button onclick="setState({ accountMenuOpen: true, menuOpen: false })" class="text-amber-300 font-bold py-2 text-left">MI CUENTA</button>
+                                ` : ''}
                                 <button onclick="setState({currentPage: 'catalog', menuOpen: false})" class="text-amber-200 hover:text-amber-400 py-2 text-left">CATÁLOGO</button>
                                 <button onclick="setState({currentPage: 'about', menuOpen: false})" class="text-amber-200 hover:text-amber-400 py-2 text-left">NOSOTROS</button>
                                 <button onclick="setState({currentPage: 'location', menuOpen: false})" class="text-amber-200 hover:text-amber-400 py-2 text-left">UBICACIÓN</button>
@@ -682,6 +740,7 @@ function Navbar() {
         </header>
     `;
 }
+
 
 function Footer() {
     return html`
@@ -1532,9 +1591,11 @@ function renderApp() {
     if (['login', 'register'].includes(state.currentPage)) {
         appContainer.innerHTML = NotificationBanner() + pageContent;
     } else if (state.currentPage === 'admin') {
-        appContainer.innerHTML = NotificationBanner() + Navbar() + '<main class="pb-16">' + pageContent + '</main>';
+        // ¡Aquí inyectamos el menú lateral para el Admin!
+        appContainer.innerHTML = NotificationBanner() + Navbar() + AccountSideMenu() + '<main class="pb-16">' + pageContent + '</main>';
     } else {
-        appContainer.innerHTML = NotificationBanner() + Navbar() + '<main class="pb-16">' + pageContent + '</main>' + Footer();
+        // ¡Y aquí lo inyectamos para el Cliente en el resto de páginas!
+        appContainer.innerHTML = NotificationBanner() + Navbar() + AccountSideMenu() + '<main class="pb-16">' + pageContent + '</main>' + Footer();
     }
 
     if (state.currentPage === 'home' || state.currentPage === 'admin') startCarousel();
