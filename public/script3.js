@@ -33,7 +33,7 @@ let state = {
     menuOpen: false,
     categoryDropdownOpen: false, 
     adminMenuOpen: false,
-    accountMenuOpen: false,
+    accountMenuOpen: false, // Variable para el menú lateral
     carouselIndex: 0,
     carouselImages: [
         'ParfumH/aventus.jpg', 'ParfumH/bleu.jpg', 'ParfumH/Allure.jpg',
@@ -62,11 +62,13 @@ function setState(newState) {
     state = { ...state, ...newState };
     renderApp();
 
+    // Si el nuevo estado tiene un mensaje de error/notificación
     if (newState.error) {
+        // Esperar 4 segundos y luego quitar la notificación
         setTimeout(() => {
             state.error = null;
             renderApp();
-        }, 4000); 
+        }, 4000); // 4000 milisegundos = 4 segundos
     }
 }
 
@@ -401,6 +403,7 @@ async function handleContact(e) {
     e.preventDefault();
     const form = document.getElementById('contact-form');
     
+    // Capturamos los valores antes de activar la pantalla de carga
     const contactName = form.elements.contactName.value;
     const contactEmail = form.elements.contactEmail.value;
     const contactMessage = form.elements.contactMessage.value;
@@ -410,6 +413,7 @@ async function handleContact(e) {
         return;
     }
 
+    // ¡Aquí activamos tu animación de carga!
     setState({ loading: true });
 
     try {
@@ -426,13 +430,16 @@ async function handleContact(e) {
         const data = await response.json();
 
         if (data.success) {
+            // Si todo sale bien, apagamos la carga y redirigimos
             setState({ loading: false });
             window.location.href = '/contact-success.html';
         } else {
+            // Si el backend nos manda un error, apagamos la carga y mostramos el mensaje
             setState({ error: '❌ ' + (data.message || 'Error al enviar el mensaje.'), loading: false });
         }
     } catch (error) {
         console.error("Error en la petición fetch:", error);
+        // Si hay error de red o servidor caído, apagamos la carga
         setState({ error: '⚠️ Error de conexión al intentar enviar el mensaje.', loading: false });
     }
 }
@@ -527,16 +534,19 @@ async function checkout() {
     }
 }
 
+// Variable para llevar el control del tiempo y evitar conflictos
 let timeoutNotificacion;
 
 function NotificationBanner() {
     if (!state.error) return '';
 
+    // Limpiamos cualquier temporizador anterior
     clearTimeout(timeoutNotificacion);
     
+    // Agregamos el temporizador de 5 segundos
     timeoutNotificacion = setTimeout(() => {
         if (state.error) {
-            setState({ error: null });
+            setState({ error: null }); 
         }
     }, 5000);
 
@@ -586,62 +596,6 @@ function AdminNavbarDropdown() {
                 class="flex items-center text-red-400 hover:text-red-500 transition-all font-bold tracking-wide">
             PANEL ADMIN
         </button>
-    `;
-}
-
-function AccountSideMenu() {
-    if (!state.accountMenuOpen || !state.currentUser) return '';
-
-    return html`
-        <div onclick="setState({ accountMenuOpen: false })" 
-             style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.7); z-index: 999998; backdrop-filter: blur(5px); cursor: pointer;">
-        </div>
-
-        <div style="position: fixed; top: 0; right: 0; width: 340px; max-width: 85vw; height: 100vh; background-color: #0f172a; z-index: 999999; border-left: 2px solid rgba(249, 212, 35, 0.4); box-shadow: -10px 0 30px rgba(0,0,0,0.8); display: flex; flex-direction: column; animation: slideInRight 0.3s ease-out;">
-            
-            <div style="padding: 24px; border-bottom: 1px solid rgba(249, 212, 35, 0.2); background-color: rgba(0,0,0,0.3); display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="background: linear-gradient(135deg, #f9d423 0%, #e8a600 100%); padding: 12px; border-radius: 50%; color: #1a1a2e; box-shadow: 0 4px 10px rgba(249, 212, 35, 0.3);">
-                        ${icons.User(24)}
-                    </div>
-                    <div>
-                        <h3 style="color: #fde047; font-weight: bold; font-size: 1.1rem; margin: 0;">${state.currentUser.name}</h3>
-                        <p style="color: #9ca3af; font-size: 0.75rem; margin: 0; margin-top: 2px;">${state.currentUser.role === 'admin' ? 'Administrador' : 'Cliente VIP'}</p>
-                    </div>
-                </div>
-                <button onclick="setState({ accountMenuOpen: false })" style="background: transparent; border: none; color: #9ca3af; cursor: pointer; padding: 4px;">
-                    ${icons.X(24)}
-                </button>
-            </div>
-
-            <div style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;">
-                <button style="display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px; background-color: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; color: #fef3c7; cursor: pointer; text-align: left; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(249,212,35,0.1)'; this.style.borderColor='rgba(249,212,35,0.3)'" onmouseout="this.style.backgroundColor='rgba(255,255,255,0.03)'; this.style.borderColor='rgba(255,255,255,0.05)'">
-                    <span style="color: #f9d423;">${icons.ShoppingCart(20)}</span>
-                    Historial de Compras
-                </button>
-                <button style="display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px; background-color: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; color: #fef3c7; cursor: pointer; text-align: left; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(249,212,35,0.1)'; this.style.borderColor='rgba(249,212,35,0.3)'" onmouseout="this.style.backgroundColor='rgba(255,255,255,0.03)'; this.style.borderColor='rgba(255,255,255,0.05)'">
-                    <span style="color: #f9d423;">${icons.Heart(20)}</span>
-                    Mis Favoritos
-                </button>
-                <button style="display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px; background-color: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; color: #fef3c7; cursor: pointer; text-align: left; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(249,212,35,0.1)'; this.style.borderColor='rgba(249,212,35,0.3)'" onmouseout="this.style.backgroundColor='rgba(255,255,255,0.03)'; this.style.borderColor='rgba(255,255,255,0.05)'">
-                    <span style="color: #f9d423;">${icons.Edit(20)}</span>
-                    Mis Datos y Envíos
-                </button>
-            </div>
-
-            <div style="padding: 24px; border-top: 1px solid rgba(249, 212, 35, 0.2); background-color: rgba(0,0,0,0.3);">
-                <button onclick="logout()" style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 14px; background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; color: #ef4444; font-weight: bold; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(239,68,68,0.2)'" onmouseout="this.style.backgroundColor='rgba(239,68,68,0.1)'">
-                    ${icons.LogOut(20)} Cerrar Sesión
-                </button>
-            </div>
-            
-            <style>
-                @keyframes slideInRight {
-                    from { transform: translateX(100%); }
-                    to { transform: translateX(0); }
-                }
-            </style>
-        </div>
     `;
 }
 
@@ -723,6 +677,46 @@ function Navbar() {
                 ` : ''}
             </div>
         </header>
+
+        ${state.accountMenuOpen && state.currentUser ? html`
+            <div onclick="setState({ accountMenuOpen: false })" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); z-index: 999998; backdrop-filter: blur(5px); cursor: pointer;"></div>
+            
+            <div style="position: fixed; top: 0; right: 0; height: 100vh; width: 340px; max-width: 85vw; background-color: #0f172a; z-index: 999999; border-left: 2px solid rgba(249, 212, 35, 0.4); box-shadow: -10px 0 30px rgba(0,0,0,0.8); display: flex; flex-direction: column; animation: slideIn 0.3s ease-out;">
+                <div style="padding: 24px; border-bottom: 1px solid rgba(249, 212, 35, 0.2); background-color: rgba(0,0,0,0.3); display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="background: linear-gradient(135deg, #f9d423 0%, #e8a600 100%); padding: 12px; border-radius: 50%; color: #1a1a2e; box-shadow: 0 4px 10px rgba(249, 212, 35, 0.3);">
+                            ${icons.User(24)}
+                        </div>
+                        <div>
+                            <h3 style="color: #fde047; font-weight: bold; font-size: 1.1rem; margin: 0;">${state.currentUser.name}</h3>
+                            <p style="color: #9ca3af; font-size: 0.75rem; margin: 0; margin-top: 2px;">${state.currentUser.role === 'admin' ? 'Administrador' : 'Cliente VIP'}</p>
+                        </div>
+                    </div>
+                    <button onclick="setState({ accountMenuOpen: false })" style="background: transparent; border: none; color: #9ca3af; cursor: pointer; padding: 4px;">
+                        ${icons.X(24)}
+                    </button>
+                </div>
+                <div style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;">
+                    <button style="display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px; background-color: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; color: #fef3c7; cursor: pointer; text-align: left; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(249,212,35,0.1)'; this.style.borderColor='rgba(249,212,35,0.3)'" onmouseout="this.style.backgroundColor='rgba(255,255,255,0.03)'; this.style.borderColor='rgba(255,255,255,0.05)'">
+                        <span style="color: #f9d423;">${icons.ShoppingCart(20)}</span> Historial de Compras
+                    </button>
+                    <button style="display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px; background-color: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; color: #fef3c7; cursor: pointer; text-align: left; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(249,212,35,0.1)'; this.style.borderColor='rgba(249,212,35,0.3)'" onmouseout="this.style.backgroundColor='rgba(255,255,255,0.03)'; this.style.borderColor='rgba(255,255,255,0.05)'">
+                        <span style="color: #f9d423;">${icons.Heart(20)}</span> Mis Favoritos
+                    </button>
+                    <button style="display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px; background-color: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; color: #fef3c7; cursor: pointer; text-align: left; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(249,212,35,0.1)'; this.style.borderColor='rgba(249,212,35,0.3)'" onmouseout="this.style.backgroundColor='rgba(255,255,255,0.03)'; this.style.borderColor='rgba(255,255,255,0.05)'">
+                        <span style="color: #f9d423;">${icons.Edit(20)}</span> Mis Datos y Envíos
+                    </button>
+                </div>
+                <div style="padding: 24px; border-top: 1px solid rgba(249, 212, 35, 0.2); background-color: rgba(0,0,0,0.3);">
+                    <button onclick="logout()" style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 14px; background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; color: #ef4444; font-weight: bold; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(239,68,68,0.2)'" onmouseout="this.style.backgroundColor='rgba(239,68,68,0.1)'">
+                        ${icons.LogOut(20)} Cerrar Sesión
+                    </button>
+                </div>
+                <style>
+                    @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+                </style>
+            </div>
+        ` : ''}
     `;
 }
 
@@ -1472,9 +1466,9 @@ function renderApp() {
     if (['login', 'register'].includes(state.currentPage)) {
         appContainer.innerHTML = NotificationBanner() + pageContent;
     } else if (state.currentPage === 'admin') {
-        appContainer.innerHTML = NotificationBanner() + Navbar() + AccountSideMenu() + '<main class="pb-16">' + pageContent + '</main>';
+        appContainer.innerHTML = NotificationBanner() + Navbar() + '<main class="pb-16">' + pageContent + '</main>';
     } else {
-        appContainer.innerHTML = NotificationBanner() + Navbar() + AccountSideMenu() + '<main class="pb-16">' + pageContent + '</main>' + Footer();
+        appContainer.innerHTML = NotificationBanner() + Navbar() + '<main class="pb-16">' + pageContent + '</main>' + Footer();
     }
 
     if (state.currentPage === 'home' || state.currentPage === 'admin') startCarousel();
