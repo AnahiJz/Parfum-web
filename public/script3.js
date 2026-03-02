@@ -62,13 +62,11 @@ function setState(newState) {
     state = { ...state, ...newState };
     renderApp();
 
-    // Si el nuevo estado tiene un mensaje de error/notificación
     if (newState.error) {
-        // Esperar 4 segundos y luego quitar la notificación
         setTimeout(() => {
             state.error = null;
             renderApp();
-        }, 4000); // 4000 milisegundos = 4 segundos
+        }, 4000); 
     }
 }
 
@@ -196,18 +194,11 @@ function filterClients() {
 }
 
 function prepareEditUser(userId) {
-    const user = state.users.find(u => u.id === userId);
-    if (user) {
-        setState({
-            editingUser: { ...user },
-            newUserForm: { name: '', email: '', password: '' }
-        });
-
-        // Esta línea hace que la pantalla se deslice suavemente al formulario
-        const formElement = document.querySelector('form[onsubmit="saveUser(event)"]');
-        if (formElement) {
-            formElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+    const userToEdit = state.users.find(u => u.id === userId) || state.admins.find(u => u.id === userId);
+    if (userToEdit) {
+        setState({ editingUser: userToEdit });
+        const form = document.getElementById('create-admin-form');
+        if (form) form.scrollIntoView({ behavior: 'smooth' });
     }
 }
 
@@ -319,6 +310,7 @@ function logout() {
         error: '👋 Has cerrado sesión exitosamente.',
         categoryDropdownOpen: false,
         adminMenuOpen: false,
+        accountMenuOpen: false,
         currentCategory: 'all'
     });
 }
@@ -409,7 +401,6 @@ async function handleContact(e) {
     e.preventDefault();
     const form = document.getElementById('contact-form');
     
-    // Capturamos los valores antes de activar la pantalla de carga
     const contactName = form.elements.contactName.value;
     const contactEmail = form.elements.contactEmail.value;
     const contactMessage = form.elements.contactMessage.value;
@@ -419,7 +410,6 @@ async function handleContact(e) {
         return;
     }
 
-    // ¡Aquí activamos tu animación de carga!
     setState({ loading: true });
 
     try {
@@ -436,16 +426,13 @@ async function handleContact(e) {
         const data = await response.json();
 
         if (data.success) {
-            // Si todo sale bien, apagamos la carga y redirigimos
             setState({ loading: false });
             window.location.href = '/contact-success.html';
         } else {
-            // Si el backend nos manda un error, apagamos la carga y mostramos el mensaje
             setState({ error: '❌ ' + (data.message || 'Error al enviar el mensaje.'), loading: false });
         }
     } catch (error) {
         console.error("Error en la petición fetch:", error);
-        // Si hay error de red o servidor caído, apagamos la carga
         setState({ error: '⚠️ Error de conexión al intentar enviar el mensaje.', loading: false });
     }
 }
@@ -540,19 +527,16 @@ async function checkout() {
     }
 }
 
-// Variable para llevar el control del tiempo y evitar conflictos
 let timeoutNotificacion;
 
 function NotificationBanner() {
     if (!state.error) return '';
 
-    // Limpiamos cualquier temporizador anterior (por si salen varias notificaciones seguidas)
     clearTimeout(timeoutNotificacion);
     
-    // Agregamos el temporizador de 5 segundos (5000 milisegundos)
     timeoutNotificacion = setTimeout(() => {
         if (state.error) {
-            setState({ error: null }); // Oculta la notificación
+            setState({ error: null });
         }
     }, 5000);
 
@@ -566,7 +550,6 @@ function NotificationBanner() {
     `;
 }
 
-    
 function CategoryDropdown() {
     const categories = [
         { name: 'Todos los Productos', key: 'all' },
@@ -606,9 +589,7 @@ function AdminNavbarDropdown() {
     `;
 }
 
-
 function AccountSideMenu() {
-    // Si el menú no está abierto o no hay usuario, no dibujamos nada
     if (!state.accountMenuOpen || !state.currentUser) return '';
 
     return html`
@@ -616,7 +597,7 @@ function AccountSideMenu() {
              style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.7); z-index: 999998; backdrop-filter: blur(5px); cursor: pointer;">
         </div>
 
-        <div style="position: fixed; top: 0; right: 0; width: 340px; max-width: 85vw; height: 100vh; background-color: #0f172a; z-index: 999999; border-left: 2px solid rgba(249, 212, 35, 0.4); box-shadow: -10px 0 30px rgba(0,0,0,0.8); display: flex; flex-direction: column; animation: slideIn 0.3s ease-out;">
+        <div style="position: fixed; top: 0; right: 0; width: 340px; max-width: 85vw; height: 100vh; background-color: #0f172a; z-index: 999999; border-left: 2px solid rgba(249, 212, 35, 0.4); box-shadow: -10px 0 30px rgba(0,0,0,0.8); display: flex; flex-direction: column; animation: slideInRight 0.3s ease-out;">
             
             <div style="padding: 24px; border-bottom: 1px solid rgba(249, 212, 35, 0.2); background-color: rgba(0,0,0,0.3); display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 12px;">
@@ -653,9 +634,9 @@ function AccountSideMenu() {
                     ${icons.LogOut(20)} Cerrar Sesión
                 </button>
             </div>
-
+            
             <style>
-                @keyframes slideIn {
+                @keyframes slideInRight {
                     from { transform: translateX(100%); }
                     to { transform: translateX(0); }
                 }
@@ -663,7 +644,6 @@ function AccountSideMenu() {
         </div>
     `;
 }
-
 
 function Navbar() {
     const cartCount = state.cart.reduce((total, item) => total + item.quantity, 0);
@@ -708,9 +688,6 @@ function Navbar() {
                                     ${isAdmin ? 'ADMIN' : 'MI CUENTA'}
                                 </button>
                             </div>
-                            <button onclick="logout()" class="glass-dark p-3 rounded-xl hover:bg-red-500/20 transition-all group shadow-lg">
-                                ${icons.LogOut(22, 'text-amber-300 group-hover:text-red-400')}
-                            </button>
                         ` : html`
                             <div class="flex items-center gap-2">
                                 <div onclick="setState({currentPage: 'login', categoryDropdownOpen: false})" class="hidden md:block glass-dark p-3 rounded-xl shadow-lg cursor-pointer hover:bg-amber-500/20 transition-all">
@@ -749,7 +726,6 @@ function Navbar() {
     `;
 }
 
-
 function Footer() {
     return html`
         <footer class="glass-dark border-t border-amber-400/30 mt-16">
@@ -762,7 +738,6 @@ function Footer() {
                         </div>
                         <p class="text-amber-200/70 text-sm">Fragancias de lujo exclusivas.</p>
                     </div>
-
                     <div>
                         <h4 class="text-amber-400 font-semibold mb-4">Enlaces</h4>
                         <ul class="space-y-2 text-sm">
@@ -772,7 +747,6 @@ function Footer() {
                             <li><a href="#" onclick="setState({currentPage: 'contact'})" class="text-amber-200/70 hover:text-amber-400 transition">Contacto</a></li>
                         </ul>
                     </div>
-
                     <div class="col-span-1 md:col-span-1">
                         <h4 class="text-amber-400 font-semibold mb-4">Contáctanos</h4>
                         <ul class="space-y-3 text-sm text-amber-200/70">
@@ -781,14 +755,12 @@ function Footer() {
                             <li class="flex items-center gap-3 break-all">${icons.Mail(18, 'text-amber-400')} info@parfum.com</li>
                         </ul>
                     </div>
-                    
                     <div class="col-span-1 md:col-span-2">
                          <h4 class="text-amber-400 font-semibold mb-4">Horario</h4>
                          <ul class="space-y-3 text-sm text-amber-200/70 mb-6">
                             <li class="flex items-center gap-3">${icons.Clock(18, 'text-amber-400')} Lunes a Viernes: 10:00 - 20:00</li>
                             <li class="flex items-center gap-3">${icons.Clock(18, 'text-amber-400')} Sábado: 11:00 - 18:00</li>
                         </ul>
-
                         <h4 class="text-amber-400 font-semibold mb-4">Síguenos</h4>
                         <div class="flex gap-4">
                             <a href="https://instagram.com/tu_perfil" class="group glass p-2 rounded-xl hover:bg-gradient-to-br from-purple-500 to-pink-500 transition-all" target="_blank">
@@ -982,17 +954,12 @@ function CartPage() {
                 <div class="glass-dark p-8 rounded-3xl border border-amber-400/30 h-fit">
                     <h2 class="text-2xl text-amber-300 mb-4">Total: $${subtotal.toLocaleString('es-MX')}</h2>
                     <button onclick="checkout()" class="w-full gradient-gold text-gray-900 px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform">PAGAR</button>
-                     <div id="paypal-button-container" style="margin-top: 15px; width: 100%;"></div>
+                    <div id="paypal-button-container" style="margin-top: 15px; width: 100%;"></div>
                 </div>
             </div>`}
-            
-       
         </div>
     `;
 }
-
-
-
 
 function AboutUsPage() {
     const values = [
@@ -1129,99 +1096,6 @@ function ContactPage() {
     `;
 }
 
-function filterAdminProducts() {
-    if (!state.adminSearchQuery) return state.products;
-    return state.products.filter(p => p.name.toLowerCase().includes(state.adminSearchQuery.toLowerCase()));
-}
-
-function prepareEditProduct(product) {
-    setState({ editingProduct: product });
-}
-
-function cancelEditProduct() {
-    setState({ editingProduct: null });
-    state.newProductForm = { name: '', price: '', stock: '', image: '', gender: 'hombre', type: 'designer' };
-}
-
-function handleProductInput(field, value) {
-    if (state.editingProduct) {
-        state.editingProduct[field] = value;
-    } else {
-        state.newProductForm[field] = value;
-    }
-}
-
-function handleUserInput(field, value) {
-    if (state.editingUser) {
-        state.editingUser[field] = value;
-    } else {
-        state.newUserForm[field] = value;
-    }
-}
-
-async function saveProduct(e) {
-    e.preventDefault();
-    const form = document.getElementById('product-form');
-    
-    const name = document.getElementById('prod-name').value;
-    const price = parseFloat(document.getElementById('prod-price').value);
-    const image = document.getElementById('prod-image').value;
-    const stock = parseInt(document.getElementById('prod-stock').value);
-    const gender = document.getElementById('prod-gender').value;
-    const type = document.getElementById('prod-type').value;
-
-    const productData = {
-        name, price, image, stock, gender, type,
-        rating: state.editingProduct ? state.editingProduct.rating : 5.0,
-        badge: '', 
-        isPopular: false 
-    };
-
-    const url = state.editingProduct 
-        ? `/api/admin/products/${state.editingProduct.id}`
-        : '/api/admin/products';
-    
-    const method = state.editingProduct ? 'PUT' : 'POST';
-
-    try {
-        const response = await fetch(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(productData)
-        });
-
-        const data = await response.json();
-
-        if (data.success || response.ok) {
-            setState({ error: state.editingProduct ? '✅ Producto actualizado' : '✅ Producto creado' });
-            fetchProductsFromDB();
-            cancelEditProduct();
-        } else {
-            setState({ error: '❌ Error al guardar: ' + (data.message || 'Error desconocido') });
-        }
-    } catch (error) {
-        console.error(error);
-        setState({ error: '⚠️ Error de conexión' });
-    }
-}
-
-async function deleteProduct(id) {
-    if (!confirm('¿Estás seguro de eliminar este producto del catálogo?')) return;
-
-    try {
-        const response = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
-        if (response.ok) {
-            setState({ error: '🗑️ Producto eliminado' });
-            fetchProductsFromDB();
-        } else {
-            setState({ error: '❌ No se pudo eliminar el producto' });
-        }
-    } catch (error) {
-        console.error(error);
-        setState({ error: '⚠️ Error al eliminar' });
-    }
-}
-
 function AdminPage() {
     if (!state.currentUser || state.currentUser.role !== 'admin') {
         return html`<div class="text-center p-20 text-red-400 font-bold text-2xl">🚫 Acceso Denegado</div>`;
@@ -1236,7 +1110,6 @@ function AdminPage() {
     const filteredAdmins = filterAdminUsers();
     const filteredClients = filterClients();
 
-    // Simulación de bandeja de mensajes (Nuevo apartado)
     const filteredMessages = state.messages || [
         { id: 1, contactName: 'Diana Jasso', contactEmail: 'djassojimenez@gmail.com', contactMessage: '¿Tienen stock de Aventus de 100ml?', fecha: new Date() }
     ];
@@ -1599,10 +1472,8 @@ function renderApp() {
     if (['login', 'register'].includes(state.currentPage)) {
         appContainer.innerHTML = NotificationBanner() + pageContent;
     } else if (state.currentPage === 'admin') {
-        // ¡Aquí inyectamos el menú lateral para el Admin!
         appContainer.innerHTML = NotificationBanner() + Navbar() + AccountSideMenu() + '<main class="pb-16">' + pageContent + '</main>';
     } else {
-        // ¡Y aquí lo inyectamos para el Cliente en el resto de páginas!
         appContainer.innerHTML = NotificationBanner() + Navbar() + AccountSideMenu() + '<main class="pb-16">' + pageContent + '</main>' + Footer();
     }
 
@@ -1618,7 +1489,6 @@ function renderApp() {
         }
     }
 }
-
 
 function renderizarPayPal(montoTotal) {
     const contenedor = document.getElementById('paypal-button-container');
@@ -1649,11 +1519,7 @@ function renderizarPayPal(montoTotal) {
     }
 }
 
-
-
 window.onload = function() { 
     checkSession();
     fetchProductsFromDB();
 };
-
-// --- LÓGICA DE INTEGRACIÓN PAYPAL ---
