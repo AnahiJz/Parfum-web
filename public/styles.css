@@ -81,3 +81,18 @@ body {
 .admin-table td {
     background-color: rgba(0, 0, 0, 0.1);
 }
+
+.text-gold-gradient {
+    background: linear-gradient(to bottom, #f9d423, #d4af37);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.animate-float {
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+}

@@ -186,7 +186,8 @@ function filterClients() {
 }
 
 function prepareEditUser(userId) {
-    const userToEdit = state.users.find(u => u.id === userId) || state.admins.find(u => u.id === userId);
+    const idStr = String(userId);
+    const userToEdit = state.users.find(u => String(u.id) === idStr) || state.admins.find(u => String(u.id) === idStr);
     if (userToEdit) {
         setState({ editingUser: userToEdit });
         const form = document.getElementById('create-admin-form');
@@ -236,8 +237,14 @@ async function saveUser(e) {
     
     const method = state.editingUser ? 'PUT' : 'POST';
     const bodyData = { name, email };
+    
     if (password) bodyData.password = password;
-    if (!state.editingUser) bodyData.role = 'admin'; 
+    
+    if (!state.editingUser) {
+        bodyData.role = 'admin'; 
+    } else {
+        bodyData.role = state.editingUser.privileges === 'Control Total' ? 'admin' : 'usuario';
+    }
 
     try {
         const response = await fetch(url, {
@@ -246,6 +253,7 @@ async function saveUser(e) {
             body: JSON.stringify(bodyData)
         });
         const data = await response.json();
+        
         if (data.success || response.ok) {
             setState({ error: state.editingUser ? '✅ Usuario actualizado' : '✅ Administrador creado exitosamente' });
             fetchUsersFromDB(); 
@@ -294,6 +302,8 @@ function setCategoryFilter(categoryKey) {
 
 function logout() {
     localStorage.removeItem('parfum_user');
+    fetch('/api/logout', { method: 'POST' }).catch(err => console.error('Fallo al cerrar sesión en servidor:', err));
+    
     setState({
         isLoggedIn: false,
         currentUser: null,
@@ -333,6 +343,9 @@ async function handleLogin(e) {
                 currentPage: data.user.rol === 'admin' ? 'admin' : 'catalog',
                 error: `¡Bienvenido de nuevo, ${data.user.nombre}!`
             });
+            
+            history.pushState({ loggedIn: true }, '', window.location.href);
+
             fetchCart(data.user.id);
             if (data.user.rol === 'admin') {
                 fetchSalesFromDB();
@@ -379,6 +392,8 @@ async function handleRegister(e) {
                 currentPage: 'catalog',
                 error: `🎉 ¡Cuenta creada con éxito! Bienvenido, ${name}.`
             });
+
+            history.pushState({ loggedIn: true }, '', window.location.href);
         } else {
             setState({ error: '❌ ' + data.message });
         }
@@ -910,7 +925,7 @@ function AboutUsPage() {
                     <div class="glass-dark p-6 rounded-2xl border border-amber-400/30 shadow-xl">
                         <h2 class="text-3xl font-bold text-amber-300 mb-3">Nuestra Historia</h2>
                         <p class="text-amber-200/80">
-                            Parfum nació en 2018 con la visión de elevar la experiencia de compra de fragancias en México. Lo que comenzó como un pequeño proyecto de curaduría de perfumes nicho, se ha convertido en una boutique digital líder, dedicada a conectar a nuestros clientes con las esencias más exclusivas del mundo.
+                            Parfum nació en 2018 con la visión de elevating la experiencia de compra de fragancias en México. Lo que comenzó como un pequeño proyecto de curaduría de perfumes nicho, se ha convertido en una boutique digital líder, dedicada a conectar a nuestros clientes con las esencias más exclusivas del mundo.
                         </p>
                     </div>
                 </div>
@@ -974,36 +989,36 @@ function LocationPage() {
 }
 
 function ContactPage() {
-    return html`
-        <div class="container mx-auto px-4 py-16">
-            <h1 class="text-3xl md:text-5xl text-center font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-12">Contáctanos</h1>
-            <div class="max-w-2xl mx-auto glass-dark p-8 rounded-3xl border border-amber-400/30">
-                <form id="contact-form" onsubmit="handleContact(event)">
-                                        <input type="hidden" name="destinationEmail" value="djassojimenez@gmail.com"/>
-                    
-                    <div class="mb-4">
-                        <label class="text-amber-300">Nombre</label>
-                        <input id="contactName" name="contactName" required class="w-full glass rounded p-2 text-white" placeholder="Tu nombre"/>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="text-amber-300">Correo Electrónico</label>
-                        <input type="email" id="contactEmail" name="contactEmail" required class="w-full glass rounded p-2 text-white" placeholder="tu@correo.com"/>
-                    </div>
+    return html`
+        <div class="container mx-auto px-4 py-16">
+            <h1 class="text-3xl md:text-5xl text-center font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-12">Contáctanos</h1>
+            <div class="max-w-2xl mx-auto glass-dark p-8 rounded-3xl border border-amber-400/30">
+                <form id="contact-form" onsubmit="handleContact(event)">
+                                        <input type="hidden" name="destinationEmail" value="djassojimenez@gmail.com"/>
+                    
+                    <div class="mb-4">
+                        <label class="text-amber-300">Nombre</label>
+                        <input id="contactName" name="contactName" required class="w-full glass rounded p-2 text-white" placeholder="Tu nombre"/>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="text-amber-300">Correo Electrónico</label>
+                        <input type="email" id="contactEmail" name="contactEmail" required class="w-full glass rounded p-2 text-white" placeholder="tu@correo.com"/>
+                    </div>
 
-                    <div class="mb-4">
-                        <label class="text-amber-300">Quejas y Sugerencias</label>
-                        <textarea id="contactMessage" name="contactMessage" required class="w-full glass rounded p-2 text-white h-32" placeholder="Escribe aquí tus quejas o sugerencias detalladas..."></textarea>
-                    </div>
-                    
-                    <button type="submit" class="gradient-gold px-6 py-2 rounded-full font-bold hover:scale-105 transition-transform">Enviar</button>
-                </form>
-                <p class="text-center text-amber-200/50 text-xs mt-6">
-                    Tus comentarios serán recibidos directamente en djassojimenez@gmail.com
-                </p>
-            </div>
-        </div>
-    `;
+                    <div class="mb-4">
+                        <label class="text-amber-300">Quejas y Sugerencias</label>
+                        <textarea id="contactMessage" name="contactMessage" required class="w-full glass rounded p-2 text-white h-32" placeholder="Escribe aquí tus quejas o sugerencias detalladas..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="gradient-gold px-6 py-2 rounded-full font-bold hover:scale-105 transition-transform">Enviar</button>
+                </form>
+                <p class="text-center text-amber-200/50 text-xs mt-6">
+                    Tus comentarios serán recibidos directamente en djassojimenez@gmail.com
+                </p>
+            </div>
+        </div>
+    `;
 }
 
 function filterAdminProducts() {
@@ -1018,22 +1033,6 @@ function prepareEditProduct(product) {
 function cancelEditProduct() {
     setState({ editingProduct: null });
     state.newProductForm = { name: '', price: '', stock: '', image: '', gender: 'hombre', type: 'designer' };
-}
-
-function handleProductInput(field, value) {
-    if (state.editingProduct) {
-        state.editingProduct[field] = value;
-    } else {
-        state.newProductForm[field] = value;
-    }
-}
-
-function handleUserInput(field, value) {
-    if (state.editingUser) {
-        state.editingUser[field] = value;
-    } else {
-        state.newUserForm[field] = value;
-    }
 }
 
 async function saveProduct(e) {
@@ -1346,10 +1345,10 @@ function AdminPage() {
                                             <td class="p-3 font-medium text-white">${u.name}</td>
                                             <td class="p-3 text-gray-400">${u.email}</td>
                                             <td class="p-3 text-right flex justify-end gap-2">
-                                                <button onclick="prepareEditUser(${u.id})" class="text-blue-400 hover:text-blue-300 hover:scale-110 transition" title="Editar">
+                                                <button onclick="prepareEditUser('${u.id}')" class="text-blue-400 hover:text-blue-300 hover:scale-110 transition" title="Editar">
                                                     ${icons.Edit(20)}
                                                 </button>
-                                                <button onclick="deleteUser(${u.id})" class="text-red-400 hover:text-red-300 hover:scale-110 transition" title="Eliminar">
+                                                <button onclick="deleteUser('${u.id}')" class="text-red-400 hover:text-red-300 hover:scale-110 transition" title="Eliminar">
                                                     ${icons.Trash(20)}
                                                 </button>
                                             </td>
@@ -1392,10 +1391,10 @@ function AdminPage() {
                                             <td class="p-3 font-medium text-white">${u.name}</td>
                                             <td class="p-3 text-gray-400">${u.email}</td>
                                             <td class="p-3 text-right flex justify-end gap-2">
-                                                <button onclick="prepareEditUser(${u.id})" class="text-blue-400 hover:text-blue-300 hover:scale-110 transition" title="Editar">
+                                                <button onclick="prepareEditUser('${u.id}')" class="text-blue-400 hover:text-blue-300 hover:scale-110 transition" title="Editar">
                                                     ${icons.Edit(20)}
                                                 </button>
-                                                <button onclick="deleteUser(${u.id})" class="text-red-400 hover:text-red-300 hover:scale-110 transition" title="Eliminar">
+                                                <button onclick="deleteUser('${u.id}')" class="text-red-400 hover:text-red-300 hover:scale-110 transition" title="Eliminar">
                                                     ${icons.Trash(20)}
                                                 </button>
                                             </td>
@@ -1460,3 +1459,23 @@ window.onload = function() {
     checkSession();
     fetchProductsFromDB();
 };
+
+window.addEventListener('popstate', (e) => {
+    if (state.isLoggedIn) {
+        logout();
+        setState({ 
+            currentPage: 'login', 
+            error: '🔒 Por seguridad, tu sesión se ha cerrado al retroceder.' 
+        });
+    }
+});
+
+window.addEventListener('pageshow', (e) => {
+    if (e.persisted && state.isLoggedIn) {
+        logout();
+        setState({ 
+            currentPage: 'login', 
+            error: '🔒 Sesión expirada por inactividad o navegación.' 
+        });
+    }
+});

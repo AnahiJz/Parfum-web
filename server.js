@@ -106,6 +106,10 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+app.post('/api/logout', (req, res) => {
+    res.json({ success: true });
+});
+
 app.post('/api/register', async (req, res) => {
     const { name, email, password } = req.body;
     try {
@@ -363,9 +367,6 @@ app.delete('/api/admin/users/:id', async (req, res) => {
     }
 });
 
-// --- MANEJO DE RUTAS Y ERRORES ---
-
-// Ruta principal: Sirve tu aplicación Parfum
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -412,6 +413,3 @@ app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Visita: http://localhost:${PORT}`);
 });
-
-
-
