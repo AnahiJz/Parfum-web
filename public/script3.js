@@ -252,18 +252,26 @@ async function saveUser(e) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(bodyData)
         });
-        const data = await response.json();
-        
-        if (data.success || response.ok) {
-            setState({ error: state.editingUser ? '✅ Usuario actualizado' : '✅ Administrador creado exitosamente' });
-            fetchUsersFromDB(); 
-            cancelEditUser();
+
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+            const data = await response.json();
+            
+            if (data.success || response.ok) {
+                setState({ error: state.editingUser ? '✅ Usuario actualizado' : '✅ Administrador creado exitosamente' });
+                fetchUsersFromDB(); 
+                cancelEditUser();
+            } else {
+                setState({ error: '❌ ' + (data.message || 'Error en la operación') });
+            }
         } else {
-            setState({ error: '❌ ' + (data.message || 'Error en la operación') });
+            const text = await response.text();
+            console.error("Respuesta no JSON del servidor:", text);
+            setState({ error: '⚠️ El servidor falló (revisa los logs).' });
         }
     } catch (error) {
-        console.error(error);
-        setState({ error: '⚠️ Error de conexión' });
+        console.error("Fetch falló:", error);
+        setState({ error: '⚠️ Error de red: No se pudo conectar con el servidor.' });
     }
 }
 

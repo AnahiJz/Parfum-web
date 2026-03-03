@@ -1,11 +1,8 @@
-require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const db = require('./db');
 const nodemailer = require('nodemailer');
-const { MercadoPagoConfig, Preference } = require('mercadopago');
-const client = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN });
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY); 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -140,8 +137,11 @@ app.post('/api/admin/create', async (req, res) => {
         );
         res.json({ success: true });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: 'Error al crear admin' });
+        console.error("🚨 Error exacto en BD al crear admin:", error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({ success: false, message: 'Este correo ya está registrado.' });
+        }
+        res.status(500).json({ success: false, message: 'Error interno de la base de datos.' });
     }
 });
 
@@ -202,7 +202,7 @@ app.post('/api/cart/remove', async (req, res) => {
 });
 
 app.post('/api/checkout', async (req, res) => {
-    const { userId, cart, total, provider } = req.body;
+    const { userId, cart, total } = req.body;
     if (!userId || !cart || cart.length === 0) {
         return res.status(400).json({ success: false, message: 'Datos inválidos' });
     }
@@ -220,54 +220,57 @@ app.post('/api/checkout', async (req, res) => {
             [orderDetails]
         );
         await connection.commit();
+        const line_items = cart.map(item => ({
+            price_data: {
+                currency: 'mxn',
+                product_data: { name: item.name },
+                unit_amount: Math.round(item.price * 100),
+            },
+            quantity: item.quantity,
+        }));
         const protocol = req.headers['x-forwarded-proto'] || 'http';
         const host = req.get('host');
-        let checkoutUrl;
-
-        if (provider === 'stripe') {
-            const session = await stripe.checkout.sessions.create({
-                payment_method_types: ['card'],
-                line_items: cart.map(item => ({
-                    price_data: {
-                        currency: 'mxn',
-                        product_data: { name: item.name },
-                        unit_amount: Math.round(item.price * 100),
-                    },
-                    quantity: item.quantity,
-                })),
-                mode: 'payment',
-                success_url: `${protocol}://${host}/success.html?orderId=${orderId}`,
-                cancel_url: `${protocol}://${host}/cancel.html`,
-            });
-            checkoutUrl = session.url;
-        } else if (provider === 'mercadopago') {
-            const preference = new Preference(client);
-            const result = await preference.create({
-                body: {
-                    items: cart.map(item => ({
-                        title: item.name,
-                        unit_price: Number(item.price),
-                        quantity: Number(item.quantity),
-                        currency_id: 'MXN'
-                    })),
-                    back_urls: {
-                        success: `${protocol}://${host}/success.html?orderId=${orderId}`,
-                        failure: `${protocol}://${host}/cancel.html`,
-                        pending: `${protocol}://${host}/pending.html`
-                    },
-                    auto_return: 'approved',
-                }
-            });
-            checkoutUrl = result.init_point;
-        } else {
-            throw new Error('Proveedor de pago no soportado');
-        }
-        
-        res.json({ success: true, url: checkoutUrl });
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            line_items: line_items,
+            mode: 'payment',
+            success_url: `${protocol}://${host}/success.html?orderId=${orderId}`,
+            cancel_url: `${protocol}://${host}/cancel.html`,
+        });
+        res.json({ success: true, url: session.url });
     } catch (error) {
         await connection.rollback();
         console.error(error);
         res.status(500).json({ success: false, message: 'Error al procesar pago' });
+    } finally {
+        connection.release();
+    }
+});
+
+app.post('/api/paypal/create-pending-order', async (req, res) => {
+    const { userId, cart, total } = req.body;
+    if (!userId || !cart || cart.length === 0) {
+        return res.status(400).json({ success: false, message: 'Datos inválidos' });
+    }
+    const connection = await db.getConnection();
+    try {
+        await connection.beginTransaction();
+        const [orderResult] = await connection.query(
+            'INSERT INTO pedidos (usuario_id, subtotal, total, direccion_envio, estado) VALUES (?, ?, ?, ?, ?)',
+            [userId, total, total, 'Pago vía PayPal', 'pendiente']
+        );
+        const orderId = orderResult.insertId;
+        const orderDetails = cart.map(item => [orderId, item.id, item.name, item.quantity, item.price]);
+        await connection.query(
+            'INSERT INTO pedido_detalle (pedido_id, producto_id, nombre_producto, cantidad, precio_unitario) VALUES ?',
+            [orderDetails]
+        );
+        await connection.commit();
+        res.json({ success: true, orderId: orderId });
+    } catch (error) {
+        await connection.rollback();
+        console.error("Error guardando orden de PayPal:", error);
+        res.status(500).json({ success: false, message: 'Error al procesar pedido' });
     } finally {
         connection.release();
     }
@@ -373,15 +376,18 @@ app.delete('/api/admin/products/:id', async (req, res) => {
 
 app.put('/api/admin/users/:id', async (req, res) => {
     const { id } = req.params;
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
     try {
         let query = password && password.trim() !== '' 
-            ? 'UPDATE usuarios SET nombre = ?, correo = ?, contrasena_hash = ? WHERE id = ?' 
-            : 'UPDATE usuarios SET nombre = ?, correo = ? WHERE id = ?';
-        let values = password && password.trim() !== '' ? [name, email, password, id] : [name, email, id];
+            ? 'UPDATE usuarios SET nombre = ?, correo = ?, contrasena_hash = ?, rol = ? WHERE id = ?' 
+            : 'UPDATE usuarios SET nombre = ?, correo = ?, rol = ? WHERE id = ?';
+        let values = password && password.trim() !== '' 
+            ? [name, email, password, role || 'usuario', id] 
+            : [name, email, role || 'usuario', id];
         await db.query(query, values);
         res.json({ success: true });
     } catch (error) {
+        console.error("🚨 Error al actualizar usuario:", error);
         res.status(500).json({ success: false });
     }
 });
@@ -401,9 +407,9 @@ app.get('/', (req, res) => {
 });
 
 app.post('/api/contact', async (req, res) => {
-    const { contactName, contactEmail, contactMessage } = req.body;
+    const { contactName, contactEmail, contactMessage, destinationEmail } = req.body;
 
-    if (!contactName || !contactEmail || !contactMessage) {
+    if (!contactName || !contactEmail || !contactMessage || !destinationEmail) {
         return res.status(400).json({ success: false, message: 'Faltan campos por completar' });
     }
 
@@ -425,7 +431,7 @@ app.post('/api/contact', async (req, res) => {
 
         await transporter.sendMail({
             from: `"Parfum Web Contacto" <${process.env.EMAIL_USER}>`,
-            to: 'langel.shino@gmail.com, djassojimenez@gmail.com',
+            to: destinationEmail,
             replyTo: contactEmail,
             subject: `Nuevo mensaje de ${contactName} - Parfum Contacto`,
             html: emailHtml
@@ -438,12 +444,7 @@ app.post('/api/contact', async (req, res) => {
     }
 });
 
-
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Visita: http://localhost:${PORT}`);
-<<<<<<< HEAD
 });
-=======
-});
->>>>>>> 74bf37a3034ebab125f4046dda753cce27b6092f
