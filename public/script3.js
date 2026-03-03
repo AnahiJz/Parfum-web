@@ -956,10 +956,13 @@ function CartPage() {
                         </div>
                     `).join('')}
                 </div>
-                <div class="glass-dark p-8 rounded-3xl border border-amber-400/30 h-fit">
+               <div class="glass-dark p-8 rounded-3xl border border-amber-400/30 h-fit">
                     <h2 class="text-2xl text-amber-300 mb-4">Total: $${subtotal.toLocaleString('es-MX')}</h2>
-                    <button onclick="checkout()" class="w-full gradient-gold text-gray-900 px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform">PAGAR</button>
-                    <div id="paypal-button-container" style="margin-top: 15px; width: 100%;"></div>
+                    <button onclick="checkout()" class="w-full gradient-gold text-gray-900 px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2">
+                        PAGAR CON MERCADO PAGO
+                    </button>
+                </div>
+                
                 </div>
             </div>`}
         </div>
@@ -1496,37 +1499,4 @@ function renderApp() {
         }
     }
 }
-
-function renderizarPayPal(montoTotal) {
-    const contenedor = document.getElementById('paypal-button-container');
-    
-    if (contenedor && contenedor.innerHTML === "") {
-        paypal.Buttons({
-            style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'pay' },
-            
-            createOrder: function(data, actions) {
-                if (montoTotal <= 0) return false;
-                return actions.order.create({
-                    purchase_units: [{ amount: { value: montoTotal.toString() } }]
-                });
-            },
-            
-            onApprove: function(data, actions) {
-                return actions.order.capture().then(function(details) {
-                    console.log('Pago completado por:', details.payer.name.given_name);
-                    window.location.href = "/success.html"; 
-                });
-            },
-            
-            onError: function (err) {
-                console.error('Error:', err);
-                alert('Ocurrió un error al procesar el pago.');
-            }
-        }).render('#paypal-button-container');
-    }
-}
-
-window.onload = function() { 
-    checkSession();
-    fetchProductsFromDB();
 };
