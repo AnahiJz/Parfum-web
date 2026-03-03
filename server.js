@@ -1,8 +1,11 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const db = require('./db');
 const nodemailer = require('nodemailer');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY); 
+const { MercadoPagoConfig, Preference } = require('mercadopago');
+const client = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN });
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -199,7 +202,7 @@ app.post('/api/cart/remove', async (req, res) => {
 });
 
 app.post('/api/checkout', async (req, res) => {
-    const { userId, cart, total } = req.body;
+    const { userId, cart, total, provider } = req.body;
     if (!userId || !cart || cart.length === 0) {
         return res.status(400).json({ success: false, message: 'Datos inválidos' });
     }
@@ -217,24 +220,50 @@ app.post('/api/checkout', async (req, res) => {
             [orderDetails]
         );
         await connection.commit();
-        const line_items = cart.map(item => ({
-            price_data: {
-                currency: 'mxn',
-                product_data: { name: item.name },
-                unit_amount: Math.round(item.price * 100),
-            },
-            quantity: item.quantity,
-        }));
         const protocol = req.headers['x-forwarded-proto'] || 'http';
         const host = req.get('host');
-        const session = await stripe.checkout.sessions.create({
-            payment_method_types: ['card'],
-            line_items: line_items,
-            mode: 'payment',
-            success_url: `${protocol}://${host}/success.html?orderId=${orderId}`,
-            cancel_url: `${protocol}://${host}/cancel.html`,
-        });
-        res.json({ success: true, url: session.url });
+        let checkoutUrl;
+
+        if (provider === 'stripe') {
+            const session = await stripe.checkout.sessions.create({
+                payment_method_types: ['card'],
+                line_items: cart.map(item => ({
+                    price_data: {
+                        currency: 'mxn',
+                        product_data: { name: item.name },
+                        unit_amount: Math.round(item.price * 100),
+                    },
+                    quantity: item.quantity,
+                })),
+                mode: 'payment',
+                success_url: `${protocol}://${host}/success.html?orderId=${orderId}`,
+                cancel_url: `${protocol}://${host}/cancel.html`,
+            });
+            checkoutUrl = session.url;
+        } else if (provider === 'mercadopago') {
+            const preference = new Preference(client);
+            const result = await preference.create({
+                body: {
+                    items: cart.map(item => ({
+                        title: item.name,
+                        unit_price: Number(item.price),
+                        quantity: Number(item.quantity),
+                        currency_id: 'MXN'
+                    })),
+                    back_urls: {
+                        success: `${protocol}://${host}/success.html?orderId=${orderId}`,
+                        failure: `${protocol}://${host}/cancel.html`,
+                        pending: `${protocol}://${host}/pending.html`
+                    },
+                    auto_return: 'approved',
+                }
+            });
+            checkoutUrl = result.init_point;
+        } else {
+            throw new Error('Proveedor de pago no soportado');
+        }
+        
+        res.json({ success: true, url: checkoutUrl });
     } catch (error) {
         await connection.rollback();
         console.error(error);
@@ -372,9 +401,9 @@ app.get('/', (req, res) => {
 });
 
 app.post('/api/contact', async (req, res) => {
-    const { contactName, contactEmail, contactMessage, destinationEmail } = req.body;
+    const { contactName, contactEmail, contactMessage } = req.body;
 
-    if (!contactName || !contactEmail || !contactMessage || !destinationEmail) {
+    if (!contactName || !contactEmail || !contactMessage) {
         return res.status(400).json({ success: false, message: 'Faltan campos por completar' });
     }
 
@@ -396,7 +425,7 @@ app.post('/api/contact', async (req, res) => {
 
         await transporter.sendMail({
             from: `"Parfum Web Contacto" <${process.env.EMAIL_USER}>`,
-            to: destinationEmail,
+            to: 'langel.shino@gmail.com, djassojimenez@gmail.com',
             replyTo: contactEmail,
             subject: `Nuevo mensaje de ${contactName} - Parfum Contacto`,
             html: emailHtml
@@ -409,7 +438,12 @@ app.post('/api/contact', async (req, res) => {
     }
 });
 
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Visita: http://localhost:${PORT}`);
+<<<<<<< HEAD
 });
+=======
+});
+>>>>>>> 74bf37a3034ebab125f4046dda753cce27b6092f

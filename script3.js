@@ -32,7 +32,8 @@ let state = {
     cart: [],
     menuOpen: false,
     categoryDropdownOpen: false, 
-    adminMenuOpen: false, 
+    adminMenuOpen: false,
+    accountMenuOpen: false, // Variable para el menú lateral
     carouselIndex: 0,
     carouselImages: [
         'ParfumH/aventus.jpg', 'ParfumH/bleu.jpg', 'ParfumH/Allure.jpg',
@@ -60,6 +61,15 @@ let carouselInterval;
 function setState(newState) {
     state = { ...state, ...newState };
     renderApp();
+
+    // Si el nuevo estado tiene un mensaje de error/notificación
+    if (newState.error) {
+        // Esperar 4 segundos y luego quitar la notificación
+        setTimeout(() => {
+            state.error = null;
+            renderApp();
+        }, 4000); // 4000 milisegundos = 4 segundos
+    }
 }
 
 function html(strings, ...values) {
@@ -186,8 +196,7 @@ function filterClients() {
 }
 
 function prepareEditUser(userId) {
-    const idStr = String(userId);
-    const userToEdit = state.users.find(u => String(u.id) === idStr) || state.admins.find(u => String(u.id) === idStr);
+    const userToEdit = state.users.find(u => u.id === userId) || state.admins.find(u => u.id === userId);
     if (userToEdit) {
         setState({ editingUser: userToEdit });
         const form = document.getElementById('create-admin-form');
@@ -237,14 +246,8 @@ async function saveUser(e) {
     
     const method = state.editingUser ? 'PUT' : 'POST';
     const bodyData = { name, email };
-    
     if (password) bodyData.password = password;
-    
-    if (!state.editingUser) {
-        bodyData.role = 'admin'; 
-    } else {
-        bodyData.role = state.editingUser.privileges === 'Control Total' ? 'admin' : 'usuario';
-    }
+    if (!state.editingUser) bodyData.role = 'admin'; 
 
     try {
         const response = await fetch(url, {
@@ -253,7 +256,6 @@ async function saveUser(e) {
             body: JSON.stringify(bodyData)
         });
         const data = await response.json();
-        
         if (data.success || response.ok) {
             setState({ error: state.editingUser ? '✅ Usuario actualizado' : '✅ Administrador creado exitosamente' });
             fetchUsersFromDB(); 
@@ -302,8 +304,6 @@ function setCategoryFilter(categoryKey) {
 
 function logout() {
     localStorage.removeItem('parfum_user');
-    fetch('/api/logout', { method: 'POST' }).catch(err => console.error(err));
-    
     setState({
         isLoggedIn: false,
         currentUser: null,
@@ -312,6 +312,7 @@ function logout() {
         error: '👋 Has cerrado sesión exitosamente.',
         categoryDropdownOpen: false,
         adminMenuOpen: false,
+        accountMenuOpen: false,
         currentCategory: 'all'
     });
 }
@@ -343,9 +344,6 @@ async function handleLogin(e) {
                 currentPage: data.user.rol === 'admin' ? 'admin' : 'catalog',
                 error: `¡Bienvenido de nuevo, ${data.user.nombre}!`
             });
-            
-            history.pushState({ loggedIn: true }, '', window.location.href);
-
             fetchCart(data.user.id);
             if (data.user.rol === 'admin') {
                 fetchSalesFromDB();
@@ -392,8 +390,6 @@ async function handleRegister(e) {
                 currentPage: 'catalog',
                 error: `🎉 ¡Cuenta creada con éxito! Bienvenido, ${name}.`
             });
-
-            history.pushState({ loggedIn: true }, '', window.location.href);
         } else {
             setState({ error: '❌ ' + data.message });
         }
@@ -407,37 +403,44 @@ async function handleContact(e) {
     e.preventDefault();
     const form = document.getElementById('contact-form');
     
+    // Capturamos los valores antes de activar la pantalla de carga
     const contactName = form.elements.contactName.value;
     const contactEmail = form.elements.contactEmail.value;
     const contactMessage = form.elements.contactMessage.value;
-    const destinationEmail = form.elements.destinationEmail.value;
 
     if (!contactName || !contactEmail || !contactMessage) {
         setState({ error: '⚠️ Por favor completa todos los campos.' });
         return;
     }
 
+    // ¡Aquí activamos tu animación de carga!
+    setState({ loading: true });
+
     try {
         const response = await fetch('/api/contact', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contactName, contactEmail, contactMessage, destinationEmail })
+            body: JSON.stringify({ 
+                contactName, 
+                contactEmail, 
+                contactMessage 
+            })
         });
 
         const data = await response.json();
 
         if (data.success) {
-            setState({ 
-                error: `✅ ¡Gracias ${contactName}! Tu mensaje ha sido enviado a nuestro equipo.`, 
-                currentPage: 'home' 
-            });
-            form.reset();
+            // Si todo sale bien, apagamos la carga y redirigimos
+            setState({ loading: false });
+            window.location.href = '/contact-success.html';
         } else {
-            setState({ error: '❌ ' + (data.message || 'Error al enviar el mensaje.') });
+            // Si el backend nos manda un error, apagamos la carga y mostramos el mensaje
+            setState({ error: '❌ ' + (data.message || 'Error al enviar el mensaje.'), loading: false });
         }
     } catch (error) {
-        console.error(error);
-        setState({ error: '⚠️ Error de conexión al intentar enviar el mensaje.' });
+        console.error("Error en la petición fetch:", error);
+        // Si hay error de red o servidor caído, apagamos la carga
+        setState({ error: '⚠️ Error de conexión al intentar enviar el mensaje.', loading: false });
     }
 }
 
@@ -451,12 +454,18 @@ async function addToCart(productId) {
         const response = await fetch('/api/cart/add', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: state.currentUser.id, productId: productId, quantity: 1 })
+            body: JSON.stringify({ 
+                userId: state.currentUser.id, 
+                productId: productId, 
+                quantity: 1 
+            })
         });
         if (response.ok) {
             await fetchCart(state.currentUser.id);
             const nombreProd = product ? product.name : 'Producto';
             setState({ error: `✅ ${nombreProd} añadido al carrito` });
+        } else {
+            console.error('Error en respuesta del servidor al agregar al carrito');
         }
     } catch (error) {
         console.error(error);
@@ -496,7 +505,7 @@ async function updateQuantity(productId, newQuantity) {
     }
 }
 
-async function checkout() {
+async function checkout(provider) {
     if (!state.currentUser || !state.currentUser.id) {
         setState({ error: '❌ Error: No se pudo identificar al usuario.' });
         return;
@@ -510,7 +519,8 @@ async function checkout() {
             body: JSON.stringify({
                 userId: state.currentUser.id,
                 cart: state.cart,
-                total: total
+                total: total,
+                provider: provider
             })
         });
         const data = await response.json();
@@ -525,8 +535,22 @@ async function checkout() {
     }
 }
 
+// Variable para llevar el control del tiempo y evitar conflictos
+let timeoutNotificacion;
+
 function NotificationBanner() {
     if (!state.error) return '';
+
+    // Limpiamos cualquier temporizador anterior
+    clearTimeout(timeoutNotificacion);
+    
+    // Agregamos el temporizador de 5 segundos
+    timeoutNotificacion = setTimeout(() => {
+        if (state.error) {
+            setState({ error: null }); 
+        }
+    }, 5000);
+
     return html` 
         <div id="notification-banner" class="notification-banner fixed top-0 left-1/2 transform -translate-x-1/2 mt-4 p-3 rounded-xl shadow-2xl z-[100] max-w-sm w-full mx-4
             ${state.error.includes('❌') || state.error.includes('🚨') || state.error.includes('⚠️') || state.error.includes('🗑️') || state.error.includes('🔒') ? 'bg-red-700' : 'bg-green-600'} 
@@ -575,6 +599,57 @@ function AdminNavbarDropdown() {
         </button>
     `;
 }
+function AccountSideMenu() {
+    if (!state.accountMenuOpen || !state.currentUser) return '';
+
+    return html`
+        <div class="fixed inset-0 flex justify-end" style="z-index: 9999;">
+            
+            <div class="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity" onclick="setState({ accountMenuOpen: false })"></div>
+
+            <div class="relative w-80 max-w-[85vw] h-full glass-dark border-l border-amber-400/30 shadow-2xl flex flex-col transform transition-transform duration-300 animate-fadeInUp">
+                
+                <div class="p-6 border-b border-amber-400/20 flex justify-between items-center bg-black/40">
+                    <div class="flex items-center gap-3">
+                        <div class="gradient-gold p-3 rounded-full text-gray-900 shadow-lg">
+                            ${icons.User(24)}
+                        </div>
+                        <div>
+                            <h3 class="text-amber-300 font-bold text-lg leading-tight">${state.currentUser.name}</h3>
+                            <p class="text-gray-400 text-xs">${state.currentUser.role === 'admin' ? 'Administrador' : 'Cliente VIP'}</p>
+                        </div>
+                    </div>
+                    <button onclick="setState({ accountMenuOpen: false })" class="text-gray-400 hover:text-red-400 transition-colors p-1">
+                        ${icons.X(24)}
+                    </button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-4 space-y-3">
+                    <button class="w-full flex items-center gap-3 p-4 rounded-xl glass hover:bg-amber-500/20 text-amber-100 transition-all text-left border border-transparent hover:border-amber-400/30">
+                        ${icons.ShoppingCart(20, 'text-amber-400')}
+                        <span class="font-medium">Historial de Compras</span>
+                    </button>
+                    <button class="w-full flex items-center gap-3 p-4 rounded-xl glass hover:bg-amber-500/20 text-amber-100 transition-all text-left border border-transparent hover:border-amber-400/30">
+                        ${icons.Heart(20, 'text-amber-400')}
+                        <span class="font-medium">Mis Favoritos</span>
+                    </button>
+                    <button class="w-full flex items-center gap-3 p-4 rounded-xl glass hover:bg-amber-500/20 text-amber-100 transition-all text-left border border-transparent hover:border-amber-400/30">
+                        ${icons.Edit(20, 'text-amber-400')}
+                        <span class="font-medium">Mis Datos y Envíos</span>
+                    </button>
+                </div>
+
+                <div class="p-6 border-t border-amber-400/20 bg-black/40">
+                    <button onclick="logout()" class="w-full flex items-center justify-center gap-2 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-400 py-3 rounded-xl font-bold transition-all">
+                        ${icons.LogOut(20)}
+                        Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
 
 function Navbar() {
     const cartCount = state.cart.reduce((total, item) => total + item.quantity, 0);
@@ -612,14 +687,13 @@ function Navbar() {
                         ` : ''}
                         ${state.isLoggedIn ? html`
                             <div class="flex items-center gap-2">
-                                <div class="hidden md:block glass-dark p-3 rounded-xl shadow-lg">${icons.User(26, 'text-amber-300')}</div>
-                                <button class="hidden md:block text-amber-100 font-medium glass-dark px-4 py-3 rounded-xl hover:bg-amber-500/20 transition-all">
+                                <div onclick="setState({ accountMenuOpen: true, menuOpen: false })" class="hidden md:block glass-dark p-3 rounded-xl shadow-lg cursor-pointer hover:bg-amber-500/20 transition-all">
+                                    ${icons.User(26, 'text-amber-300')}
+                                </div>
+                                <button onclick="setState({ accountMenuOpen: true, menuOpen: false })" class="hidden md:block text-amber-100 font-medium glass-dark px-4 py-3 rounded-xl hover:bg-amber-500/20 transition-all">
                                     ${isAdmin ? 'ADMIN' : 'MI CUENTA'}
                                 </button>
                             </div>
-                            <button onclick="logout()" class="glass-dark p-3 rounded-xl hover:bg-red-500/20 transition-all group shadow-lg">
-                                ${icons.LogOut(22, 'text-amber-300 group-hover:text-red-400')}
-                            </button>
                         ` : html`
                             <div class="flex items-center gap-2">
                                 <div onclick="setState({currentPage: 'login', categoryDropdownOpen: false})" class="hidden md:block glass-dark p-3 rounded-xl shadow-lg cursor-pointer hover:bg-amber-500/20 transition-all">
@@ -640,7 +714,11 @@ function Navbar() {
                         <nav class="flex flex-col gap-2">
                             ${isAdmin ? html`
                                 <button onclick="setState({currentPage: 'admin', menuOpen: false})" class="text-red-400 font-bold py-2 text-left">PANEL ADMIN</button>
+                                <button onclick="setState({ accountMenuOpen: true, menuOpen: false })" class="text-amber-200 font-bold py-2 text-left">MI CUENTA</button>
                             ` : html`
+                                ${state.isLoggedIn ? html`
+                                    <button onclick="setState({ accountMenuOpen: true, menuOpen: false })" class="text-amber-300 font-bold py-2 text-left">MI CUENTA</button>
+                                ` : ''}
                                 <button onclick="setState({currentPage: 'catalog', menuOpen: false})" class="text-amber-200 hover:text-amber-400 py-2 text-left">CATÁLOGO</button>
                                 <button onclick="setState({currentPage: 'about', menuOpen: false})" class="text-amber-200 hover:text-amber-400 py-2 text-left">NOSOTROS</button>
                                 <button onclick="setState({currentPage: 'location', menuOpen: false})" class="text-amber-200 hover:text-amber-400 py-2 text-left">UBICACIÓN</button>
@@ -666,7 +744,6 @@ function Footer() {
                         </div>
                         <p class="text-amber-200/70 text-sm">Fragancias de lujo exclusivas.</p>
                     </div>
-
                     <div>
                         <h4 class="text-amber-400 font-semibold mb-4">Enlaces</h4>
                         <ul class="space-y-2 text-sm">
@@ -676,7 +753,6 @@ function Footer() {
                             <li><a href="#" onclick="setState({currentPage: 'contact'})" class="text-amber-200/70 hover:text-amber-400 transition">Contacto</a></li>
                         </ul>
                     </div>
-
                     <div class="col-span-1 md:col-span-1">
                         <h4 class="text-amber-400 font-semibold mb-4">Contáctanos</h4>
                         <ul class="space-y-3 text-sm text-amber-200/70">
@@ -685,14 +761,12 @@ function Footer() {
                             <li class="flex items-center gap-3 break-all">${icons.Mail(18, 'text-amber-400')} info@parfum.com</li>
                         </ul>
                     </div>
-                    
                     <div class="col-span-1 md:col-span-2">
                          <h4 class="text-amber-400 font-semibold mb-4">Horario</h4>
                          <ul class="space-y-3 text-sm text-amber-200/70 mb-6">
                             <li class="flex items-center gap-3">${icons.Clock(18, 'text-amber-400')} Lunes a Viernes: 10:00 - 20:00</li>
                             <li class="flex items-center gap-3">${icons.Clock(18, 'text-amber-400')} Sábado: 11:00 - 18:00</li>
                         </ul>
-
                         <h4 class="text-amber-400 font-semibold mb-4">Síguenos</h4>
                         <div class="flex gap-4">
                             <a href="https://instagram.com/tu_perfil" class="group glass p-2 rounded-xl hover:bg-gradient-to-br from-purple-500 to-pink-500 transition-all" target="_blank">
@@ -883,12 +957,18 @@ function CartPage() {
                         </div>
                     `).join('')}
                 </div>
-                <div class="glass-dark p-8 rounded-3xl border border-amber-400/30 h-fit">
+               <div class="glass-dark p-8 rounded-3xl border border-amber-400/30 h-fit">
                     <h2 class="text-2xl text-amber-300 mb-4">Total: $${subtotal.toLocaleString('es-MX')}</h2>
-                    <button onclick="checkout()" class="w-full gradient-gold text-gray-900 px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform mb-4">PAGAR CON TARJETA</button>
-                    <div class="relative z-0">
-                        <div id="paypal-button-container" class="w-full"></div>
+                    <div class="flex flex-col gap-3">
+                        <button onclick="checkout('mercadopago')" class="w-full gradient-gold text-gray-900 px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2">
+                            PAGAR CON MERCADO PAGO
+                        </button>
+                        <button onclick="checkout('stripe')" class="w-full bg-indigo-600 text-white px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2 shadow-lg border border-indigo-400/30">
+                            PAGAR CON STRIPE
+                        </button>
                     </div>
+                </div>
+                
                 </div>
             </div>`}
         </div>
@@ -911,7 +991,16 @@ function AboutUsPage() {
                 
                 <div class="space-y-8">
                     <div class="glass-dark p-4 rounded-3xl border border-amber-400/30 shadow-2xl">
-                        <img src="corporativo.png" alt="Equipo de Parfum" class="w-full h-auto max-h-[500px] object-cover rounded-2xl opacity-90"/>
+                        <video 
+                            src="video.mp4" 
+                            class="w-full h-auto max-h-[500px] object-cover rounded-2xl opacity-90"
+                            controls 
+                            autoplay 
+                            muted 
+                            loop 
+                            playsinline>
+                            Tu navegador no soporta la reproducción de videos.
+                        </video>
                     </div>
                     
                     <div class="glass-dark p-6 rounded-2xl border border-amber-400/30 shadow-xl">
@@ -984,106 +1073,41 @@ function ContactPage() {
     return html`
         <div class="container mx-auto px-4 py-16">
             <h1 class="text-3xl md:text-5xl text-center font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-12">Contáctanos</h1>
-            <div class="max-w-2xl mx-auto glass-dark p-8 rounded-3xl border border-amber-400/30">
+            
+            <div class="max-w-2xl mx-auto glass-dark p-8 rounded-3xl border border-amber-400/30 relative overflow-hidden">
+                
+                ${state.loading ? html`
+                    <div class="absolute inset-0 bg-gray-900/80 flex flex-col items-center justify-center z-50 backdrop-blur-sm">
+                        <div class="w-12 h-12 border-4 border-amber-400 border-t-transparent rounded-full animate-spin mb-4"></div>
+                        <p class="text-amber-300 font-bold text-lg animate-pulse">Enviando mensaje...</p>
+                    </div>
+                ` : ''}
+
                 <form id="contact-form" onsubmit="handleContact(event)">
-                    <input type="hidden" name="destinationEmail" value="djassojimenez@gmail.com"/>
+                    
                     <div class="mb-4">
                         <label class="text-amber-300">Nombre</label>
                         <input id="contactName" name="contactName" required class="w-full glass rounded p-2 text-white" placeholder="Tu nombre"/>
                     </div>
+                    
                     <div class="mb-4">
                         <label class="text-amber-300">Correo Electrónico</label>
                         <input type="email" id="contactEmail" name="contactEmail" required class="w-full glass rounded p-2 text-white" placeholder="tu@correo.com"/>
                     </div>
+
                     <div class="mb-4">
                         <label class="text-amber-300">Quejas y Sugerencias</label>
                         <textarea id="contactMessage" name="contactMessage" required class="w-full glass rounded p-2 text-white h-32" placeholder="Escribe aquí tus quejas o sugerencias detalladas..."></textarea>
                     </div>
+                    
                     <button type="submit" class="gradient-gold px-6 py-2 rounded-full font-bold hover:scale-105 transition-transform">Enviar</button>
                 </form>
                 <p class="text-center text-amber-200/50 text-xs mt-6">
-                    Tus comentarios serán recibidos directamente en djassojimenez@gmail.com
+                    Tus comentarios serán recibidos por nuestro equipo de atención y dirección.
                 </p>
             </div>
         </div>
     `;
-}
-
-function filterAdminProducts() {
-    if (!state.adminSearchQuery) return state.products;
-    return state.products.filter(p => p.name.toLowerCase().includes(state.adminSearchQuery.toLowerCase()));
-}
-
-function prepareEditProduct(product) {
-    setState({ editingProduct: product });
-}
-
-function cancelEditProduct() {
-    setState({ editingProduct: null });
-    state.newProductForm = { name: '', price: '', stock: '', image: '', gender: 'hombre', type: 'designer' };
-}
-
-async function saveProduct(e) {
-    e.preventDefault();
-    const form = document.getElementById('product-form');
-    
-    const name = document.getElementById('prod-name').value;
-    const price = parseFloat(document.getElementById('prod-price').value);
-    const image = document.getElementById('prod-image').value;
-    const stock = parseInt(document.getElementById('prod-stock').value);
-    const gender = document.getElementById('prod-gender').value;
-    const type = document.getElementById('prod-type').value;
-
-    const productData = {
-        name, price, image, stock, gender, type,
-        rating: state.editingProduct ? state.editingProduct.rating : 5.0,
-        badge: '', 
-        isPopular: false 
-    };
-
-    const url = state.editingProduct 
-        ? `/api/admin/products/${state.editingProduct.id}`
-        : '/api/admin/products';
-    
-    const method = state.editingProduct ? 'PUT' : 'POST';
-
-    try {
-        const response = await fetch(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(productData)
-        });
-
-        const data = await response.json();
-
-        if (data.success || response.ok) {
-            setState({ error: state.editingProduct ? '✅ Producto actualizado' : '✅ Producto creado' });
-            fetchProductsFromDB();
-            cancelEditProduct();
-        } else {
-            setState({ error: '❌ Error al guardar: ' + (data.message || 'Error desconocido') });
-        }
-    } catch (error) {
-        console.error(error);
-        setState({ error: '⚠️ Error de conexión' });
-    }
-}
-
-async function deleteProduct(id) {
-    if (!confirm('¿Estás seguro de eliminar este producto del catálogo?')) return;
-
-    try {
-        const response = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
-        if (response.ok) {
-            setState({ error: '🗑️ Producto eliminado' });
-            fetchProductsFromDB();
-        } else {
-            setState({ error: '❌ No se pudo eliminar el producto' });
-        }
-    } catch (error) {
-        console.error(error);
-        setState({ error: '⚠️ Error al eliminar' });
-    }
 }
 
 function AdminPage() {
@@ -1100,6 +1124,10 @@ function AdminPage() {
     const filteredAdmins = filterAdminUsers();
     const filteredClients = filterClients();
 
+    const filteredMessages = state.messages || [
+        { id: 1, contactName: 'Diana Jasso', contactEmail: 'djassojimenez@gmail.com', contactMessage: '¿Tienen stock de Aventus de 100ml?', fecha: new Date() }
+    ];
+
     const productData = state.editingProduct || state.newProductForm;
     const userData = state.editingUser || state.newUserForm;
 
@@ -1109,34 +1137,105 @@ function AdminPage() {
                 ${icons.Sparkles(32)} Panel de Administración
             </h1>
 
-            <div class="glass-dark p-6 md:p-8 rounded-2xl border border-amber-400/30 mb-8">
-                <h3 class="text-xl md:text-2xl text-amber-200 font-bold mb-6">
-                    ${state.editingUser ? '✏️ Editar Usuario' : 'Crear Nuevo Administrador'}
-                </h3>
-                <form id="create-admin-form" onsubmit="saveUser(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                    <input type="text" id="user-name" placeholder="Nombre" 
-                        value="${userData.name}"
-                        oninput="handleUserInput('name', this.value)"
-                        required class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
-                    <input type="email" id="user-email" placeholder="Correo" 
-                        value="${userData.email}"
-                        oninput="handleUserInput('email', this.value)"
-                        required class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
-                    <input type="password" id="user-password" placeholder="${state.editingUser ? 'Dejar vacío para mantener' : 'Contraseña'}" 
-                        oninput="handleUserInput('password', this.value)"
-                        ${state.editingUser ? '' : 'required'} class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
-                    
-                    <div class="flex gap-2">
-                        <button type="submit" class="flex-1 gradient-gold text-gray-900 font-bold p-3 rounded-lg hover:scale-105 transition">
-                            ${state.editingUser ? 'Actualizar' : 'Crear Admin'}
-                        </button>
-                        ${state.editingUser ? html`
-                            <button type="button" onclick="cancelEditUser()" class="p-3 bg-red-500/20 text-red-400 border border-red-500/50 rounded-lg hover:bg-red-500/40 transition">
-                                ${icons.X(20)}
-                            </button>
-                        ` : ''}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div class="glass-dark p-6 rounded-2xl border border-amber-400/30">
+                    <h3 class="text-amber-200 text-sm font-bold uppercase">Usuarios Registrados</h3>
+                    <p class="text-4xl font-bold text-white mt-2">${state.users.length}</p>
+                </div>
+                <div class="glass-dark p-6 rounded-2xl border border-amber-400/30">
+                    <h3 class="text-amber-200 text-sm font-bold uppercase">Ventas Totales</h3>
+                    <p class="text-4xl font-bold text-green-400 mt-2">${state.sales.length}</p>
+                </div>
+                <div class="glass-dark p-6 rounded-2xl border border-amber-400/30">
+                    <h3 class="text-amber-200 text-sm font-bold uppercase">Ingresos</h3>
+                    <p class="text-4xl font-bold text-amber-400 mt-2">${totalRevenue}</p>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-8 mb-12">
+                <div class="glass-dark p-6 rounded-2xl border border-green-400/30">
+                    <h2 class="text-xl md:text-2xl text-green-400 mb-6 font-bold flex items-center gap-2">
+                        ${icons.ShoppingCart(24)} Historial de Ventas
+                    </h2>
+                    <div class="overflow-x-auto max-h-96">
+                        <table class="w-full text-left text-sm text-gray-300 min-w-[600px]">
+                            <thead class="text-xs uppercase bg-green-900/30 text-green-300 sticky top-0">
+                                <tr>
+                                    <th class="p-3">ID</th>
+                                    <th class="p-3">Cliente</th>
+                                    <th class="p-3">Total</th>
+                                    <th class="p-3">Estado</th>
+                                    <th class="p-3">Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-700">
+                                ${state.sales.length === 0 ? 
+                                    html`<tr><td colspan="5" class="p-4 text-center text-gray-500">No hay ventas registradas aún.</td></tr>` : 
+                                    state.sales.map(sale => html`
+                                    <tr class="hover:bg-white/5 transition">
+                                        <td class="p-3 font-mono text-green-200">#${sale.id}</td>
+                                        <td class="p-3 font-medium text-white">${sale.client}</td>
+                                        <td class="p-3 text-amber-300 font-bold">${sale.total}</td>
+                                        <td class="p-3">
+                                            <span class="px-2 py-1 rounded text-xs font-bold ${sale.status === 'Pagado' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}">
+                                                ${sale.status}
+                                            </span>
+                                        </td>
+                                        <td class="p-3 text-xs text-gray-400">${sale.date}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
                     </div>
-                </form>
+                </div>
+
+                <div class="space-y-8">
+                    <div class="glass-dark p-6 rounded-2xl border border-blue-400/30">
+                        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                            <h2 class="text-xl md:text-2xl text-blue-400 font-bold flex items-center gap-2">
+                                ${icons.User(24)} Clientes
+                            </h2>
+                            <div class="relative w-full md:w-48">
+                                <span class="absolute left-2 top-2 text-gray-400">${icons.Search(14)}</span>
+                                <input type="text" 
+                                    id="client-search"
+                                    placeholder="Buscar cliente..." 
+                                    value="${state.clientSearchQuery}"
+                                    oninput="setState({clientSearchQuery: this.value})"
+                                    class="w-full pl-8 pr-2 py-1 text-sm rounded-lg bg-black/40 text-white border border-blue-400/20 focus:border-blue-400 outline-none"
+                                />
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto max-h-64">
+                            <table class="w-full text-left text-sm text-gray-300 min-w-[500px]">
+                                <thead class="text-xs uppercase bg-blue-900/30 text-blue-300 sticky top-0">
+                                    <tr>
+                                        <th class="p-3">Nombre</th>
+                                        <th class="p-3">Email</th>
+                                        <th class="p-3 text-right">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-700">
+                                    ${filteredClients.length === 0 ? html`<tr><td colspan="3" class="p-4 text-center text-gray-500">No se encontraron clientes.</td></tr>` : ''}
+                                    ${filteredClients.map(u => html`
+                                        <tr class="hover:bg-white/5 transition">
+                                            <td class="p-3 font-medium text-white">${u.name}</td>
+                                            <td class="p-3 text-gray-400">${u.email}</td>
+                                            <td class="p-3 text-right flex justify-end gap-2">
+                                                <button onclick="prepareEditUser(${u.id})" class="text-blue-400 hover:text-blue-300 hover:scale-110 transition" title="Editar">
+                                                    ${icons.Edit(20)}
+                                                </button>
+                                                <button onclick="deleteUser(${u.id})" class="text-red-400 hover:text-red-300 hover:scale-110 transition" title="Eliminar">
+                                                    ${icons.Trash(20)}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="glass-dark p-6 md:p-8 rounded-2xl border border-amber-400/30 mb-12 relative overflow-hidden">
@@ -1248,51 +1347,77 @@ function AdminPage() {
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                <div class="glass-dark p-6 rounded-2xl border border-amber-400/30">
-                    <h3 class="text-amber-200 text-sm font-bold uppercase">Usuarios Registrados</h3>
-                    <p class="text-4xl font-bold text-white mt-2">${state.users.length}</p>
-                </div>
-                <div class="glass-dark p-6 rounded-2xl border border-amber-400/30">
-                    <h3 class="text-amber-200 text-sm font-bold uppercase">Ventas Totales</h3>
-                    <p class="text-4xl font-bold text-green-400 mt-2">${state.sales.length}</p>
-                </div>
-                <div class="glass-dark p-6 rounded-2xl border border-amber-400/30">
-                    <h3 class="text-amber-200 text-sm font-bold uppercase">Ingresos</h3>
-                    <p class="text-4xl font-bold text-amber-400 mt-2">${totalRevenue}</p>
+            <div class="glass-dark p-6 rounded-2xl border border-amber-400/30 mb-12">
+                <h2 class="text-xl md:text-2xl text-amber-400 font-bold mb-6 flex items-center gap-2">
+                    ${icons.Mail(24)} Bandeja de Mensajes Clientes
+                </h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-gray-300">
+                        <thead class="text-xs uppercase bg-amber-900/30 text-amber-300">
+                            <tr>
+                                <th class="p-3">Remitente</th>
+                                <th class="p-3">Correo</th>
+                                <th class="p-3">Mensaje</th>
+                                <th class="p-3 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700">
+                            ${filteredMessages.map(msg => html`
+                                <tr class="hover:bg-white/5 transition">
+                                    <td class="p-3 font-bold text-white">${msg.contactName}</td>
+                                    <td class="p-3 text-amber-200 underline">${msg.contactEmail}</td>
+                                    <td class="p-3 text-gray-400 italic">"${msg.contactMessage.substring(0, 40)}..."</td>
+                                    <td class="p-3 text-right flex justify-end gap-2">
+                                        <button onclick="alert('Mensaje: ' + '${msg.contactMessage}')" class="p-2 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/40 transition">Ver</button>
+                                        <button class="p-2 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40 transition">${icons.Trash(16)}</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
             <div class="grid lg:grid-cols-2 gap-8">
-                <div class="glass-dark p-6 rounded-2xl border border-green-400/30">
-                    <h2 class="text-xl md:text-2xl text-green-400 mb-6 font-bold flex items-center gap-2">
-                        ${icons.ShoppingCart(24)} Historial de Ventas
-                    </h2>
-                    <div class="overflow-x-auto max-h-96">
-                        <table class="w-full text-left text-sm text-gray-300 min-w-[600px]">
-                            <thead class="text-xs uppercase bg-green-900/30 text-green-300 sticky top-0">
+                <div class="glass-dark p-6 rounded-2xl border border-purple-400/30">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                        <h2 class="text-xl md:text-2xl text-purple-400 font-bold flex items-center gap-2">
+                            ${icons.User(24)} Administradores
+                        </h2>
+                        <div class="relative w-full md:w-48">
+                            <span class="absolute left-2 top-2 text-gray-400">${icons.Search(14)}</span>
+                            <input type="text" 
+                                id="admin-search"
+                                placeholder="Buscar admin..." 
+                                value="${state.adminSearchQueryUsers}"
+                                oninput="setState({adminSearchQueryUsers: this.value})"
+                                class="w-full pl-8 pr-2 py-1 text-sm rounded-lg bg-black/40 text-white border border-purple-400/20 focus:border-purple-400 outline-none"
+                            />
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto max-h-64">
+                        <table class="w-full text-left text-sm text-gray-300 min-w-[500px]">
+                            <thead class="text-xs uppercase bg-purple-900/30 text-purple-300 sticky top-0">
                                 <tr>
-                                    <th class="p-3">ID</th>
-                                    <th class="p-3">Cliente</th>
-                                    <th class="p-3">Total</th>
-                                    <th class="p-3">Estado</th>
-                                    <th class="p-3">Fecha</th>
+                                    <th class="p-3">Nombre</th>
+                                    <th class="p-3">Email</th>
+                                    <th class="p-3 text-right">Acción</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-700">
-                                ${state.sales.length === 0 ? 
-                                    html`<tr><td colspan="5" class="p-4 text-center text-gray-500">No hay ventas registradas aún.</td></tr>` : 
-                                    state.sales.map(sale => html`
+                                ${filteredAdmins.length === 0 ? html`<tr><td colspan="3" class="p-4 text-center text-gray-500">No se encontraron administradores.</td></tr>` : ''}
+                                ${filteredAdmins.map(u => html`
                                     <tr class="hover:bg-white/5 transition">
-                                        <td class="p-3 font-mono text-green-200">#${sale.id}</td>
-                                        <td class="p-3 font-medium text-white">${sale.client}</td>
-                                        <td class="p-3 text-amber-300 font-bold">${sale.total}</td>
-                                        <td class="p-3">
-                                            <span class="px-2 py-1 rounded text-xs font-bold ${sale.status === 'Pagado' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}">
-                                                ${sale.status}
-                                            </span>
+                                        <td class="p-3 font-medium text-white">${u.name}</td>
+                                        <td class="p-3 text-gray-400">${u.email}</td>
+                                        <td class="p-3 text-right flex justify-end gap-2">
+                                            <button onclick="prepareEditUser(${u.id})" class="text-blue-400 hover:text-blue-300 hover:scale-110 transition" title="Editar">
+                                                ${icons.Edit(20)}
+                                            </button>
+                                            <button onclick="deleteUser(${u.id})" class="text-red-400 hover:text-red-300 hover:scale-110 transition" title="Eliminar">
+                                                ${icons.Trash(20)}
+                                            </button>
                                         </td>
-                                        <td class="p-3 text-xs text-gray-400">${sale.date}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -1300,98 +1425,34 @@ function AdminPage() {
                     </div>
                 </div>
 
-                <div class="space-y-8">
-                    <div class="glass-dark p-6 rounded-2xl border border-blue-400/30">
-                        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                            <h2 class="text-xl md:text-2xl text-blue-400 font-bold flex items-center gap-2">
-                                ${icons.User(24)} Clientes
-                            </h2>
-                            <div class="relative w-full md:w-48">
-                                <span class="absolute left-2 top-2 text-gray-400">${icons.Search(14)}</span>
-                                <input type="text" 
-                                    id="client-search"
-                                    placeholder="Buscar cliente..." 
-                                    value="${state.clientSearchQuery}"
-                                    oninput="setState({clientSearchQuery: this.value})"
-                                    class="w-full pl-8 pr-2 py-1 text-sm rounded-lg bg-black/40 text-white border border-blue-400/20 focus:border-blue-400 outline-none"
-                                />
-                            </div>
+                <div class="glass-dark p-6 md:p-8 rounded-2xl border border-amber-400/30 h-fit">
+                    <h3 class="text-xl md:text-2xl text-amber-200 font-bold mb-6">
+                        ${state.editingUser ? '✏️ Editar Usuario' : 'Crear Nuevo Administrador'}
+                    </h3>
+                    <form id="create-admin-form" onsubmit="saveUser(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                        <input type="text" id="user-name" placeholder="Nombre" 
+                            value="${userData.name}"
+                            oninput="handleUserInput('name', this.value)"
+                            required class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
+                        <input type="email" id="user-email" placeholder="Correo" 
+                            value="${userData.email}"
+                            oninput="handleUserInput('email', this.value)"
+                            required class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
+                        <input type="password" id="user-password" placeholder="${state.editingUser ? 'Dejar vacío para mantener' : 'Contraseña'}" 
+                            oninput="handleUserInput('password', this.value)"
+                            ${state.editingUser ? '' : 'required'} class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
+                        
+                        <div class="flex gap-2">
+                            <button type="submit" class="flex-1 gradient-gold text-gray-900 font-bold p-3 rounded-lg hover:scale-105 transition">
+                                ${state.editingUser ? 'Actualizar' : 'Crear Admin'}
+                            </button>
+                            ${state.editingUser ? html`
+                                <button type="button" onclick="cancelEditUser()" class="p-3 bg-red-500/20 text-red-400 border border-red-500/50 rounded-lg hover:bg-red-500/40 transition">
+                                    ${icons.X(20)}
+                                </button>
+                            ` : ''}
                         </div>
-                        <div class="overflow-x-auto max-h-64">
-                            <table class="w-full text-left text-sm text-gray-300 min-w-[500px]">
-                                <thead class="text-xs uppercase bg-blue-900/30 text-blue-300 sticky top-0">
-                                    <tr>
-                                        <th class="p-3">Nombre</th>
-                                        <th class="p-3">Email</th>
-                                        <th class="p-3 text-right">Acción</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-700">
-                                    ${filteredClients.length === 0 ? html`<tr><td colspan="3" class="p-4 text-center text-gray-500">No se encontraron clientes.</td></tr>` : ''}
-                                    ${filteredClients.map(u => html`
-                                        <tr class="hover:bg-white/5 transition">
-                                            <td class="p-3 font-medium text-white">${u.name}</td>
-                                            <td class="p-3 text-gray-400">${u.email}</td>
-                                            <td class="p-3 text-right flex justify-end gap-2">
-                                                <button onclick="prepareEditUser('${u.id}')" class="text-blue-400 hover:text-blue-300 hover:scale-110 transition" title="Editar">
-                                                    ${icons.Edit(20)}
-                                                </button>
-                                                <button onclick="deleteUser('${u.id}')" class="text-red-400 hover:text-red-300 hover:scale-110 transition" title="Eliminar">
-                                                    ${icons.Trash(20)}
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="glass-dark p-6 rounded-2xl border border-purple-400/30">
-                        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                            <h2 class="text-xl md:text-2xl text-purple-400 font-bold flex items-center gap-2">
-                                ${icons.User(24)} Administradores
-                            </h2>
-                            <div class="relative w-full md:w-48">
-                                <span class="absolute left-2 top-2 text-gray-400">${icons.Search(14)}</span>
-                                <input type="text" 
-                                    id="admin-search"
-                                    placeholder="Buscar admin..." 
-                                    value="${state.adminSearchQueryUsers}"
-                                    oninput="setState({adminSearchQueryUsers: this.value})"
-                                    class="w-full pl-8 pr-2 py-1 text-sm rounded-lg bg-black/40 text-white border border-purple-400/20 focus:border-purple-400 outline-none"
-                                />
-                            </div>
-                        </div>
-                        <div class="overflow-x-auto max-h-64">
-                            <table class="w-full text-left text-sm text-gray-300 min-w-[500px]">
-                                <thead class="text-xs uppercase bg-purple-900/30 text-purple-300 sticky top-0">
-                                    <tr>
-                                        <th class="p-3">Nombre</th>
-                                        <th class="p-3">Email</th>
-                                        <th class="p-3 text-right">Acción</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-700">
-                                    ${filteredAdmins.length === 0 ? html`<tr><td colspan="3" class="p-4 text-center text-gray-500">No se encontraron administradores.</td></tr>` : ''}
-                                    ${filteredAdmins.map(u => html`
-                                        <tr class="hover:bg-white/5 transition">
-                                            <td class="p-3 font-medium text-white">${u.name}</td>
-                                            <td class="p-3 text-gray-400">${u.email}</td>
-                                            <td class="p-3 text-right flex justify-end gap-2">
-                                                <button onclick="prepareEditUser('${u.id}')" class="text-blue-400 hover:text-blue-300 hover:scale-110 transition" title="Editar">
-                                                    ${icons.Edit(20)}
-                                                </button>
-                                                <button onclick="deleteUser('${u.id}')" class="text-red-400 hover:text-red-300 hover:scale-110 transition" title="Eliminar">
-                                                    ${icons.Trash(20)}
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -1425,50 +1486,14 @@ function renderApp() {
     if (['login', 'register'].includes(state.currentPage)) {
         appContainer.innerHTML = NotificationBanner() + pageContent;
     } else if (state.currentPage === 'admin') {
-        appContainer.innerHTML = NotificationBanner() + Navbar() + '<main class="pb-16">' + pageContent + '</main>';
+        // Agregamos AccountSideMenu() AQUÍ, como un elemento independiente
+        appContainer.innerHTML = NotificationBanner() + AccountSideMenu() + Navbar() + '<main class="pb-16">' + pageContent + '</main>';
     } else {
-        appContainer.innerHTML = NotificationBanner() + Navbar() + '<main class="pb-16">' + pageContent + '</main>' + Footer();
+        // Y AQUÍ también
+        appContainer.innerHTML = NotificationBanner() + AccountSideMenu() + Navbar() + '<main class="pb-16">' + pageContent + '</main>' + Footer();
     }
 
     if (state.currentPage === 'home' || state.currentPage === 'admin') startCarousel();
-
-    if (state.currentPage === 'cart' && state.cart.length > 0) {
-        setTimeout(() => {
-            const container = document.getElementById('paypal-button-container');
-            if (window.paypal && container && container.innerHTML === '') {
-                window.paypal.Buttons({
-                    style: { layout: 'vertical', color: 'gold', shape: 'rect' },
-                    createOrder: function(data, actions) {
-                        const total = state.cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-                        return actions.order.create({
-                            purchase_units: [{ amount: { value: total.toString() } }]
-                        });
-                    },
-                    onApprove: function(data, actions) {
-                        return actions.order.capture().then(async function(details) {
-                            setState({ loading: true, error: '⏳ Validando pedido...' });
-                            const total = state.cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-                            try {
-                                const response = await fetch('/api/paypal/create-pending-order', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ userId: state.currentUser.id, cart: state.cart, total: total })
-                                });
-                                const resData = await response.json();
-                                if (resData.success) {
-                                    window.location.href = `/success.html?orderId=${resData.orderId}`;
-                                } else {
-                                    setState({ error: '❌ Error al registrar en BD.', loading: false });
-                                }
-                            } catch (err) {
-                                setState({ error: '⚠️ Error de conexión.', loading: false });
-                            }
-                        });
-                    }
-                }).render('#paypal-button-container');
-            }
-        }, 150); 
-    }
 
     if (activeId) {
         const element = document.getElementById(activeId);
@@ -1480,28 +1505,4 @@ function renderApp() {
         }
     }
 }
-
-window.onload = function() { 
-    checkSession();
-    fetchProductsFromDB();
 };
-
-window.addEventListener('popstate', (e) => {
-    if (state.isLoggedIn) {
-        logout();
-        setState({ 
-            currentPage: 'login', 
-            error: '🔒 Por seguridad, tu sesión se ha cerrado al retroceder.' 
-        });
-    }
-});
-
-window.addEventListener('pageshow', (e) => {
-    if (e.persisted && state.isLoggedIn) {
-        logout();
-        setState({ 
-            currentPage: 'login', 
-            error: '🔒 Sesión expirada por inactividad o navegación.' 
-        });
-    }
-});

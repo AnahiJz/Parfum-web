@@ -11,9 +11,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^16.4.5",
     "express": "^5.1.0",
+<<<<<<< HEAD
     "google-auth-library": "^10.5.0",
     "googleapis": "^171.4.0",
+=======
+    "mercadopago": "^2.0.8",
+>>>>>>> 74bf37a3034ebab125f4046dda753cce27b6092f
     "mysql2": "^3.15.3",
     "nodemailer": "^7.0.11",
     "stripe": "^20.0.0"
