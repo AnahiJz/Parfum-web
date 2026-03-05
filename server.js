@@ -95,14 +95,15 @@ app.post('/api/login', async (req, res) => {
     try {
         const query = 'SELECT id, nombre, correo, rol FROM usuarios WHERE correo = ? AND contrasena_hash = ?';
         const [rows] = await db.query(query, [username, password]);
+        
         if (rows.length > 0) {
             res.json({ success: true, user: rows[0] });
         } else {
             res.status(401).json({ success: false, message: 'Credenciales incorrectas' });
         }
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: 'Error del servidor' });
+        console.error("🚨 ERROR EN LOGIN:", error);
+        res.status(500).json({ success: false, message: 'Error SQL: ' + error.message });
     }
 });
 
