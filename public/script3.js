@@ -92,49 +92,42 @@ async function fetchProductsFromDB() {
     try {
         const response = await fetch('/api/products');
         
-        if (!response.ok) {
-            const errData = await response.json();
-            throw new Error(errData.error || 'Error de red al obtener productos');
-        }
+        // 1. Leemos la respuesta como texto CRUDO primero para evitar que explote el JSON
+        const textRaw = await response.text();
         
-        const dbProducts = await response.json();
+        let dbProducts;
+        try {
+            dbProducts = JSON.parse(textRaw); 
+        } catch (e) {
+            console.error("🚨 EL SERVIDOR DEVOLVIÓ ESTO EN LUGAR DE JSON:\n", textRaw);
+            throw new Error("El servidor devolvió un error HTML. Presiona F12 y revisa la consola.");
+        }
+
+        if (!response.ok) {
+            throw new Error(dbProducts.error || 'Error del servidor al obtener productos');
+        }
+
+        // 2. Mapeo seguro: Ya no usamos "toLowerCase()" ciegamente, leemos los IDs numéricos de tu BD
         const mappedProducts = dbProducts.map(p => ({
             id: p.id,
-            name: p.nombre,
-            price: parseFloat(p.precio),
-            image: p.imagen_principal,
-            gender: p.nombre_genero ? p.nombre_genero.toLowerCase() : 'unisex',
-            badge: p.texto_insignia,
-            rating: parseFloat(p.calificacion),
-            type: p.nombre_tipo ? p.nombre_tipo.toLowerCase() : 'designer',
+            name: p.nombre || 'Sin nombre',
+            price: parseFloat(p.precio) || 0,
+            image: p.imagen_principal || '',
+            // Si es 1 = hombre, si es 2 = mujer, de lo contrario unisex
+            gender: p.genero_id === 1 ? 'hombre' : (p.genero_id === 2 ? 'mujer' : 'unisex'),
+            badge: p.texto_insignia || '',
+            rating: parseFloat(p.calificacion) || 5.0,
+            // Si tipo_id es 2, lo marcamos como nicho, de lo contrario diseñador
+            type: p.tipo_id === 2 ? 'niche' : 'designer',
             isPopular: p.es_popular === 1,
-            isNiche: p.nombre_tipo === 'Niche',
-            stock: p.stock
+            isNiche: p.tipo_id === 2,
+            stock: p.stock || 0
         }));
+        
         setState({ products: mappedProducts, loading: false });
     } catch (error) {
         console.error("Error cargando productos:", error);
-        setState({ error: error.message, loading: false });
-    }
-}
-
-async function fetchUsersFromDB() {
-    try {
-        const response = await fetch('/api/users');
-        if (!response.ok) throw new Error('Error al obtener usuarios');
-        const dbUsers = await response.json();
-        const mappedUsers = dbUsers.map(u => ({
-            id: u.id,
-            name: u.nombre,
-            email: u.correo,
-            last_access: new Date(u.fecha_creacion).toLocaleDateString('es-MX'),
-            privileges: u.rol === 'admin' ? 'Control Total' : 'Cliente'
-        }));
-        const admins = mappedUsers.filter(u => u.privileges === 'Control Total');
-        const regularUsers = mappedUsers.filter(u => u.privileges === 'Cliente');
-        setState({ users: regularUsers, admins: admins });
-    } catch (error) {
-        console.error("Error usuarios:", error);
+        setState({ error: '❌ ' + error.message, loading: false });
     }
 }
 
