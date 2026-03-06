@@ -19,17 +19,13 @@ const transporter = nodemailer.createTransport({
 
 app.get('/api/products', async (req, res) => {
     try {
-        const query = `
-            SELECT p.*, g.nombre as nombre_genero, t.nombre as nombre_tipo 
-            FROM productos p
-            LEFT JOIN generos g ON p.genero_id = g.id
-            LEFT JOIN tipos_perfume t ON p.tipo_id = t.id
-        `;
+        const query = 'SELECT * FROM productos';
         const [rows] = await db.query(query);
+        
         res.json(rows);
     } catch (error) {
         console.error("🚨 ERROR EN PRODUCTOS:", error);
-        res.status(500).json({ error: 'Error SQL en productos: ' + error.message });
+        res.status(500).json({ error: 'Error SQL: ' + error.message });
     }
 });
 
