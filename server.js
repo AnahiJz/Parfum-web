@@ -28,8 +28,8 @@ app.get('/api/products', async (req, res) => {
         const [rows] = await db.query(query);
         res.json(rows);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error al obtener productos' });
+        console.error("🚨 ERROR EN PRODUCTOS:", error);
+        res.status(500).json({ error: 'Error SQL en productos: ' + error.message });
     }
 });
 

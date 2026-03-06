@@ -91,7 +91,12 @@ function checkSession() {
 async function fetchProductsFromDB() {
     try {
         const response = await fetch('/api/products');
-        if (!response.ok) throw new Error('Error de red al obtener productos');
+        
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error || 'Error de red al obtener productos');
+        }
+        
         const dbProducts = await response.json();
         const mappedProducts = dbProducts.map(p => ({
             id: p.id,
@@ -109,7 +114,7 @@ async function fetchProductsFromDB() {
         setState({ products: mappedProducts, loading: false });
     } catch (error) {
         console.error("Error cargando productos:", error);
-        setState({ error: 'Error al conectar con la base de datos.', loading: false });
+        setState({ error: error.message, loading: false });
     }
 }
 
