@@ -231,6 +231,15 @@ app.post('/api/checkout', async (req, res) => {
             payment_method_types: ['card'],
             line_items: line_items,
             mode: 'payment',
+
+            // 1. Agrega esto para habilitar la creación del ticket/factura en PDF:
+  invoice_creation: {
+    enabled: true,
+  },
+  
+  // 2. Stripe necesita saber a quién facturar, así que habilitamos la recolección de dirección y correo:
+  billing_address_collection: 'required', 
+  
             success_url: `${protocol}://${host}/success.html?orderId=${orderId}`,
             cancel_url: `${protocol}://${host}/cancel.html`,
         });
