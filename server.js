@@ -205,6 +205,10 @@ app.post('/api/checkout', async (req, res) => {
     }
     const connection = await db.getConnection();
     try {
+        // Obtener el correo del usuario para enviarlo a Stripe
+        const [userRows] = await connection.query('SELECT correo FROM usuarios WHERE id = ?', [userId]);
+        const userEmail = userRows.length > 0 ? userRows[0].correo : undefined;
+
         await connection.beginTransaction();
         const [orderResult] = await connection.query(
             'INSERT INTO pedidos (usuario_id, subtotal, total, direccion_envio, estado) VALUES (?, ?, ?, ?, ?)',
@@ -227,22 +231,25 @@ app.post('/api/checkout', async (req, res) => {
         }));
         const protocol = req.headers['x-forwarded-proto'] || 'http';
         const host = req.get('host');
-        const session = await stripe.checkout.sessions.create({
+        
+        const sessionConfig = {
             payment_method_types: ['card'],
             line_items: line_items,
             mode: 'payment',
-
-            // 1. Agrega esto para habilitar la creación del ticket/factura en PDF:
-  invoice_creation: {
-    enabled: true,
-  },
-  
-  // 2. Stripe necesita saber a quién facturar, así que habilitamos la recolección de dirección y correo:
-  billing_address_collection: 'required', 
-  
+            invoice_creation: {
+                enabled: true,
+            },
+            billing_address_collection: 'required', 
             success_url: `${protocol}://${host}/success.html?orderId=${orderId}`,
             cancel_url: `${protocol}://${host}/cancel.html`,
-        });
+        };
+
+        // Si tenemos el email del usuario, lo enviamos a Stripe para el envío automático del receipt
+        if (userEmail) {
+            sessionConfig.customer_email = userEmail;
+        }
+
+        const session = await stripe.checkout.sessions.create(sessionConfig);
         res.json({ success: true, url: session.url });
     } catch (error) {
         await connection.rollback();
