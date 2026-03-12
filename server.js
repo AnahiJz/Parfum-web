@@ -227,8 +227,12 @@ app.post('/api/checkout', async (req, res) => {
         }));
         const protocol = req.headers['x-forwarded-proto'] || 'http';
         const host = req.get('host');
+        const [userRows] = await connection.query('SELECT correo FROM usuarios WHERE id = ?', [userId]);
+        const userEmail = userRows.length > 0 ? userRows[0].correo : undefined;
+
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
+            customer_email: userEmail,
             line_items: line_items,
             mode: 'payment',
 

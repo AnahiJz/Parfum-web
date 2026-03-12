@@ -56,9 +56,18 @@ let state = {
 };
 
 let carouselInterval;
+let errorTimeout;
 
 function setState(newState) {
     state = { ...state, ...newState };
+    
+    if (newState.error) {
+        if (errorTimeout) clearTimeout(errorTimeout);
+        errorTimeout = setTimeout(() => {
+            if (state.error) setState({ error: null });
+        }, 5000);
+    }
+    
     renderApp();
 }
 
