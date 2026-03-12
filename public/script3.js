@@ -1115,34 +1115,103 @@ function AdminPage() {
                 ${icons.Sparkles(32)} Panel de Administración
             </h1>
 
-            <div class="glass-dark p-6 md:p-8 rounded-2xl border border-amber-400/30 mb-8">
-                <h3 class="text-xl md:text-2xl text-amber-200 font-bold mb-6">
-                    ${state.editingUser ? '✏️ Editar Usuario' : 'Crear Nuevo Administrador'}
-                </h3>
-                <form id="create-admin-form" onsubmit="saveUser(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                    <input type="text" id="user-name" placeholder="Nombre" 
-                        value="${userData.name}"
-                        oninput="handleUserInput('name', this.value)"
-                        required class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
-                    <input type="email" id="user-email" placeholder="Correo" 
-                        value="${userData.email}"
-                        oninput="handleUserInput('email', this.value)"
-                        required class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
-                    <input type="password" id="user-password" placeholder="${state.editingUser ? 'Dejar vacío para mantener' : 'Contraseña'}" 
-                        oninput="handleUserInput('password', this.value)"
-                        ${state.editingUser ? '' : 'required'} class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
-                    
-                    <div class="flex gap-2">
-                        <button type="submit" class="flex-1 gradient-gold text-gray-900 font-bold p-3 rounded-lg hover:scale-105 transition">
-                            ${state.editingUser ? 'Actualizar' : 'Crear Admin'}
-                        </button>
-                        ${state.editingUser ? html`
-                            <button type="button" onclick="cancelEditUser()" class="p-3 bg-red-500/20 text-red-400 border border-red-500/50 rounded-lg hover:bg-red-500/40 transition">
-                                ${icons.X(20)}
-                            </button>
-                        ` : ''}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div class="glass-dark p-6 rounded-2xl border border-amber-400/30">
+                    <h3 class="text-amber-200 text-sm font-bold uppercase">Usuarios Registrados</h3>
+                    <p class="text-4xl font-bold text-white mt-2">${state.users.length}</p>
+                </div>
+                <div class="glass-dark p-6 rounded-2xl border border-amber-400/30">
+                    <h3 class="text-amber-200 text-sm font-bold uppercase">Ventas Totales</h3>
+                    <p class="text-4xl font-bold text-green-400 mt-2">${state.sales.length}</p>
+                </div>
+                <div class="glass-dark p-6 rounded-2xl border border-amber-400/30">
+                    <h3 class="text-amber-200 text-sm font-bold uppercase">Ingresos</h3>
+                    <p class="text-4xl font-bold text-amber-400 mt-2">${totalRevenue}</p>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-8 mb-12">
+                <div class="glass-dark p-6 rounded-2xl border border-green-400/30 h-fit">
+                    <h2 class="text-xl md:text-2xl text-green-400 mb-6 font-bold flex items-center gap-2">
+                        ${icons.ShoppingCart(24)} Historial de Ventas
+                    </h2>
+                    <div class="overflow-x-auto max-h-96">
+                        <table class="w-full text-left text-sm text-gray-300 min-w-[600px]">
+                            <thead class="text-xs uppercase bg-green-900/30 text-green-300 sticky top-0">
+                                <tr>
+                                    <th class="p-3">ID</th>
+                                    <th class="p-3">Cliente</th>
+                                    <th class="p-3">Total</th>
+                                    <th class="p-3">Estado</th>
+                                    <th class="p-3">Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-700">
+                                ${state.sales.length === 0 ? 
+                                    html`<tr><td colspan="5" class="p-4 text-center text-gray-500">No hay ventas registradas aún.</td></tr>` : 
+                                    state.sales.map(sale => html`
+                                    <tr class="hover:bg-white/5 transition">
+                                        <td class="p-3 font-mono text-green-200">#${sale.id}</td>
+                                        <td class="p-3 font-medium text-white">${sale.client}</td>
+                                        <td class="p-3 text-amber-300 font-bold">${sale.total}</td>
+                                        <td class="p-3">
+                                            <span class="px-2 py-1 rounded text-xs font-bold ${sale.status === 'Pagado' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}">
+                                                ${sale.status}
+                                            </span>
+                                        </td>
+                                        <td class="p-3 text-xs text-gray-400">${sale.date}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
                     </div>
-                </form>
+                </div>
+
+                <div class="glass-dark p-6 rounded-2xl border border-blue-400/30 h-fit">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                        <h2 class="text-xl md:text-2xl text-blue-400 font-bold flex items-center gap-2">
+                            ${icons.User(24)} Clientes
+                        </h2>
+                        <div class="relative w-full md:w-48">
+                            <span class="absolute left-2 top-2 text-gray-400">${icons.Search(14)}</span>
+                            <input type="text" 
+                                id="client-search"
+                                placeholder="Buscar cliente..." 
+                                value="${state.clientSearchQuery}"
+                                oninput="setState({clientSearchQuery: this.value})"
+                                class="w-full pl-8 pr-2 py-1 text-sm rounded-lg bg-black/40 text-white border border-blue-400/20 focus:border-blue-400 outline-none"
+                            />
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto max-h-96">
+                        <table class="w-full text-left text-sm text-gray-300 min-w-[500px]">
+                            <thead class="text-xs uppercase bg-blue-900/30 text-blue-300 sticky top-0">
+                                <tr>
+                                    <th class="p-3">Nombre</th>
+                                    <th class="p-3">Email</th>
+                                    <th class="p-3 text-right">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-700">
+                                ${filteredClients.length === 0 ? html`<tr><td colspan="3" class="p-4 text-center text-gray-500">No se encontraron clientes.</td></tr>` : ''}
+                                ${filteredClients.map(u => html`
+                                    <tr class="hover:bg-white/5 transition">
+                                        <td class="p-3 font-medium text-white">${u.name}</td>
+                                        <td class="p-3 text-gray-400">${u.email}</td>
+                                        <td class="p-3 text-right flex justify-end gap-2">
+                                            <button onclick="prepareEditUser('${u.id}')" class="text-blue-400 hover:text-blue-300 hover:scale-110 transition" title="Editar">
+                                                ${icons.Edit(20)}
+                                            </button>
+                                            <button onclick="deleteUser('${u.id}')" class="text-red-400 hover:text-red-300 hover:scale-110 transition" title="Eliminar">
+                                                ${icons.Trash(20)}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             <div class="glass-dark p-6 md:p-8 rounded-2xl border border-amber-400/30 mb-12 relative overflow-hidden">
@@ -1254,51 +1323,46 @@ function AdminPage() {
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                <div class="glass-dark p-6 rounded-2xl border border-amber-400/30">
-                    <h3 class="text-amber-200 text-sm font-bold uppercase">Usuarios Registrados</h3>
-                    <p class="text-4xl font-bold text-white mt-2">${state.users.length}</p>
-                </div>
-                <div class="glass-dark p-6 rounded-2xl border border-amber-400/30">
-                    <h3 class="text-amber-200 text-sm font-bold uppercase">Ventas Totales</h3>
-                    <p class="text-4xl font-bold text-green-400 mt-2">${state.sales.length}</p>
-                </div>
-                <div class="glass-dark p-6 rounded-2xl border border-amber-400/30">
-                    <h3 class="text-amber-200 text-sm font-bold uppercase">Ingresos</h3>
-                    <p class="text-4xl font-bold text-amber-400 mt-2">${totalRevenue}</p>
-                </div>
-            </div>
-
             <div class="grid lg:grid-cols-2 gap-8">
-                <div class="glass-dark p-6 rounded-2xl border border-green-400/30">
-                    <h2 class="text-xl md:text-2xl text-green-400 mb-6 font-bold flex items-center gap-2">
-                        ${icons.ShoppingCart(24)} Historial de Ventas
-                    </h2>
-                    <div class="overflow-x-auto max-h-96">
-                        <table class="w-full text-left text-sm text-gray-300 min-w-[600px]">
-                            <thead class="text-xs uppercase bg-green-900/30 text-green-300 sticky top-0">
+                <div class="glass-dark p-6 rounded-2xl border border-purple-400/30 h-fit">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                        <h2 class="text-xl md:text-2xl text-purple-400 font-bold flex items-center gap-2">
+                            ${icons.User(24)} Administradores
+                        </h2>
+                        <div class="relative w-full md:w-48">
+                            <span class="absolute left-2 top-2 text-gray-400">${icons.Search(14)}</span>
+                            <input type="text" 
+                                id="admin-search"
+                                placeholder="Buscar admin..." 
+                                value="${state.adminSearchQueryUsers}"
+                                oninput="setState({adminSearchQueryUsers: this.value})"
+                                class="w-full pl-8 pr-2 py-1 text-sm rounded-lg bg-black/40 text-white border border-purple-400/20 focus:border-purple-400 outline-none"
+                            />
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto max-h-64">
+                        <table class="w-full text-left text-sm text-gray-300 min-w-[500px]">
+                            <thead class="text-xs uppercase bg-purple-900/30 text-purple-300 sticky top-0">
                                 <tr>
-                                    <th class="p-3">ID</th>
-                                    <th class="p-3">Cliente</th>
-                                    <th class="p-3">Total</th>
-                                    <th class="p-3">Estado</th>
-                                    <th class="p-3">Fecha</th>
+                                    <th class="p-3">Nombre</th>
+                                    <th class="p-3">Email</th>
+                                    <th class="p-3 text-right">Acción</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-700">
-                                ${state.sales.length === 0 ? 
-                                    html`<tr><td colspan="5" class="p-4 text-center text-gray-500">No hay ventas registradas aún.</td></tr>` : 
-                                    state.sales.map(sale => html`
+                                ${filteredAdmins.length === 0 ? html`<tr><td colspan="3" class="p-4 text-center text-gray-500">No se encontraron administradores.</td></tr>` : ''}
+                                ${filteredAdmins.map(u => html`
                                     <tr class="hover:bg-white/5 transition">
-                                        <td class="p-3 font-mono text-green-200">#${sale.id}</td>
-                                        <td class="p-3 font-medium text-white">${sale.client}</td>
-                                        <td class="p-3 text-amber-300 font-bold">${sale.total}</td>
-                                        <td class="p-3">
-                                            <span class="px-2 py-1 rounded text-xs font-bold ${sale.status === 'Pagado' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}">
-                                                ${sale.status}
-                                            </span>
+                                        <td class="p-3 font-medium text-white">${u.name}</td>
+                                        <td class="p-3 text-gray-400">${u.email}</td>
+                                        <td class="p-3 text-right flex justify-end gap-2">
+                                            <button onclick="prepareEditUser('${u.id}')" class="text-blue-400 hover:text-blue-300 hover:scale-110 transition" title="Editar">
+                                                ${icons.Edit(20)}
+                                            </button>
+                                            <button onclick="deleteUser('${u.id}')" class="text-red-400 hover:text-red-300 hover:scale-110 transition" title="Eliminar">
+                                                ${icons.Trash(20)}
+                                            </button>
                                         </td>
-                                        <td class="p-3 text-xs text-gray-400">${sale.date}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -1306,100 +1370,38 @@ function AdminPage() {
                     </div>
                 </div>
 
-                <div class="space-y-8">
-                    <div class="glass-dark p-6 rounded-2xl border border-blue-400/30">
-                        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                            <h2 class="text-xl md:text-2xl text-blue-400 font-bold flex items-center gap-2">
-                                ${icons.User(24)} Clientes
-                            </h2>
-                            <div class="relative w-full md:w-48">
-                                <span class="absolute left-2 top-2 text-gray-400">${icons.Search(14)}</span>
-                                <input type="text" 
-                                    id="client-search"
-                                    placeholder="Buscar cliente..." 
-                                    value="${state.clientSearchQuery}"
-                                    oninput="setState({clientSearchQuery: this.value})"
-                                    class="w-full pl-8 pr-2 py-1 text-sm rounded-lg bg-black/40 text-white border border-blue-400/20 focus:border-blue-400 outline-none"
-                                />
-                            </div>
+                <div class="glass-dark p-6 md:p-8 rounded-2xl border border-amber-400/30 h-fit">
+                    <h3 class="text-xl md:text-2xl text-amber-200 font-bold mb-6">
+                        ${state.editingUser ? '✏️ Editar Usuario' : 'Crear Nuevo Administrador'}
+                    </h3>
+                    
+                    <form id="create-admin-form" onsubmit="saveUser(event)" class="flex flex-col gap-4">
+                        <input type="text" id="user-name" placeholder="Nombre" 
+                            value="${userData.name}"
+                            oninput="handleUserInput('name', this.value)"
+                            required class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
+                        <input type="email" id="user-email" placeholder="Correo" 
+                            value="${userData.email}"
+                            oninput="handleUserInput('email', this.value)"
+                            required class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
+                        <input type="password" id="user-password" placeholder="${state.editingUser ? 'Dejar vacío para mantener' : 'Contraseña'}" 
+                            oninput="handleUserInput('password', this.value)"
+                            ${state.editingUser ? '' : 'required'} class="p-3 rounded-lg glass text-white placeholder-gray-400"/>
+                        
+                        <div class="flex gap-2 mt-2">
+                            <button type="submit" class="flex-1 gradient-gold text-gray-900 font-bold p-3 rounded-lg hover:scale-105 transition">
+                                ${state.editingUser ? 'Actualizar' : 'Crear Admin'}
+                            </button>
+                            ${state.editingUser ? html`
+                                <button type="button" onclick="cancelEditUser()" class="p-3 bg-red-500/20 text-red-400 border border-red-500/50 rounded-lg hover:bg-red-500/40 transition">
+                                    ${icons.X(20)}
+                                </button>
+                            ` : ''}
                         </div>
-                        <div class="overflow-x-auto max-h-64">
-                            <table class="w-full text-left text-sm text-gray-300 min-w-[500px]">
-                                <thead class="text-xs uppercase bg-blue-900/30 text-blue-300 sticky top-0">
-                                    <tr>
-                                        <th class="p-3">Nombre</th>
-                                        <th class="p-3">Email</th>
-                                        <th class="p-3 text-right">Acción</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-700">
-                                    ${filteredClients.length === 0 ? html`<tr><td colspan="3" class="p-4 text-center text-gray-500">No se encontraron clientes.</td></tr>` : ''}
-                                    ${filteredClients.map(u => html`
-                                        <tr class="hover:bg-white/5 transition">
-                                            <td class="p-3 font-medium text-white">${u.name}</td>
-                                            <td class="p-3 text-gray-400">${u.email}</td>
-                                            <td class="p-3 text-right flex justify-end gap-2">
-                                                <button onclick="prepareEditUser('${u.id}')" class="text-blue-400 hover:text-blue-300 hover:scale-110 transition" title="Editar">
-                                                    ${icons.Edit(20)}
-                                                </button>
-                                                <button onclick="deleteUser('${u.id}')" class="text-red-400 hover:text-red-300 hover:scale-110 transition" title="Eliminar">
-                                                    ${icons.Trash(20)}
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="glass-dark p-6 rounded-2xl border border-purple-400/30">
-                        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                            <h2 class="text-xl md:text-2xl text-purple-400 font-bold flex items-center gap-2">
-                                ${icons.User(24)} Administradores
-                            </h2>
-                            <div class="relative w-full md:w-48">
-                                <span class="absolute left-2 top-2 text-gray-400">${icons.Search(14)}</span>
-                                <input type="text" 
-                                    id="admin-search"
-                                    placeholder="Buscar admin..." 
-                                    value="${state.adminSearchQueryUsers}"
-                                    oninput="setState({adminSearchQueryUsers: this.value})"
-                                    class="w-full pl-8 pr-2 py-1 text-sm rounded-lg bg-black/40 text-white border border-purple-400/20 focus:border-purple-400 outline-none"
-                                />
-                            </div>
-                        </div>
-                        <div class="overflow-x-auto max-h-64">
-                            <table class="w-full text-left text-sm text-gray-300 min-w-[500px]">
-                                <thead class="text-xs uppercase bg-purple-900/30 text-purple-300 sticky top-0">
-                                    <tr>
-                                        <th class="p-3">Nombre</th>
-                                        <th class="p-3">Email</th>
-                                        <th class="p-3 text-right">Acción</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-700">
-                                    ${filteredAdmins.length === 0 ? html`<tr><td colspan="3" class="p-4 text-center text-gray-500">No se encontraron administradores.</td></tr>` : ''}
-                                    ${filteredAdmins.map(u => html`
-                                        <tr class="hover:bg-white/5 transition">
-                                            <td class="p-3 font-medium text-white">${u.name}</td>
-                                            <td class="p-3 text-gray-400">${u.email}</td>
-                                            <td class="p-3 text-right flex justify-end gap-2">
-                                                <button onclick="prepareEditUser('${u.id}')" class="text-blue-400 hover:text-blue-300 hover:scale-110 transition" title="Editar">
-                                                    ${icons.Edit(20)}
-                                                </button>
-                                                <button onclick="deleteUser('${u.id}')" class="text-red-400 hover:text-red-300 hover:scale-110 transition" title="Eliminar">
-                                                    ${icons.Trash(20)}
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                    </form>
                 </div>
             </div>
+
         </div>
     `;
 }
