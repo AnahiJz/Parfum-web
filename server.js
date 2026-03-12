@@ -416,6 +416,8 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+const fs = require('fs').promises;
+
 app.post('/api/contact', async (req, res) => {
     const { contactName, contactEmail, contactMessage, destinationEmail } = req.body;
 
@@ -424,6 +426,29 @@ app.post('/api/contact', async (req, res) => {
     }
 
     try {
+        const newMessage = {
+            id: Date.now().toString(),
+            name: contactName,
+            email: contactEmail,
+            message: contactMessage,
+            read: false,
+            date: new Date().toISOString()
+        };
+
+        const messagesPath = path.join(__dirname, 'mensajes.json');
+        
+        try {
+            await fs.access(messagesPath);
+        } catch {
+            await fs.writeFile(messagesPath, '[]');
+        }
+
+        const data = await fs.readFile(messagesPath, 'utf8');
+        const messages = JSON.parse(data || '[]');
+        messages.push(newMessage);
+        await fs.writeFile(messagesPath, JSON.stringify(messages, null, 2));
+
+
         const emailHtml = `
             <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 20px;">
                 <div style="background-color: #d4af37; padding: 20px; text-align: center; color: white;">
@@ -451,6 +476,61 @@ app.post('/api/contact', async (req, res) => {
     } catch (error) {
         console.error('Error enviando el correo de contacto:', error);
         res.status(500).json({ success: false, message: 'Hubo un error al enviar el mensaje' });
+    }
+});
+
+app.get('/api/admin/messages', async (req, res) => {
+    try {
+        const messagesPath = path.join(__dirname, 'mensajes.json');
+        try {
+            await fs.access(messagesPath);
+        } catch {
+            await fs.writeFile(messagesPath, '[]');
+        }
+        const data = await fs.readFile(messagesPath, 'utf8');
+        const messages = JSON.parse(data || '[]');
+        messages.sort((a, b) => new Date(b.date) - new Date(a.date));
+        res.json(messages);
+    } catch (error) {
+        console.error('Error obteniendo mensajes:', error);
+        res.status(500).json({ error: 'Error al obtener mensajes' });
+    }
+});
+
+app.put('/api/admin/messages/:id/read', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const messagesPath = path.join(__dirname, 'mensajes.json');
+        const data = await fs.readFile(messagesPath, 'utf8');
+        let messages = JSON.parse(data || '[]');
+        
+        const index = messages.findIndex(m => m.id === id);
+        if (index !== -1) {
+            messages[index].read = true;
+            await fs.writeFile(messagesPath, JSON.stringify(messages, null, 2));
+            res.json({ success: true });
+        } else {
+            res.status(404).json({ success: false, message: 'Mensaje no encontrado' });
+        }
+    } catch (error) {
+        console.error('Error actualizando mensaje:', error);
+        res.status(500).json({ success: false });
+    }
+});
+
+app.delete('/api/admin/messages/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const messagesPath = path.join(__dirname, 'mensajes.json');
+        const data = await fs.readFile(messagesPath, 'utf8');
+        let messages = JSON.parse(data || '[]');
+        
+        messages = messages.filter(m => m.id !== id);
+        await fs.writeFile(messagesPath, JSON.stringify(messages, null, 2));
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error eliminando mensaje:', error);
+        res.status(500).json({ success: false });
     }
 });
 

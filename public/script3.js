@@ -52,7 +52,8 @@ let state = {
     adminSearchQueryUsers: '',
     clientSearchQuery: '',
     newProductForm: { name: '', price: '', stock: '', image: '', gender: 'hombre', type: 'designer' },
-    newUserForm: { name: '', email: '', password: '' }
+    newUserForm: { name: '', email: '', password: '' },
+    messages: []
 };
 
 let carouselInterval;
@@ -93,7 +94,44 @@ function checkSession() {
         if (user.role === 'admin') {
             fetchSalesFromDB();
             fetchUsersFromDB();
+            fetchContactMessagesFromDB();
         }
+    }
+}
+
+async function fetchContactMessagesFromDB() {
+    try {
+        const response = await fetch('/api/admin/messages');
+        if (response.ok) {
+            const messages = await response.json();
+            setState({ messages });
+        }
+    } catch (error) {
+        console.error("Error al obtener mensajes:", error);
+    }
+}
+
+async function markMessageAsRead(id) {
+    try {
+        const response = await fetch(`/api/admin/messages/${id}/read`, { method: 'PUT' });
+        if (response.ok) {
+            fetchContactMessagesFromDB();
+        }
+    } catch (error) {
+        console.error("Error al marcar mensaje:", error);
+    }
+}
+
+async function deleteMessage(id) {
+    if (!confirm('¿Seguro que deseas eliminar este mensaje de contacto permanentemente?')) return;
+    try {
+        const response = await fetch(`/api/admin/messages/${id}`, { method: 'DELETE' });
+        if (response.ok) {
+            fetchContactMessagesFromDB();
+            setState({ error: '🗑️ Mensaje eliminado correctamente' });
+        }
+    } catch (error) {
+        console.error("Error al eliminar mensaje:", error);
     }
 }
 
@@ -365,6 +403,7 @@ async function handleLogin(e) {
             if (data.user.rol === 'admin') {
                 fetchSalesFromDB();
                 fetchUsersFromDB();
+                fetchContactMessagesFromDB();
             }
         } else {
             setState({ error: '❌ ' + data.message });
@@ -1227,6 +1266,45 @@ function AdminPage() {
                             </tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+
+            <!-- Sección de Mensajes de Contacto -->
+            <div class="glass-dark p-6 md:p-8 rounded-2xl border border-pink-400/30 mb-12 relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">${icons.Mail(100, 'text-pink-400')}</div>
+                <h3 class="text-xl md:text-2xl text-pink-200 font-bold mb-6 flex items-center gap-2">📧 Mensajes de Contacto</h3>
+                
+                <div class="grid gap-4">
+                    ${(!state.messages || state.messages.length === 0) ? 
+                        html`<div class="text-center p-8 text-gray-400 glass border border-white/5 rounded-xl">No hay mensajes de contacto aún.</div>` :
+                        state.messages.map(msg => html`
+                            <div class="glass p-5 rounded-xl border ${msg.read ? 'border-white/5 opacity-70' : 'border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.1)]'} flex flex-col md:flex-row gap-4 items-start md:items-center transition-all">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <h4 class="text-pink-300 font-bold text-lg">${msg.name}</h4>
+                                        ${!msg.read ? html`<span class="px-2 py-0.5 bg-pink-500/20 text-pink-400 text-xs font-bold rounded-full">Nuevo</span>` : ''}
+                                        <span class="text-xs text-gray-500 ml-auto md:ml-2">${new Date(msg.date).toLocaleDateString('es-MX', {day: '2-digit', month: 'short', hour:'2-digit', minute:'2-digit'})}</span>
+                                    </div>
+                                    <p class="text-sm text-gray-300 font-mono mb-2">${msg.email}</p>
+                                    <p class="text-gray-100 bg-black/30 p-3 rounded-lg border border-white/5 whitespace-pre-wrap">${msg.message}</p>
+                                </div>
+                                <div class="flex flex-row md:flex-col gap-2 w-full md:w-auto mt-2 md:mt-0">
+                                    ${!msg.read ? html`
+                                        <button onclick="markMessageAsRead('${msg.id}')" class="flex-1 md:flex-none px-4 py-2 bg-pink-500/20 text-pink-300 border border-pink-500/50 rounded-lg hover:bg-pink-500/40 transition flex items-center justify-center gap-2" title="Marcar como Leído">
+                                            ${icons.Eye(18)} <span class="md:hidden">Leído</span>
+                                        </button>
+                                    ` : html`
+                                        <button disabled class="flex-1 md:flex-none px-4 py-2 bg-gray-500/10 text-gray-500 border border-gray-500/20 rounded-lg cursor-not-allowed flex items-center justify-center gap-2">
+                                            ${icons.Eye(18)} <span class="md:hidden">Leído</span>
+                                        </button>
+                                    `}
+                                    <button onclick="deleteMessage('${msg.id}')" class="flex-1 md:flex-none px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/50 rounded-lg hover:bg-red-500/40 transition flex items-center justify-center gap-2" title="Eliminar">
+                                        ${icons.Trash(18)} <span class="md:hidden">Borrar</span>
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')
+                    }
                 </div>
             </div>
 
