@@ -435,6 +435,7 @@ app.post('/api/contact', async (req, res) => {
             date: new Date().toISOString()
         };
 
+        // Guardar mensaje en JSON
         const messagesPath = path.join(__dirname, 'mensajes.json');
         
         try {
@@ -448,34 +449,40 @@ app.post('/api/contact', async (req, res) => {
         messages.push(newMessage);
         await fs.writeFile(messagesPath, JSON.stringify(messages, null, 2));
 
-
-        const emailHtml = `
-            <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 20px;">
-                <div style="background-color: #d4af37; padding: 20px; text-align: center; color: white;">
-                    <h1 style="margin: 0;">Nuevo Mensaje de Contacto - ParfumWeb</h1>
-                </div>
-                <div style="padding: 20px;">
-                    <p><strong>De:</strong> ${contactName} (${contactEmail})</p>
-                    <p><strong>Asunto:</strong> Quejas y Sugerencias</p>
-                    <hr style="border: 1px solid #eee; margin: 20px 0;">
-                    <h3 style="color: #d4af37;">Mensaje:</h3>
-                    <p style="white-space: pre-wrap; background: #f9f9f9; padding: 15px; border-left: 4px solid #d4af37;">${contactMessage}</p>
-                </div>
-            </div>
-        `;
-
-        await transporter.sendMail({
-            from: `"Parfum Web Contacto" <${process.env.EMAIL_USER}>`,
-            to: destinationEmail,
-            replyTo: contactEmail,
-            subject: `Nuevo mensaje de ${contactName} - Parfum Contacto`,
-            html: emailHtml
-        });
-
+        // Enviar respuesta exitosa al cliente (ya se guardó)
         res.json({ success: true, message: 'Mensaje enviado correctamente' });
+
+        // Intentar enviar el correo de manera asíncrona sin bloquear
+        try {
+            const emailHtml = `
+                <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 20px;">
+                    <div style="background-color: #d4af37; padding: 20px; text-align: center; color: white;">
+                        <h1 style="margin: 0;">Nuevo Mensaje de Contacto - ParfumWeb</h1>
+                    </div>
+                    <div style="padding: 20px;">
+                        <p><strong>De:</strong> ${contactName} (${contactEmail})</p>
+                        <p><strong>Asunto:</strong> Quejas y Sugerencias</p>
+                        <hr style="border: 1px solid #eee; margin: 20px 0;">
+                        <h3 style="color: #d4af37;">Mensaje:</h3>
+                        <p style="white-space: pre-wrap; background: #f9f9f9; padding: 15px; border-left: 4px solid #d4af37;">${contactMessage}</p>
+                    </div>
+                </div>
+            `;
+
+            await transporter.sendMail({
+                from: `"Parfum Web Contacto" <${process.env.EMAIL_USER}>`,
+                to: destinationEmail,
+                replyTo: contactEmail,
+                subject: `Nuevo mensaje de ${contactName} - Parfum Contacto`,
+                html: emailHtml
+            });
+        } catch (mailError) {
+            console.error('Error enviando el correo de contacto (el mensaje sí se guardó en local):', mailError);
+        }
+
     } catch (error) {
-        console.error('Error enviando el correo de contacto:', error);
-        res.status(500).json({ success: false, message: 'Hubo un error al enviar el mensaje' });
+        console.error('Error general de contacto persistiendo mensaje:', error);
+        res.status(500).json({ success: false, message: 'Hubo un error al procesar tu solicitud' });
     }
 });
 
