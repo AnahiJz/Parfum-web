@@ -426,28 +426,31 @@ app.post('/api/contact', async (req, res) => {
     }
 
     try {
-        const newMessage = {
-            id: Date.now().toString(),
-            name: contactName,
-            email: contactEmail,
-            message: contactMessage,
-            read: false,
-            date: new Date().toISOString()
-        };
-
-        // Guardar mensaje en JSON
-        const messagesPath = path.join(__dirname, 'mensajes.json');
-        
+        // Leer mensajes actuales
+        const filePath = path.join(__dirname, 'mensajes.json');
+        let mensajes = [];
         try {
-            await fs.access(messagesPath);
-        } catch {
-            await fs.writeFile(messagesPath, '[]');
+            const data = await fs.readFile(filePath, 'utf8');
+            mensajes = JSON.parse(data);
+        } catch (error) {
+            // Si el archivo no existe o está vacío, se asume un arreglo vacío
+            mensajes = [];
         }
 
-        const data = await fs.readFile(messagesPath, 'utf8');
-        const messages = JSON.parse(data || '[]');
-        messages.push(newMessage);
-        await fs.writeFile(messagesPath, JSON.stringify(messages, null, 2));
+        // Crear nuevo mensaje
+        const nuevoMensaje = {
+            id: Date.now(), // Usamos un timestamp como ID único
+            nombre: contactName,
+            correo: contactEmail,
+            mensaje: contactMessage,
+            leido: 0,
+            fecha_creacion: new Date().toISOString()
+        };
+
+        mensajes.unshift(nuevoMensaje); // Añadir al inicio
+
+        // Guardar en archivo
+        await fs.writeFile(filePath, JSON.stringify(mensajes, null, 2));
 
         // Enviar respuesta exitosa al cliente (ya se guardó)
         res.json({ success: true, message: 'Mensaje enviado correctamente' });
@@ -470,10 +473,10 @@ app.post('/api/contact', async (req, res) => {
             `;
 
             await transporter.sendMail({
-                from: `"Parfum Web Contacto" <${process.env.EMAIL_USER}>`,
+                from: \`"Parfum Web Contacto" <\${process.env.EMAIL_USER}>\`,
                 to: process.env.EMAIL_USER,
                 replyTo: contactEmail,
-                subject: `Nuevo mensaje de ${contactName} - Parfum Contacto`,
+                subject: \`Nuevo mensaje de \${contactName} - Parfum Contacto\`,
                 html: emailHtml
             });
         } catch (mailError) {
@@ -488,16 +491,24 @@ app.post('/api/contact', async (req, res) => {
 
 app.get('/api/admin/messages', async (req, res) => {
     try {
-        const messagesPath = path.join(__dirname, 'mensajes.json');
+        const filePath = path.join(__dirname, 'mensajes.json');
+        let mensajes = [];
         try {
-            await fs.access(messagesPath);
-        } catch {
-            await fs.writeFile(messagesPath, '[]');
+            const data = await fs.readFile(filePath, 'utf8');
+            mensajes = JSON.parse(data);
+        } catch (error) {
+            mensajes = [];
         }
-        const data = await fs.readFile(messagesPath, 'utf8');
-        const messages = JSON.parse(data || '[]');
-        messages.sort((a, b) => new Date(b.date) - new Date(a.date));
-        res.json(messages);
+
+        const mappedMessages = mensajes.map(m => ({
+            id: m.id,
+            name: m.nombre,
+            email: m.correo,
+            message: m.mensaje,
+            read: m.leido === 1,
+            date: m.fecha_creacion
+        }));
+        res.json(mappedMessages);
     } catch (error) {
         console.error('Error obteniendo mensajes:', error);
         res.status(500).json({ error: 'Error al obtener mensajes' });
@@ -507,18 +518,20 @@ app.get('/api/admin/messages', async (req, res) => {
 app.put('/api/admin/messages/:id/read', async (req, res) => {
     try {
         const { id } = req.params;
-        const messagesPath = path.join(__dirname, 'mensajes.json');
-        const data = await fs.readFile(messagesPath, 'utf8');
-        let messages = JSON.parse(data || '[]');
+        const filePath = path.join(__dirname, 'mensajes.json');
         
-        const index = messages.findIndex(m => m.id === id);
-        if (index !== -1) {
-            messages[index].read = true;
-            await fs.writeFile(messagesPath, JSON.stringify(messages, null, 2));
-            res.json({ success: true });
-        } else {
-            res.status(404).json({ success: false, message: 'Mensaje no encontrado' });
-        }
+        const data = await fs.readFile(filePath, 'utf8');
+        let mensajes = JSON.parse(data);
+        
+        mensajes = mensajes.map(m => {
+            if (m.id.toString() === id.toString()) {
+                m.leido = 1;
+            }
+            return m;
+        });
+
+        await fs.writeFile(filePath, JSON.stringify(mensajes, null, 2));
+        res.json({ success: true });
     } catch (error) {
         console.error('Error actualizando mensaje:', error);
         res.status(500).json({ success: false });
@@ -528,12 +541,14 @@ app.put('/api/admin/messages/:id/read', async (req, res) => {
 app.delete('/api/admin/messages/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const messagesPath = path.join(__dirname, 'mensajes.json');
-        const data = await fs.readFile(messagesPath, 'utf8');
-        let messages = JSON.parse(data || '[]');
+        const filePath = path.join(__dirname, 'mensajes.json');
         
-        messages = messages.filter(m => m.id !== id);
-        await fs.writeFile(messagesPath, JSON.stringify(messages, null, 2));
+        const data = await fs.readFile(filePath, 'utf8');
+        let mensajes = JSON.parse(data);
+        
+        mensajes = mensajes.filter(m => m.id.toString() !== id.toString());
+
+        await fs.writeFile(filePath, JSON.stringify(mensajes, null, 2));
         res.json({ success: true });
     } catch (error) {
         console.error('Error eliminando mensaje:', error);
