@@ -419,9 +419,9 @@ app.get('/', (req, res) => {
 const fs = require('fs').promises;
 
 app.post('/api/contact', async (req, res) => {
-    const { contactName, contactEmail, contactMessage, destinationEmail } = req.body;
+    const { contactName, contactEmail, contactMessage } = req.body;
 
-    if (!contactName || !contactEmail || !contactMessage || !destinationEmail) {
+    if (!contactName || !contactEmail || !contactMessage) {
         return res.status(400).json({ success: false, message: 'Faltan campos por completar' });
     }
 
@@ -471,7 +471,7 @@ app.post('/api/contact', async (req, res) => {
 
             await transporter.sendMail({
                 from: `"Parfum Web Contacto" <${process.env.EMAIL_USER}>`,
-                to: destinationEmail,
+                to: process.env.EMAIL_USER,
                 replyTo: contactEmail,
                 subject: `Nuevo mensaje de ${contactName} - Parfum Contacto`,
                 html: emailHtml

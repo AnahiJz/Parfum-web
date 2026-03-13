@@ -464,7 +464,6 @@ async function handleContact(e) {
     const contactName = form.elements.contactName.value;
     const contactEmail = form.elements.contactEmail.value;
     const contactMessage = form.elements.contactMessage.value;
-    const destinationEmail = form.elements.destinationEmail.value;
 
     if (!contactName || !contactEmail || !contactMessage) {
         setState({ error: '⚠️ Por favor completa todos los campos.' });
@@ -475,7 +474,7 @@ async function handleContact(e) {
         const response = await fetch('/api/contact', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contactName, contactEmail, contactMessage, destinationEmail })
+            body: JSON.stringify({ contactName, contactEmail, contactMessage })
         });
 
         const data = await response.json();
