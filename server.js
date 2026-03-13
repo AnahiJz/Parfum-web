@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const db = require('./db');
@@ -9,13 +10,29 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
+const transporter = require('../config/mailer');
+
+const { email, nombre, total } = req.body;
+
+  try {
+    
+    await transporter.sendMail({
+      from: '"Parfum Web" <djassojimenez@gmail.com>',
+      to: email, 
+      subject: "¡Confirmación de tu compra! 🛍️",
+      html: `
+        <h1>Hola ${nombre}, gracias por tu compra</h1>
+        <p>Hemos recibido tu pedido correctamente.</p>
+        <p><strong>Total pagado:</strong> $${total}</p>
+        <p>Pronto recibirás un número de guía para el envío.</p>
+      `,
+    });
+
+    res.status(200).json({ msg: 'Compra exitosa y correo enviado' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: 'Error en el proceso' });
+  };
 
 app.get('/api/products', async (req, res) => {
     try {

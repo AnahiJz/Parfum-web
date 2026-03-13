@@ -92,7 +92,6 @@ async function fetchProductsFromDB() {
     try {
         const response = await fetch('/api/products');
         
-        // 1. Leemos la respuesta como texto CRUDO primero para evitar que explote el JSON
         const textRaw = await response.text();
         
         let dbProducts;
@@ -107,17 +106,14 @@ async function fetchProductsFromDB() {
             throw new Error(dbProducts.error || 'Error del servidor al obtener productos');
         }
 
-        // 2. Mapeo seguro: Ya no usamos "toLowerCase()" ciegamente, leemos los IDs numéricos de tu BD
         const mappedProducts = dbProducts.map(p => ({
             id: p.id,
             name: p.nombre || 'Sin nombre',
             price: parseFloat(p.precio) || 0,
             image: p.imagen_principal || '',
-            // Si es 1 = hombre, si es 2 = mujer, de lo contrario unisex
             gender: p.genero_id === 1 ? 'hombre' : (p.genero_id === 2 ? 'mujer' : 'unisex'),
             badge: p.texto_insignia || '',
             rating: parseFloat(p.calificacion) || 5.0,
-            // Si tipo_id es 2, lo marcamos como nicho, de lo contrario diseñador
             type: p.tipo_id === 2 ? 'niche' : 'designer',
             isPopular: p.es_popular === 1,
             isNiche: p.tipo_id === 2,
