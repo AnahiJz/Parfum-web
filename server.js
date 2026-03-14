@@ -1,4 +1,3 @@
-require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const db = require('./db');
@@ -10,29 +9,13 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const transporter = require('../config/mailer');
-
-const { email, nombre, total } = req.body;
-
-  try {
-    
-    await transporter.sendMail({
-      from: '"Parfum Web" <djassojimenez@gmail.com>',
-      to: email, 
-      subject: "¡Confirmación de tu compra! 🛍️",
-      html: `
-        <h1>Hola ${nombre}, gracias por tu compra</h1>
-        <p>Hemos recibido tu pedido correctamente.</p>
-        <p><strong>Total pagado:</strong> $${total}</p>
-        <p>Pronto recibirás un número de guía para el envío.</p>
-      `,
-    });
-
-    res.status(200).json({ msg: 'Compra exitosa y correo enviado' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ msg: 'Error en el proceso' });
-  };
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
 
 app.get('/api/products', async (req, res) => {
     try {
@@ -244,23 +227,10 @@ app.post('/api/checkout', async (req, res) => {
         }));
         const protocol = req.headers['x-forwarded-proto'] || 'http';
         const host = req.get('host');
-        const [userRows] = await connection.query('SELECT correo FROM usuarios WHERE id = ?', [userId]);
-        const userEmail = userRows.length > 0 ? userRows[0].correo : undefined;
-
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
-            customer_email: userEmail,
             line_items: line_items,
             mode: 'payment',
-
-            // 1. Agrega esto para habilitar la creación del ticket/factura en PDF:
-  invoice_creation: {
-    enabled: true,
-  },
-  
-  // 2. Stripe necesita saber a quién facturar, así que habilitamos la recolección de dirección y correo:
-  billing_address_collection: 'required', 
-  
             success_url: `${protocol}://${host}/success.html?orderId=${orderId}`,
             cancel_url: `${protocol}://${host}/cancel.html`,
         });
@@ -433,128 +403,41 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-const fs = require('fs').promises;
-
 app.post('/api/contact', async (req, res) => {
-    const { contactName, contactEmail, contactMessage } = req.body;
+    const { contactName, contactEmail, contactMessage, destinationEmail } = req.body;
 
-    if (!contactName || !contactEmail || !contactMessage) {
+    if (!contactName || !contactEmail || !contactMessage || !destinationEmail) {
         return res.status(400).json({ success: false, message: 'Faltan campos por completar' });
     }
 
     try {
-        const newMessage = {
-            id: Date.now().toString(),
-            name: contactName,
-            email: contactEmail,
-            message: contactMessage,
-            read: false,
-            date: new Date().toISOString()
-        };
-
-        // Guardar mensaje en JSON
-        const messagesPath = path.join(__dirname, 'mensajes.json');
-        
-        try {
-            await fs.access(messagesPath);
-        } catch {
-            await fs.writeFile(messagesPath, '[]');
-        }
-
-        const data = await fs.readFile(messagesPath, 'utf8');
-        const messages = JSON.parse(data || '[]');
-        messages.push(newMessage);
-        await fs.writeFile(messagesPath, JSON.stringify(messages, null, 2));
-
-        // Enviar respuesta exitosa al cliente (ya se guardó)
-        res.json({ success: true, message: 'Mensaje enviado correctamente' });
-
-        // Intentar enviar el correo de manera asíncrona sin bloquear
-        try {
-            const emailHtml = `
-                <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 20px;">
-                    <div style="background-color: #d4af37; padding: 20px; text-align: center; color: white;">
-                        <h1 style="margin: 0;">Nuevo Mensaje de Contacto - ParfumWeb</h1>
-                    </div>
-                    <div style="padding: 20px;">
-                        <p><strong>De:</strong> ${contactName} (${contactEmail})</p>
-                        <p><strong>Asunto:</strong> Quejas y Sugerencias</p>
-                        <hr style="border: 1px solid #eee; margin: 20px 0;">
-                        <h3 style="color: #d4af37;">Mensaje:</h3>
-                        <p style="white-space: pre-wrap; background: #f9f9f9; padding: 15px; border-left: 4px solid #d4af37;">${contactMessage}</p>
-                    </div>
+        const emailHtml = `
+            <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 20px;">
+                <div style="background-color: #d4af37; padding: 20px; text-align: center; color: white;">
+                    <h1 style="margin: 0;">Nuevo Mensaje de Contacto - ParfumWeb</h1>
                 </div>
-            `;
+                <div style="padding: 20px;">
+                    <p><strong>De:</strong> ${contactName} (${contactEmail})</p>
+                    <p><strong>Asunto:</strong> Quejas y Sugerencias</p>
+                    <hr style="border: 1px solid #eee; margin: 20px 0;">
+                    <h3 style="color: #d4af37;">Mensaje:</h3>
+                    <p style="white-space: pre-wrap; background: #f9f9f9; padding: 15px; border-left: 4px solid #d4af37;">${contactMessage}</p>
+                </div>
+            </div>
+        `;
 
-            await transporter.sendMail({
-                from: `"Parfum Web Contacto" <${process.env.EMAIL_USER}>`,
-                to: process.env.EMAIL_USER,
-                replyTo: contactEmail,
-                subject: `Nuevo mensaje de ${contactName} - Parfum Contacto`,
-                html: emailHtml
-            });
-        } catch (mailError) {
-            console.error('Error enviando el correo de contacto (el mensaje sí se guardó en local):', mailError);
-        }
+        await transporter.sendMail({
+            from: `"Parfum Web Contacto" <${process.env.EMAIL_USER}>`,
+            to: destinationEmail,
+            replyTo: contactEmail,
+            subject: `Nuevo mensaje de ${contactName} - Parfum Contacto`,
+            html: emailHtml
+        });
 
+        res.json({ success: true, message: 'Mensaje enviado correctamente' });
     } catch (error) {
-        console.error('Error general de contacto persistiendo mensaje:', error);
-        res.status(500).json({ success: false, message: 'Hubo un error al procesar tu solicitud' });
-    }
-});
-
-app.get('/api/admin/messages', async (req, res) => {
-    try {
-        const messagesPath = path.join(__dirname, 'mensajes.json');
-        try {
-            await fs.access(messagesPath);
-        } catch {
-            await fs.writeFile(messagesPath, '[]');
-        }
-        const data = await fs.readFile(messagesPath, 'utf8');
-        const messages = JSON.parse(data || '[]');
-        messages.sort((a, b) => new Date(b.date) - new Date(a.date));
-        res.json(messages);
-    } catch (error) {
-        console.error('Error obteniendo mensajes:', error);
-        res.status(500).json({ error: 'Error al obtener mensajes' });
-    }
-});
-
-app.put('/api/admin/messages/:id/read', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const messagesPath = path.join(__dirname, 'mensajes.json');
-        const data = await fs.readFile(messagesPath, 'utf8');
-        let messages = JSON.parse(data || '[]');
-        
-        const index = messages.findIndex(m => m.id === id);
-        if (index !== -1) {
-            messages[index].read = true;
-            await fs.writeFile(messagesPath, JSON.stringify(messages, null, 2));
-            res.json({ success: true });
-        } else {
-            res.status(404).json({ success: false, message: 'Mensaje no encontrado' });
-        }
-    } catch (error) {
-        console.error('Error actualizando mensaje:', error);
-        res.status(500).json({ success: false });
-    }
-});
-
-app.delete('/api/admin/messages/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const messagesPath = path.join(__dirname, 'mensajes.json');
-        const data = await fs.readFile(messagesPath, 'utf8');
-        let messages = JSON.parse(data || '[]');
-        
-        messages = messages.filter(m => m.id !== id);
-        await fs.writeFile(messagesPath, JSON.stringify(messages, null, 2));
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Error eliminando mensaje:', error);
-        res.status(500).json({ success: false });
+        console.error('Error enviando el correo de contacto:', error);
+        res.status(500).json({ success: false, message: 'Hubo un error al enviar el mensaje' });
     }
 });
 

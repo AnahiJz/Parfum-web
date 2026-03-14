@@ -24,35 +24,28 @@
         <a href="/" class="bg-yellow-500 text-black px-6 py-3 rounded-full font-bold hover:bg-yellow-400 transition">Volver a la Tienda</a>
     </div>
     <script>
-    window.onload = async () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const orderId = urlParams.get('orderId');
-        const savedUser = localStorage.getItem('parfum_user');
-        
-        if (savedUser && orderId) {
-            const user = JSON.parse(savedUser);
-            
-            gtag('event', 'purchase', {
-                transaction_id: orderId,
-                value: 0.00,
-                currency: 'MXN'
-            });
-            
-            try {
-                const response = await fetch('/api/order/success', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ orderId, userId: user.id })
+        window.onload = async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderId = urlParams.get('orderId');
+            const savedUser = localStorage.getItem('parfum_user');
+            if (savedUser && orderId) {
+                const user = JSON.parse(savedUser);
+                gtag('event', 'purchase', {
+                    transaction_id: orderId,
+                    value: 0.00,
+                    currency: 'MXN'
                 });
-
-                if (response.ok) {
-                    window.history.replaceState({}, document.title, window.location.pathname);
+                try {
+                    await fetch('/api/order/success', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderId, userId: user.id })
+                    });
+                } catch (e) {
+                    console.error(e);
                 }
-            } catch (e) {
-                console.error("Error al procesar la orden exitosa:", e);
             }
-        }
-    };
-</script>
+        };
+    </script>
 </body>
 </html>
