@@ -57,9 +57,23 @@ let state = {
 
 let carouselInterval;
 
+let errorTimeout; // Variable para controlar el tiempo de la alerta
+
 function setState(newState) {
     state = { ...state, ...newState };
     renderApp();
+
+    // 🚨 INICIO DE MEJORA: Si hay un mensaje nuevo, lo borramos después de 4 segundos
+    if (newState.error) {
+        clearTimeout(errorTimeout); // Cancelamos el tiempo anterior si el usuario hace clics muy rápido
+        errorTimeout = setTimeout(() => {
+            if (state.error) {
+                state.error = null;
+                renderApp(); // Volvemos a dibujar la pantalla sin la alerta
+            }
+        }, 3000); // 4000 milisegundos = 4 segundos
+    }
+    // 🚨 FIN DE MEJORA
 }
 
 function html(strings, ...values) {
@@ -75,11 +89,17 @@ function checkSession() {
     const savedUser = localStorage.getItem('parfum_user');
     if (savedUser) {
         const user = JSON.parse(savedUser);
+        // 🚨 INICIO DE MODIFICACIÓN: Saludo al recargar página
+        let saludoRecarga = user.role === 'admin'
+            ? `👑 ¡Hola de nuevo, Admin ${user.name}!`
+            : `👋 ¡Hola de nuevo, ${user.name}!`;
+
         setState({
             currentUser: user,
             isLoggedIn: true,
-            error: `👋 ¡Hola de nuevo, ${user.name}!`
+            error: saludoRecarga
         });
+        // 🚨 FIN DE MODIFICACIÓN
         fetchCart(user.id);
         if (user.role === 'admin') {
             fetchSalesFromDB();
@@ -343,12 +363,18 @@ async function handleLogin(e) {
         if (data.success) {
             const user = { id: data.user.id, name: data.user.nombre, role: data.user.rol };
             localStorage.setItem('parfum_user', JSON.stringify(user));
+            // 🚨 INICIO DE MODIFICACIÓN: Saludo personalizado por rol
+            let mensajeBienvenida = data.user.rol === 'admin' 
+                ? `👑 ¡Bienvenido al panel de control, ${data.user.nombre}!` 
+                : `✨ ¡Qué gusto verte de nuevo, ${data.user.nombre}!`;
+
             setState({
                 currentUser: user,
                 isLoggedIn: true,
                 currentPage: data.user.rol === 'admin' ? 'admin' : 'catalog',
-                error: `¡Bienvenido de nuevo, ${data.user.nombre}!`
+                error: mensajeBienvenida
             });
+            // 🚨 FIN DE MODIFICACIÓN
             
             history.pushState({ loggedIn: true }, '', window.location.href);
 
