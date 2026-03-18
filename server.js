@@ -1,3 +1,5 @@
+require('dotenv').config();
+console.log("LLAVE STRIPE:", process.env.STRIPE_SECRET_KEY);
 const express = require('express');
 const path = require('path');
 const db = require('./db');
