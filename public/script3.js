@@ -57,23 +57,22 @@ let state = {
 
 let carouselInterval;
 
-let errorTimeout; // Variable para controlar el tiempo de la alerta
+let errorTimeout;
 
 function setState(newState) {
     state = { ...state, ...newState };
     renderApp();
 
-    // 🚨 INICIO DE MEJORA: Si hay un mensaje nuevo, lo borramos después de 4 segundos
     if (newState.error) {
-        clearTimeout(errorTimeout); // Cancelamos el tiempo anterior si el usuario hace clics muy rápido
+        clearTimeout(errorTimeout);
         errorTimeout = setTimeout(() => {
             if (state.error) {
                 state.error = null;
-                renderApp(); // Volvemos a dibujar la pantalla sin la alerta
+                renderApp();
             }
-        }, 3000); // 4000 milisegundos = 4 segundos
+        }, 3000); 
     }
-    // 🚨 FIN DE MEJORA
+    
 }
 
 function html(strings, ...values) {
@@ -89,7 +88,6 @@ function checkSession() {
     const savedUser = localStorage.getItem('parfum_user');
     if (savedUser) {
         const user = JSON.parse(savedUser);
-        // 🚨 INICIO DE MODIFICACIÓN: Saludo al recargar página
         let saludoRecarga = user.role === 'admin'
             ? `👑 ¡Hola de nuevo, Admin ${user.name}!`
             : `👋 ¡Hola de nuevo, ${user.name}!`;
@@ -99,7 +97,6 @@ function checkSession() {
             isLoggedIn: true,
             error: saludoRecarga
         });
-        // 🚨 FIN DE MODIFICACIÓN
         fetchCart(user.id);
         if (user.role === 'admin') {
             fetchSalesFromDB();
@@ -108,11 +105,29 @@ function checkSession() {
     }
 }
 
+async function fetchUsersFromDB() {
+    try {
+        const response = await fetch('/api/users');
+        if (!response.ok) {
+            throw new Error('Error al obtener los usuarios');
+        }
+        const users = await response.json();
+        
+        const usuariosCountElement = document.getElementById('usuariosCount'); 
+        if (usuariosCountElement) {
+            usuariosCountElement.innerText = users.length;
+        }
+        
+        return users;
+    } catch (error) {
+        console.error("Error cargando usuarios:", error);
+    }
+}
+
 async function fetchProductsFromDB() {
     try {
         const response = await fetch('/api/products');
         
-        // 1. Leemos la respuesta como texto CRUDO primero para evitar que explote el JSON
         const textRaw = await response.text();
         
         let dbProducts;
@@ -127,17 +142,14 @@ async function fetchProductsFromDB() {
             throw new Error(dbProducts.error || 'Error del servidor al obtener productos');
         }
 
-        // 2. Mapeo seguro: Ya no usamos "toLowerCase()" ciegamente, leemos los IDs numéricos de tu BD
         const mappedProducts = dbProducts.map(p => ({
             id: p.id,
             name: p.nombre || 'Sin nombre',
             price: parseFloat(p.precio) || 0,
             image: p.imagen_principal || '',
-            // Si es 1 = hombre, si es 2 = mujer, de lo contrario unisex
             gender: p.genero_id === 1 ? 'hombre' : (p.genero_id === 2 ? 'mujer' : 'unisex'),
             badge: p.texto_insignia || '',
             rating: parseFloat(p.calificacion) || 5.0,
-            // Si tipo_id es 2, lo marcamos como nicho, de lo contrario diseñador
             type: p.tipo_id === 2 ? 'niche' : 'designer',
             isPopular: p.es_popular === 1,
             isNiche: p.tipo_id === 2,
