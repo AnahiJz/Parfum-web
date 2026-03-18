@@ -111,16 +111,26 @@ async function fetchUsersFromDB() {
         if (!response.ok) {
             throw new Error('Error al obtener los usuarios');
         }
-        const users = await response.json();
+        const dbUsers = await response.json();
         
-        const usuariosCountElement = document.getElementById('usuariosCount'); 
-        if (usuariosCountElement) {
-            usuariosCountElement.innerText = users.length;
-        }
+        const mappedUsers = dbUsers.map(u => ({
+            id: u.id,
+            name: u.nombre,
+            email: u.correo,
+            role: u.rol
+        }));
+
+        const admins = mappedUsers.filter(u => u.role === 'admin');
+        const clients = mappedUsers.filter(u => u.role !== 'admin');
+
+        setState({ 
+            users: clients, 
+            admins: admins 
+        });
         
-        return users;
+        return mappedUsers;
     } catch (error) {
-        console.error("Error cargando usuarios:", error);
+        console.error(error);
     }
 }
 
