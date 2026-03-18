@@ -278,21 +278,27 @@ app.post('/api/order/success', async (req, res) => {
     try {
         await db.query('UPDATE pedidos SET estado = "pagado" WHERE id = ?', [orderId]);
         const [cart] = await db.query('SELECT id FROM carritos WHERE usuario_id = ?', [userId]);
+        
         if (cart.length > 0) {
             await db.query('DELETE FROM carrito_items WHERE carrito_id = ?', [cart[0].id]);
         }
+        
         const [userRows] = await db.query('SELECT nombre, correo FROM usuarios WHERE id = ?', [userId]);
         const user = userRows[0];
+        
         const [orderRows] = await db.query('SELECT total, fecha_creacion FROM pedidos WHERE id = ?', [orderId]);
         const order = orderRows[0];
+        
         const [detailsRows] = await db.query('SELECT nombre_producto, cantidad, precio_unitario FROM pedido_detalle WHERE pedido_id = ?', [orderId]);
+        
         const itemsHtml = detailsRows.map(item => `
             <tr>
                 <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.nombre_producto}</td>
-                <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.cantidad}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: center;">${item.cantidad}</td>
                 <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${item.precio_unitario}</td>
             </tr>
         `).join('');
+
         const emailHtml = `
             <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 20px;">
                 <div style="background-color: #d4af37; padding: 20px; text-align: center; color: white;">
@@ -307,26 +313,31 @@ app.post('/api/order/success', async (req, res) => {
                         <thead>
                             <tr style="background-color: #f9f9f9;">
                                 <th style="padding: 10px; text-align: left;">Producto</th>
-                                <th style="padding: 10px; text-align: left;">Cant.</th>
+                                <th style="padding: 10px; text-align: center;">Cant.</th>
                                 <th style="padding: 10px; text-align: left;">Precio</th>
                             </tr>
                         </thead>
-                        <tbody>${itemsHtml}</tbody>
+                        <tbody>
+                            ${itemsHtml}
+                        </tbody>
                     </table>
                     <h2 style="text-align: right; color: #d4af37;">Total: $${order.total}</h2>
                 </div>
             </div>
         `;
+
         await transporter.sendMail({
             from: `"Parfum Luxury Fragrances" <${process.env.EMAIL_USER}>`,
             to: user.correo, 
             subject: `Ticket de Compra #${orderId} - Parfum`,
             html: emailHtml
         });
+        
         res.json({ success: true });
+        
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false });
+        console.error("Error al procesar order/success y enviar correo:", error);
+        res.status(500).json({ success: false, message: "Error interno al procesar el pago y correo" });
     }
 });
 
