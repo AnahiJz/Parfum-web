@@ -27,35 +27,34 @@
 <script type="module">
   import Typebot from 'https://cdn.jsdelivr.net/npm/@typebot.io/js@0/dist/web.js'
 
-  // Inicializamos tu bot de forma normal con el diseño de tu líder
-  Typebot.initBubble({
+  const configuracionBot = {
     typebot: "my-typebot-youxzms",
     theme: {
       button: { backgroundColor: "#1D1D1D" },
       chatWindow: { backgroundColor: "#F8F8F8" },
     }
-  });
+  };
 
-  // La función global que tu botón en Typebot va a mandar a llamar
+  // Nace el bot por primera vez
+  Typebot.initBubble(configuracionBot);
+
+  // La orden de reinicio
   window.reiniciarBot = function() {
-    // 1. Minimizamos la burbuja suavemente
-    Typebot.close(); 
+    Typebot.close(); // Se minimiza visualmente
     
-    // 2. Esperamos medio segundo para que termine la animación de bajar
     setTimeout(() => {
-      // 3. Buscamos el componente del bot en tu página
+      // 1. Buscamos el componente del bot en tu página
       const burbuja = document.querySelector('typebot-bubble');
       
-      if (burbuja && burbuja.shadowRoot) {
-        // 4. Entramos a las "entrañas" de la burbuja para encontrar el iframe
-        const iframe = burbuja.shadowRoot.querySelector('iframe');
-        
-        if (iframe) {
-          // 5. El truco de magia: forzamos al iframe a recargarse a sí mismo en silencio
-          iframe.src = iframe.src; 
-        }
+      // 2. Si existe, lo ELIMINAMOS por completo del código
+      if (burbuja) {
+        burbuja.remove(); 
       }
-    }, 500);
+      
+      // 3. Volvemos a crear el bot desde cero (nacerá en blanco)
+      Typebot.initBubble(configuracionBot);
+      
+    }, 500); // Le damos medio segundo para que termine la animación de bajar
   };
 </script>
 
