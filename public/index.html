@@ -24,19 +24,30 @@
     <div id="app-container"></div>
 
     
-   <script type="module">
+<script type="module">
   import Typebot from 'https://cdn.jsdelivr.net/npm/@typebot.io/js@0/dist/web.js'
 
-  // Esta línea le da el control remoto al bot para poder cerrarse a sí mismo
-  window.Typebot = Typebot;
-
-  Typebot.initBubble({
+  // Guardamos tu diseño y tu ID en una constante para no repetirlo
+  const configuracionBot = {
     typebot: "my-typebot-youxzms",
     theme: {
       button: { backgroundColor: "#1D1D1D" },
       chatWindow: { backgroundColor: "#F8F8F8" },
-    },
-  });
+    }
+  };
+
+  // 1. Inicializamos el bot la primera vez que carga la página
+  Typebot.initBubble(configuracionBot);
+
+  // 2. Creamos el "Botón Rojo" global para que el chat lo pueda presionar
+  window.reiniciarBot = function() {
+    Typebot.close(); // Paso A: Minimiza la burbuja suavemente
+    
+    setTimeout(() => {
+      Typebot.destroy(); // Paso B: Destruye el chat y borra el historial visual
+      Typebot.initBubble(configuracionBot); // Paso C: Lo recrea totalmente en blanco, pero minimizado
+    }, 600); // Esperamos 0.6 segundos para que termine la animación de cerrarse
+  };
 </script>
 
 
