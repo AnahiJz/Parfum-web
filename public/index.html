@@ -24,24 +24,19 @@
     <div id="app-container"></div>
 
     
-    <script type="module">
+   <script type="module">
   import Typebot from 'https://cdn.jsdelivr.net/npm/@typebot.io/js@0/dist/web.js'
 
-  const configuracionBot = {
+  // Esta línea le da el control remoto al bot para poder cerrarse a sí mismo
+  window.Typebot = Typebot;
+
+  Typebot.initBubble({
     typebot: "my-typebot-youxzms",
     theme: {
       button: { backgroundColor: "#1D1D1D" },
       chatWindow: { backgroundColor: "#F8F8F8" },
     },
-    onClose: () => {
-      setTimeout(() => {
-        Typebot.destroy();
-        Typebot.initBubble(configuracionBot);
-      }, 500);
-    }
-  };
-
-  Typebot.initBubble(configuracionBot);
+  });
 </script>
 
 
