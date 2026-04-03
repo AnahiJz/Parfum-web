@@ -1,4 +1,5 @@
 const icons = {
+    Perfume: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v5"/><path d="M9 7h6"/><path d="M7 10h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2Z"/><path d="M12 14v4"/><path d="M10 16h4"/></svg>`,
     ShoppingCart: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`,
     User: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
     Menu: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>`,
@@ -639,7 +640,7 @@ function Navbar() {
                 <div class="flex items-center justify-between py-4">
                     <div class="flex items-center gap-3 cursor-pointer group" onclick="setState({currentPage: state.isLoggedIn ? 'catalog' : 'home', categoryDropdownOpen: false, adminMenuOpen: false, currentCategory: 'all'})">
                         <div class="gradient-gold p-3 rounded-2xl shadow-xl transform group-hover:rotate-12 transition-all duration-300 animate-pulse-glow">
-                            ${icons.Package(30, 'text-gray-900')}
+                          ${icons.Perfume(30, 'text-gray-900')}  
                         </div>
                         <div>
                             <span class="text-xl md:text-3xl font-display font-bold bg-gradient-to-r from-amber-300 via-amber-200 to-amber-400 bg-clip-text text-transparent">Parfum</span>
@@ -665,12 +666,14 @@ function Navbar() {
                             </button>
                         ` : ''}
                         ${state.isLoggedIn ? html`
-                            <div class="flex items-center gap-2">
-                                <div class="hidden md:block glass-dark p-3 rounded-xl shadow-lg">${icons.User(26, 'text-amber-300')}</div>
-                                <button class="hidden md:block text-amber-100 font-medium glass-dark px-4 py-3 rounded-xl hover:bg-amber-500/20 transition-all">
-                                    ${isAdmin ? 'ADMIN' : 'MI CUENTA'}
-                                </button>
-                            </div>
+                           <div class="flex items-center gap-2">
+    <div onclick="setState({currentPage: 'profile', categoryDropdownOpen: false})" class="hidden md:block glass-dark p-3 rounded-xl shadow-lg cursor-pointer hover:bg-amber-500/20 transition-all" title="Mi Perfil">
+        ${icons.User(26, 'text-amber-300')}
+    </div>
+    <button onclick="setState({currentPage: isAdmin ? 'admin' : 'history', categoryDropdownOpen: false})" class="hidden md:block text-amber-100 font-medium glass-dark px-4 py-3 rounded-xl hover:bg-amber-500/20 transition-all">
+        ${isAdmin ? 'ADMIN' : 'HISTORIAL'}
+    </button>
+</div>
                             <button onclick="logout()" class="glass-dark p-3 rounded-xl hover:bg-red-500/20 transition-all group shadow-lg">
                                 ${icons.LogOut(22, 'text-amber-300 group-hover:text-red-400')}
                             </button>
@@ -1454,6 +1457,37 @@ function AdminPage() {
     `;
 }
 
+function ProfilePage() {
+    return html`
+        <div class="container mx-auto px-4 py-16 text-center animate-fadeInUp">
+            <h1 class="text-3xl md:text-5xl font-display font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-8">Mi Perfil</h1>
+            <div class="glass-dark p-8 rounded-3xl border border-amber-400/30 max-w-md mx-auto">
+                <div class="gradient-gold w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl">
+                    ${icons.User(40, 'text-gray-900')}
+                </div>
+                <h2 class="text-2xl text-amber-200 font-bold">${state.currentUser.name}</h2>
+                <p class="text-amber-300/70 mt-2 uppercase tracking-widest text-sm">Rol: ${state.currentUser.role}</p>
+                <button onclick="logout()" class="mt-8 bg-red-500/20 text-red-400 border border-red-500/50 px-6 py-2 rounded-full font-bold hover:bg-red-500/40 transition">Cerrar Sesión</button>
+            </div>
+        </div>
+    `;
+}
+
+function HistoryPage() {
+    return html`
+        <div class="container mx-auto px-4 py-16 animate-fadeInUp">
+            <h1 class="text-3xl md:text-5xl font-display font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-8 text-center">Historial de Compras</h1>
+            <div class="glass-dark p-8 rounded-3xl border border-amber-400/30 max-w-4xl mx-auto text-center">
+                <div class="opacity-50 mb-4">${icons.Package(48, 'text-amber-400 mx-auto')}</div>
+                <h3 class="text-xl text-amber-200">Aún no tienes compras registradas.</h3>
+                <p class="text-amber-200/60 mt-2">¡Explora nuestro catálogo para encontrar tu fragancia ideal!</p>
+                <button onclick="setState({currentPage: 'catalog'})" class="mt-6 gradient-gold text-gray-900 px-6 py-2 rounded-full font-bold hover:scale-105 transition">Ir al Catálogo</button>
+            </div>
+        </div>
+    `;
+}
+
+
 function renderApp() {
     clearInterval(carouselInterval);
     const appContainer = document.getElementById('app-container');
@@ -1475,6 +1509,8 @@ function renderApp() {
         case 'about': pageContent = AboutUsPage(); break;
         case 'location': pageContent = LocationPage(); break;
         case 'contact': pageContent = ContactPage(); break;
+        case 'profile': pageContent = ProfilePage(); break;
+        case 'history': pageContent = HistoryPage(); break;
         default: pageContent = HomePage();
     }
 
