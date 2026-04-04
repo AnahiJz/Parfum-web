@@ -403,7 +403,7 @@ async function handleLogin(e) {
         if (data.success) {
             const user = { id: data.user.id, name: data.user.nombre, role: data.user.rol };
             localStorage.setItem('parfum_user', JSON.stringify(user));
-            // 🚨 INICIO DE MODIFICACIÓN: Saludo personalizado por rol
+
             let mensajeBienvenida = data.user.rol === 'admin' 
                 ? `👑 ¡Bienvenido al panel de control, ${data.user.nombre}!` 
                 : `✨ ¡Qué gusto verte de nuevo, ${data.user.nombre}!`;
@@ -414,7 +414,6 @@ async function handleLogin(e) {
                 currentPage: data.user.rol === 'admin' ? 'admin' : 'catalog',
                 error: mensajeBienvenida
             });
-            // 🚨 FIN DE MODIFICACIÓN
             
             history.pushState({ loggedIn: true }, '', window.location.href);
 
@@ -513,6 +512,42 @@ async function handleContact(e) {
     }
 }
 
+function mostrarNotificacion(titulo, subtitulo = '') {
+    let contenedor = document.getElementById('toast-container');
+    if (!contenedor) {
+        contenedor = document.createElement('div');
+        contenedor.id = 'toast-container';
+        contenedor.className = 'fixed bottom-5 right-5 z-50 flex flex-col gap-3 pointer-events-none';
+        document.body.appendChild(contenedor);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = 'glass-dark border border-amber-400/30 px-6 py-4 rounded-xl shadow-2xl flex items-center gap-4 transform translate-y-10 opacity-0 transition-all duration-500 ease-out';
+
+    toast.innerHTML = `
+        <div class="bg-amber-500/20 p-2 rounded-full text-amber-400">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 6L9 17l-5-5"/>
+            </svg>
+        </div>
+        <div>
+            <p class="font-bold text-amber-100 text-sm tracking-wide">${titulo}</p>
+            ${subtitulo ? `<p class="text-amber-200/60 text-xs mt-0.5">${subtitulo}</p>` : ''}
+        </div>
+    `;
+
+    contenedor.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.remove('translate-y-10', 'opacity-0');
+    }, 50);
+
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-x-10');
+        setTimeout(() => toast.remove(), 500);
+    }, 3000);
+}
+
 async function addToCart(productId) {
     const product = state.products.find(p => p.id === productId);
     if (!state.isLoggedIn || !state.currentUser) {
@@ -528,7 +563,8 @@ async function addToCart(productId) {
         if (response.ok) {
             await fetchCart(state.currentUser.id);
             const nombreProd = product ? product.name : 'Producto';
-            setState({ error: `✅ ${nombreProd} añadido al carrito` });
+            mostrarNotificacion('AÑADIDO AL CARRITO', nombreProd);
+            renderApp();
         }
     } catch (error) {
         console.error(error);
