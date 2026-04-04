@@ -2,25 +2,25 @@ const icons = {
     Perfume: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Perfume logo">
         <!-- Marco octagonal -->
         <polygon points="60,4 100,22 116,60 100,98 60,116 20,98 4,60 20,22"
-            fill="none" stroke="currentColor" stroke-width="2.6" opacity="0.45"/>
+            fill="none" stroke="currentColor" stroke-width="4.5"/>
         <!-- Círculo interior -->
         <circle cx="60" cy="60" r="40"
-            fill="none" stroke="currentColor" stroke-width="1.8" opacity="0.6"/>
+            fill="none" stroke="currentColor" stroke-width="3"/>
         <!-- P (rellena) -->
         <text x="42" y="78"
             font-family="Georgia, 'Times New Roman', serif"
             font-size="52" font-weight="normal"
             fill="currentColor" stroke="none"
-            text-anchor="middle" opacity="0.9">P</text>
+            text-anchor="middle">P</text>
         <!-- W (contorno) -->
         <text x="75" y="78"
             font-family="Georgia, 'Times New Roman', serif"
             font-size="52" font-weight="normal"
-            fill="none" stroke="currentColor" stroke-width="2.6"
+            fill="none" stroke="currentColor" stroke-width="4.5"
             text-anchor="middle">W</text>
         <!-- Puntos decorativos -->
-        <circle cx="60" cy="14" r="3" fill="currentColor" opacity="0.7"/>
-        <circle cx="60" cy="106" r="3" fill="currentColor" opacity="0.7"/>
+        <circle cx="60" cy="14" r="4" fill="currentColor"/>
+        <circle cx="60" cy="106" r="4" fill="currentColor"/>
     </svg>`,
     ShoppingCart: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`,
     User: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
