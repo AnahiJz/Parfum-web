@@ -1,10 +1,22 @@
 const icons = {
-    Perfume: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 120 120" fill="none" stroke="currentColor">
-        <g transform="translate(-3, 0)">
-            <text x="48" y="85" font-family="Georgia, 'Times New Roman', serif" font-size="80" font-weight="normal" fill="currentColor" stroke="none" text-anchor="middle">P</text>
-            
-            <text x="80" y="85" font-family="Georgia, 'Times New Roman', serif" font-size="80" font-weight="normal" fill="none" stroke="currentColor" stroke-width="2.5" text-anchor="middle">W</text>
-        </g>
+    Perfume: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 120 130" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Perfume logo">
+        <rect x="42" y="6" width="36" height="15" rx="4" fill="currentColor" opacity="0.13" stroke="currentColor" stroke-width="1.5"/>
+        <line x1="46" y1="13" x2="74" y2="13" stroke="currentColor" stroke-width="0.8" opacity="0.35"/>
+        <path d="M49,21 L49,35 Q49,38 46,41 L36,48 L84,48 Q81,45 71,41 Q71,38 71,35 L71,21 Z" fill="currentColor" opacity="0.09" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+        <rect x="26" y="48" width="68" height="72" rx="10" fill="currentColor" opacity="0.07" stroke="currentColor" stroke-width="1.7"/>
+        <rect x="30" y="54" width="5" height="52" rx="2.5" fill="currentColor" opacity="0.07"/>
+        <line x1="26" y1="58" x2="94" y2="58" stroke="currentColor" stroke-width="0.8" opacity="0.25"/>
+        <line x1="26" y1="106" x2="94" y2="106" stroke="currentColor" stroke-width="0.8" opacity="0.25"/>
+        <text x="49" y="92" font-family="Georgia, 'Times New Roman', serif" font-size="36" fill="currentColor" opacity="0.88" text-anchor="middle">P</text>
+        <text x="77" y="92" font-family="Georgia, 'Times New Roman', serif" font-size="36" fill="none" stroke="currentColor" stroke-width="1.7" text-anchor="middle">W</text>
+        <rect x="68" y="2" width="20" height="7" rx="2.5" fill="currentColor" opacity="0.22" stroke="currentColor" stroke-width="1.1"/>
+        <line x1="78" y1="6" x2="78" y2="9" stroke="currentColor" stroke-width="1.4" opacity="0.45"/>
+        <circle cx="92" cy="4" r="2" fill="currentColor" opacity="0.38"/>
+        <circle cx="98" cy="8" r="1.4" fill="currentColor" opacity="0.26"/>
+        <circle cx="96" cy="1" r="1.2" fill="currentColor" opacity="0.20"/>
+        <circle cx="104" cy="4" r="1" fill="currentColor" opacity="0.15"/>
+        <circle cx="101" cy="11" r="0.9" fill="currentColor" opacity="0.12"/>
+        <circle cx="107" cy="7" r="0.7" fill="currentColor" opacity="0.09"/>
     </svg>`,
     ShoppingCart: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`,
     User: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
