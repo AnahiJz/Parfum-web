@@ -1,11 +1,54 @@
 const icons = {
-    Perfume: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <polygon points="8,2 16,2 17,5 7,5" />
-        <rect x="10" y="5" width="4" height="3" />
-        <rect x="5" y="8" width="14" height="14" rx="2" />
-        <rect x="8" y="12" width="8" height="6" />
-        <line x1="12" y1="8" x2="12" y2="20" opacity="0.4" />
-    </svg>`,
+    Perfume: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 112 104" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+  <defs>
+    <linearGradient id="pf-side" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="currentColor" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="currentColor" stop-opacity="0.30"/>
+    </linearGradient>
+    <linearGradient id="pf-top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="currentColor" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="currentColor" stop-opacity="0.16"/>
+    </linearGradient>
+  </defs>
+  <!-- Body side + top + front -->
+  <polygon points="74,32 90,24 90,84 74,92" fill="url(#pf-side)" stroke-width="0.8"/>
+  <polygon points="22,32 74,32 90,24 38,24" fill="url(#pf-top)" stroke-width="0.8"/>
+  <rect x="22" y="32" width="52" height="60" rx="6" stroke-width="1.5"/>
+  <!-- Base -->
+  <rect x="22" y="84" width="52" height="8" rx="4" stroke-width="0.9" opacity="0.4"/>
+  <!-- Label panel -->
+  <polygon points="68,40 84,32 84,72 68,72" fill="currentColor" fill-opacity="0.07" stroke-width="0.5" opacity="0.5"/>
+  <rect x="28" y="40" width="40" height="32" rx="3" stroke-width="0.9" opacity="0.5"/>
+  <line x1="33" y1="49" x2="63" y2="49" stroke-width="0.9" opacity="0.4"/>
+  <line x1="36" y1="56" x2="60" y2="56" stroke-width="0.9" opacity="0.3"/>
+  <line x1="38" y1="63" x2="58" y2="63" stroke-width="0.7" opacity="0.25"/>
+  <!-- Collar -->
+  <polygon points="61,28 77,20 77,24 61,32" fill="url(#pf-side)" stroke-width="0.7"/>
+  <polygon points="35,28 61,28 77,20 51,20" fill="url(#pf-top)" stroke-width="0.7"/>
+  <rect x="35" y="28" width="26" height="4" rx="2" stroke-width="1.5"/>
+  <!-- Neck -->
+  <polygon points="60,20 76,12 73,20 57,28" fill="url(#pf-side)" stroke-width="0.7"/>
+  <polygon points="36,20 60,20 76,12 52,12" fill="url(#pf-top)" stroke-width="0.7"/>
+  <polygon points="36,20 60,20 57,28 39,28" stroke-width="1.5"/>
+  <!-- Cap -->
+  <polygon points="66,8 82,0 82,7 66,15" fill="url(#pf-side)" stroke-width="0.7"/>
+  <polygon points="30,8 66,8 82,0 46,0"   fill="url(#pf-top)" stroke-width="0.7"/>
+  <rect x="30" y="8" width="36" height="7" rx="3.5" stroke-width="1.5"/>
+  <!-- Nozzle -->
+  <polygon points="54,15 70,7 70,12 54,20" fill="url(#pf-side)" stroke-width="0.6"/>
+  <polygon points="42,15 54,15 70,7 58,7"  fill="url(#pf-top)" stroke-width="0.6"/>
+  <rect x="42" y="15" width="12" height="5" rx="2" stroke-width="1.5"/>
+  <!-- Reflection -->
+  <line x1="27" y1="36" x2="27" y2="80" stroke-width="1.2" opacity="0.18"/>
+  <!-- Spray mist -->
+  <circle cx="80" cy="11" r="1.2" fill="currentColor" stroke="none" opacity="0.45"/>
+  <circle cx="86" cy="15" r="0.9" fill="currentColor" stroke="none" opacity="0.35"/>
+  <circle cx="90" cy="10" r="1.0" fill="currentColor" stroke="none" opacity="0.30"/>
+  <circle cx="94" cy="14" r="0.7" fill="currentColor" stroke="none" opacity="0.20"/>
+  <circle cx="83" cy="19" r="0.8" fill="currentColor" stroke="none" opacity="0.25"/>
+  <!-- Shadow -->
+  <ellipse cx="56" cy="98" rx="38" ry="5" fill="currentColor" stroke="none" opacity="0.10"/>
+</svg>`,
     ShoppingCart: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`,
     User: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
     Menu: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>`,
