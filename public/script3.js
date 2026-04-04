@@ -1,24 +1,19 @@
 const icons = {
     Perfume: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Perfume logo">
-        <!-- Marco octagonal -->
         <polygon points="60,4 100,22 116,60 100,98 60,116 20,98 4,60 20,22"
             fill="none" stroke="currentColor" stroke-width="4.5"/>
-        <!-- Círculo interior -->
         <circle cx="60" cy="60" r="40"
             fill="none" stroke="currentColor" stroke-width="3"/>
-        <!-- P (rellena) -->
         <text x="42" y="78"
             font-family="Georgia, 'Times New Roman', serif"
             font-size="52" font-weight="normal"
             fill="currentColor" stroke="none"
             text-anchor="middle">P</text>
-        <!-- W (contorno) -->
         <text x="75" y="78"
             font-family="Georgia, 'Times New Roman', serif"
             font-size="52" font-weight="normal"
             fill="none" stroke="currentColor" stroke-width="4.5"
             text-anchor="middle">W</text>
-        <!-- Puntos decorativos -->
         <circle cx="60" cy="14" r="4" fill="currentColor"/>
         <circle cx="60" cy="106" r="4" fill="currentColor"/>
     </svg>`,
