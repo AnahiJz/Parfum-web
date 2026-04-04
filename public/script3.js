@@ -1,34 +1,9 @@
 const icons = {
     Perfume: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 120 120" fill="none" stroke="currentColor">
-        <defs>
-            <linearGradient id="liquid-gold" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="currentColor" stop-opacity="0.9"/>
-                <stop offset="35%" stop-color="currentColor" stop-opacity="1"/>
-                <stop offset="50%" stop-color="currentColor" stop-opacity="0.5"/>
-                <stop offset="65%" stop-color="currentColor" stop-opacity="1"/>
-                <stop offset="100%" stop-color="currentColor" stop-opacity="0.8"/>
-            </linearGradient>
+        <g transform="translate(-3, 0)">
+            <text x="48" y="85" font-family="Georgia, 'Times New Roman', serif" font-size="80" font-weight="normal" fill="currentColor" stroke="none" text-anchor="middle">P</text>
             
-            <filter id="gold-glow" x="-20%" y="-20%" width="140%" height="140%">
-                <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000000" flood-opacity="0.4" />
-            </filter>
-        </defs>
-
-        <g filter="url(#gold-glow)">
-            <circle cx="60" cy="45" r="32" stroke="url(#liquid-gold)" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.9"/>
-            <circle cx="60" cy="45" r="36" stroke="url(#liquid-gold)" stroke-width="0.5" opacity="0.6"/>
-            
-            <polygon points="60,5 62.5,9 60,13 57.5,9" fill="url(#liquid-gold)"/>
-            <polygon points="60,77 62.5,81 60,85 57.5,81" fill="url(#liquid-gold)"/>
-            <polygon points="20,45 24,42.5 28,45 24,47.5" fill="url(#liquid-gold)"/>
-            <polygon points="92,45 96,42.5 100,45 96,47.5" fill="url(#liquid-gold)"/>
-
-            <text x="48" y="62" font-family="Georgia, 'Times New Roman', serif" font-size="44" font-weight="bold" fill="url(#liquid-gold)" text-anchor="middle">P</text>
-            <text x="72" y="62" font-family="Georgia, 'Times New Roman', serif" font-size="44" font-weight="bold" fill="none" stroke="url(#liquid-gold)" stroke-width="1.5" text-anchor="middle">W</text>
-            
-            <text x="60" y="102" font-family="Georgia, 'Times New Roman', serif" font-size="12" font-weight="bold" fill="url(#liquid-gold)" text-anchor="middle" letter-spacing="4">PARFUMWEB</text>
-            
-            <text x="60" y="114" font-family="Arial, sans-serif" font-size="4.5" font-weight="normal" fill="currentColor" text-anchor="middle" letter-spacing="2" opacity="0.7">ELEGANCIA EN CADA NOTA</text>
+            <text x="80" y="85" font-family="Georgia, 'Times New Roman', serif" font-size="80" font-weight="normal" fill="none" stroke="currentColor" stroke-width="2.5" text-anchor="middle">W</text>
         </g>
     </svg>`,
     ShoppingCart: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`,
