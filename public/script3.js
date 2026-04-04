@@ -903,7 +903,19 @@ function RegisterPage() {
         </div>
     `;
 }
-
+function SkeletonCard() {
+    return html`
+        <div class="glass-dark rounded-2xl p-6 shadow-2xl border border-amber-400/10 flex flex-col animate-pulse">
+            <div class="w-full h-56 bg-gray-600/30 rounded-xl mb-4"></div>
+            <div class="h-6 bg-gray-600/30 rounded w-3/4 mb-3"></div>
+            <div class="h-5 bg-amber-900/20 rounded w-1/3 mb-4"></div>
+            <div class="flex gap-1 mb-4">
+                ${Array(5).fill().map(() => html`<div class="h-4 w-4 bg-gray-600/30 rounded-full"></div>`).join('')}
+            </div>
+            <div class="mt-auto w-full h-12 bg-gray-600/20 rounded-full"></div>
+        </div>
+    `;
+}
 function ProductCard(product) {
     const starIcons = Array(5).fill().map((_, i) => 
         i < Math.floor(product.rating) ? icons.Star(18, 'text-yellow-400 fill-yellow-400') : 
@@ -940,10 +952,16 @@ function ProductCard(product) {
 }
 
 function CatalogPage() {
+    // NUEVO ESTADO DE CARGA PREMIUM (SKELETONS)
     if (state.loading) {
         return html`
-            <div class="container mx-auto px-4 py-32 text-center">
-                <h2 class="text-3xl text-amber-300 animate-pulse">Cargando catálogo de lujo...</h2>
+            <div class="container mx-auto px-4 py-16">
+                <div class="text-center mb-12 flex justify-center">
+                    <div class="h-10 bg-gray-600/30 rounded-lg w-64 animate-pulse"></div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                    ${Array(8).fill().map(() => SkeletonCard()).join('')}
+                </div>
             </div>
         `;
     }
