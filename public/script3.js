@@ -482,6 +482,7 @@ async function handleContact(e) {
     const contactEmail = form.elements.contactEmail.value;
     const contactMessage = form.elements.contactMessage.value;
     const destinationEmail = form.elements.destinationEmail.value;
+    const honeypot = form.elements.honeypot.value;
 
     if (!contactName || !contactEmail || !contactMessage) {
         setState({ error: '⚠️ Por favor completa todos los campos.' });
@@ -492,7 +493,7 @@ async function handleContact(e) {
         const response = await fetch('/api/contact', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contactName, contactEmail, contactMessage, destinationEmail })
+            body: JSON.stringify({ contactName, contactEmail, contactMessage, destinationEmail, honeypot })
         });
 
         const data = await response.json();
@@ -1115,6 +1116,12 @@ function ContactPage() {
             <div class="max-w-2xl mx-auto glass-dark p-8 rounded-3xl border border-amber-400/30">
                 <form id="contact-form" onsubmit="handleContact(event)">
                     <input type="hidden" name="destinationEmail" value="djassojimenez@gmail.com"/>
+
+                    {/* Campo Honeypot: si se llena, es un bot */}
+                    <div style="position: absolute; left: -5000px;" aria-hidden="true">
+                        <input type="text" name="honeypot" id="honeypot" tabindex="-1" autocomplete="off">
+                    </div>
+
                     <div class="mb-4">
                         <label class="text-amber-300">Nombre</label>
                         <input id="contactName" name="contactName" required class="w-full glass rounded p-2 text-white" placeholder="Tu nombre"/>

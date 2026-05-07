@@ -418,7 +418,14 @@ app.get('/', (req, res) => {
 });
 
 app.post('/api/contact', async (req, res) => {
-    const { contactName, contactEmail, contactMessage, destinationEmail } = req.body;
+    const { contactName, contactEmail, contactMessage, destinationEmail, honeypot } = req.body;
+
+    // Campo honeypot para detectar bots. Si tiene valor, es un bot.
+    if (honeypot) {
+        console.log('🍯 Honeypot activado. Envío de formulario bloqueado.');
+        // Respondemos con éxito para engañar al bot, pero no hacemos nada.
+        return res.json({ success: true, message: 'Mensaje enviado correctamente' });
+    }
 
     if (!contactName || !contactEmail || !contactMessage || !destinationEmail) {
         return res.status(400).json({ success: false, message: 'Faltan campos por completar' });
