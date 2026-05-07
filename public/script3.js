@@ -1,0 +1,1987 @@
+const icons = {
+    Perfume: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Perfume logo">
+        <polygon points="60,4 100,22 116,60 100,98 60,116 20,98 4,60 20,22"
+            fill="none" stroke="currentColor" stroke-width="4.5"/>
+        <circle cx="60" cy="60" r="40"
+            fill="none" stroke="currentColor" stroke-width="3"/>
+        <text x="42" y="78"
+            font-family="Georgia, 'Times New Roman', serif"
+            font-size="52" font-weight="normal"
+            fill="currentColor" stroke="none"
+            text-anchor="middle">P</text>
+        <text x="75" y="78"
+            font-family="Georgia, 'Times New Roman', serif"
+            font-size="52" font-weight="normal"
+            fill="none" stroke="currentColor" stroke-width="4.5"
+            text-anchor="middle">W</text>
+        <circle cx="60" cy="14" r="4" fill="currentColor"/>
+        <circle cx="60" cy="106" r="4" fill="currentColor"/>
+    </svg>`,
+    ShoppingCart: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`,
+    User: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+    Menu: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>`,
+    X: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`,
+    Search: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`,
+    LogOut: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>`,
+    Package: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>`,
+    ChevronDown: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="m6 9 6 6 6-6"/></svg>`,
+    Sparkles: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>`,
+    Star: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+    Edit: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>`,
+    Trash: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`,
+    MapPin: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`,
+    Phone: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`,
+    Mail: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`,
+    Clock: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+    Heart: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`,
+    Target: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
+    Eye: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`,
+    Instagram: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>`,
+    Facebook: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>`,
+    Twitter: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>`,
+    Send: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>`,
+    Award: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 10.15 15.83 14.1 11.88"/><line x1="12" x2="12" y1="16" y2="21"/><line x1="8.5" x2="15.5" y1="21" y2="21"/></svg>`,
+};
+
+let state = {
+    currentPage: 'home',
+    isLoggedIn: false, 
+    currentUser: null, 
+    cart: [],
+    menuOpen: false,
+    categoryDropdownOpen: false, 
+    adminMenuOpen: false, 
+    carouselIndex: 0,
+    carouselImages: [
+        'ParfumH/aventus.jpg', 'ParfumH/bleu.jpg', 'ParfumH/Allure.jpg',
+        'ParfumH/eternity.jpg', 'ParfumH/guilty.jpg', 'ParfumH/invictus.jpg',
+        'ParfumH/L1212.jpg', 'ParfumH/savage.jpg', 'ParfumM/tomfordm.jpg'
+    ],
+    currentCategory: 'all',
+    products: [], 
+    users: [],
+    admins: [],
+    sales: [],
+    error: null,
+    loading: true,
+    editingProduct: null,
+    adminSearchQuery: '',
+    editingUser: null,
+    adminSearchQueryUsers: '',
+    clientSearchQuery: '',
+    newProductForm: { name: '', price: '', stock: '', image: '', gender: 'hombre', type: 'designer' },
+    newUserForm: { name: '', email: '', password: '' }
+};
+
+let carouselInterval;
+
+let errorTimeout;
+
+function setState(newState) {
+    state = { ...state, ...newState };
+    renderApp();
+
+    if (newState.error) {
+        clearTimeout(errorTimeout);
+        // FASE 4: si el error empieza con ❌ / 🚨 / ⚠️ es alerta urgente (assertive)
+        const esError = newState.error.includes('❌') || newState.error.includes('🚨') || newState.error.includes('⚠️');
+        if (esError) {
+            anunciarAlerta(newState.error.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27FF}]/gu, '').trim());
+        } else {
+            anunciarEstado(newState.error.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27FF}]/gu, '').trim());
+        }
+        errorTimeout = setTimeout(() => {
+            if (state.error) {
+                state.error = null;
+                renderApp();
+            }
+        }, 3000);
+    }
+}
+
+function html(strings, ...values) {
+    let result = strings[0];
+    for (let i = 0; i < values.length; i++) {
+        result += values[i];
+        result += strings[i + 1];
+    }
+    return result;
+}
+
+// ============================================================
+// FASE 1 / FASE 4 — Funciones de anuncio para NVDA / VoiceOver
+// Estas funciones alimentan las regiones aria-live del index.html
+// ============================================================
+
+const nombresPagina = {
+    home:     'Inicio — Parfum Fragancias de Lujo',
+    login:    'Iniciar sesión',
+    register: 'Crear nueva cuenta',
+    catalog:  'Catálogo de fragancias',
+    cart:     'Tu carrito de compras',
+    admin:    'Panel de administración',
+    about:    'Quiénes somos',
+    location: 'Ubicación',
+    contact:  'Contáctanos',
+    profile:  'Mi perfil',
+    history:  'Historial de compras'
+};
+
+/**
+ * Anuncia el cambio de página a NVDA y VoiceOver.
+ * El doble-vaciado fuerza el re-anuncio aunque el texto sea el mismo.
+ */
+function anunciarRuta(pagina) {
+    const region = document.getElementById('route-announcer');
+    if (!region) return;
+    const nombre = nombresPagina[pagina] || pagina;
+    region.textContent = '';
+    setTimeout(() => { region.textContent = 'Página cargada: ' + nombre; }, 100);
+}
+
+/**
+ * Anuncia un mensaje de ALERTA URGENTE (errores, acciones destructivas).
+ * aria-live="assertive" — interrumpe la lectura actual de NVDA/VoiceOver.
+ */
+function anunciarAlerta(mensaje) {
+    const region = document.getElementById('alert-region');
+    if (!region) return;
+    region.textContent = '';
+    setTimeout(() => { region.textContent = mensaje; }, 100);
+}
+
+/**
+ * Anuncia un mensaje de ESTADO NO URGENTE (carrito, confirmaciones).
+ * aria-live="polite" — espera a que NVDA/VoiceOver termine de leer.
+ */
+function anunciarEstado(mensaje) {
+    const region = document.getElementById('status-region');
+    if (!region) return;
+    region.textContent = mensaje;
+}
+
+function checkSession() {
+    const savedUser = localStorage.getItem('parfum_user');
+    if (savedUser) {
+        const user = JSON.parse(savedUser);
+        let saludoRecarga = user.role === 'admin'
+            ? `👑 ¡Hola de nuevo, Admin ${user.name}!`
+            : `👋 ¡Hola de nuevo, ${user.name}!`;
+
+        setState({
+            currentUser: user,
+            isLoggedIn: true,
+            error: saludoRecarga
+        });
+        fetchCart(user.id);
+        if (user.role === 'admin') {
+            fetchSalesFromDB();
+            fetchUsersFromDB();
+        }
+    }
+}
+
+async function fetchUsersFromDB() {
+    try {
+        const response = await fetch('/api/users');
+        if (!response.ok) {
+            throw new Error('Error al obtener los usuarios');
+        }
+        const dbUsers = await response.json();
+        
+        const mappedUsers = dbUsers.map(u => ({
+            id: u.id,
+            name: u.nombre,
+            email: u.correo,
+            role: u.rol
+        }));
+
+        const admins = mappedUsers.filter(u => u.role === 'admin');
+        const clients = mappedUsers.filter(u => u.role !== 'admin');
+
+        setState({ 
+            users: clients, 
+            admins: admins 
+        });
+        
+        return mappedUsers;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+async function fetchProductsFromDB() {
+    try {
+        const response = await fetch('/api/products');
+        
+        const textRaw = await response.text();
+        
+        let dbProducts;
+        try {
+            dbProducts = JSON.parse(textRaw); 
+        } catch (e) {
+            console.error("🚨 EL SERVIDOR DEVOLVIÓ ESTO EN LUGAR DE JSON:\n", textRaw);
+            throw new Error("El servidor devolvió un error HTML. Presiona F12 y revisa la consola.");
+        }
+
+        if (!response.ok) {
+            throw new Error(dbProducts.error || 'Error del servidor al obtener productos');
+        }
+
+        const mappedProducts = dbProducts.map(p => ({
+            id: p.id,
+            name: p.nombre || 'Sin nombre',
+            price: parseFloat(p.precio) || 0,
+            image: p.imagen_principal || '',
+            gender: p.genero_id === 1 ? 'hombre' : (p.genero_id === 2 ? 'mujer' : 'unisex'),
+            badge: p.texto_insignia || '',
+            rating: parseFloat(p.calificacion) || 5.0,
+            type: p.tipo_id === 2 ? 'niche' : 'designer',
+            isPopular: p.es_popular === 1,
+            isNiche: p.tipo_id === 2,
+            stock: p.stock || 0
+        }));
+        
+        setState({ products: mappedProducts, loading: false });
+    } catch (error) {
+        console.error("Error cargando productos:", error);
+        setState({ error: '❌ ' + error.message, loading: false });
+    }
+}
+
+async function fetchSalesFromDB() {
+    try {
+        const response = await fetch('/api/admin/sales');
+        if (!response.ok) throw new Error('Error al obtener ventas');
+        const dbSales = await response.json();
+        const mappedSales = dbSales.map(s => ({
+            id: s.id,
+            client: s.cliente,
+            total: parseFloat(s.total).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
+            status: s.estado.charAt(0).toUpperCase() + s.estado.slice(1), 
+            date: new Date(s.fecha_creacion).toLocaleDateString('es-MX', { 
+                day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' 
+            })
+        }));
+        setState({ sales: mappedSales });
+    } catch (error) {
+        console.error("Error ventas:", error);
+    }
+}
+
+async function fetchCart(userId) {
+    try {
+        const response = await fetch(`/api/cart/${userId}`);
+        if (response.ok) {
+            const cartItems = await response.json();
+            const parsedItems = cartItems.map(item => ({
+                ...item,
+                price: parseFloat(item.price)
+            }));
+            setState({ cart: parsedItems });
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+function filterAdminUsers() {
+    if (!state.adminSearchQueryUsers) return state.admins;
+    return state.admins.filter(u => 
+        u.name.toLowerCase().includes(state.adminSearchQueryUsers.toLowerCase()) || 
+        u.email.toLowerCase().includes(state.adminSearchQueryUsers.toLowerCase())
+    );
+}
+
+function filterClients() {
+    if (!state.clientSearchQuery) return state.users;
+    return state.users.filter(u => 
+        u.name.toLowerCase().includes(state.clientSearchQuery.toLowerCase()) || 
+        u.email.toLowerCase().includes(state.clientSearchQuery.toLowerCase())
+    );
+}
+
+function prepareEditUser(userId) {
+    const idStr = String(userId);
+    const userToEdit = state.users.find(u => String(u.id) === idStr) || state.admins.find(u => String(u.id) === idStr);
+    if (userToEdit) {
+        setState({ editingUser: userToEdit });
+        const form = document.getElementById('create-admin-form');
+        if (form) form.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function cancelEditUser() {
+    setState({ editingUser: null });
+    state.newUserForm = { name: '', email: '', password: '' };
+}
+
+function handleProductInput(field, value) {
+    if (state.editingProduct) {
+        state.editingProduct[field] = value;
+    } else {
+        state.newProductForm[field] = value;
+    }
+}
+
+function handleUserInput(field, value) {
+    if (state.editingUser) {
+        state.editingUser[field] = value;
+    } else {
+        state.newUserForm[field] = value;
+    }
+}
+
+async function saveUser(e) {
+    e.preventDefault();
+    const name = document.getElementById('user-name').value;
+    const email = document.getElementById('user-email').value;
+    const password = document.getElementById('user-password').value;
+
+    if (!name || !email) {
+        setState({ error: '⚠️ Completa nombre y correo' });
+        return;
+    }
+    if (!state.editingUser && !password) {
+        setState({ error: '⚠️ La contraseña es obligatoria para nuevos usuarios' });
+        return;
+    }
+
+    const url = state.editingUser 
+        ? `/api/admin/users/${state.editingUser.id}`
+        : '/api/admin/create';
+    
+    const method = state.editingUser ? 'PUT' : 'POST';
+    const bodyData = { name, email };
+    
+    if (password) bodyData.password = password;
+    
+    if (!state.editingUser) {
+        bodyData.role = 'admin'; 
+    } else {
+        bodyData.role = state.editingUser.privileges === 'Control Total' ? 'admin' : 'usuario';
+    }
+
+    try {
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(bodyData)
+        });
+
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+            const data = await response.json();
+            
+            if (data.success || response.ok) {
+                setState({ error: state.editingUser ? '✅ Usuario actualizado' : '✅ Administrador creado exitosamente' });
+                fetchUsersFromDB(); 
+                cancelEditUser();
+            } else {
+                setState({ error: '❌ ' + (data.message || 'Error en la operación') });
+            }
+        } else {
+            const text = await response.text();
+            console.error("Respuesta no JSON del servidor:", text);
+            setState({ error: '⚠️ El servidor falló (revisa los logs).' });
+        }
+    } catch (error) {
+        console.error("Fetch falló:", error);
+        setState({ error: '⚠️ Error de red: No se pudo conectar con el servidor.' });
+    }
+}
+
+async function deleteUser(id) {
+    if (!confirm('¿Estás seguro de eliminar este usuario? Esta acción borrará sus pedidos también.')) return;
+    try {
+        const response = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+        const data = await response.json();
+        if (data.success) {
+            setState({ error: '🗑️ Usuario eliminado' });
+            fetchUsersFromDB(); 
+        } else {
+            setState({ error: '❌ ' + data.message });
+        }
+    } catch (error) {
+        console.error(error);
+        setState({ error: '⚠️ Error al eliminar usuario' });
+    }
+}
+
+function startCarousel() {
+    clearInterval(carouselInterval);
+    if (state.currentPage === 'admin') return; 
+    carouselInterval = setInterval(() => {
+        setState({ carouselIndex: (state.carouselIndex + 1) % state.carouselImages.length });
+    }, 4500);
+}
+
+function setCategoryFilter(categoryKey) {
+    setState({
+        currentPage: 'catalog',
+        currentCategory: categoryKey,
+        categoryDropdownOpen: false
+    });
+}
+
+function logout() {
+    localStorage.removeItem('parfum_user');
+    fetch('/api/logout', { method: 'POST' }).catch(err => console.error(err));
+    
+    setState({
+        isLoggedIn: false,
+        currentUser: null,
+        currentPage: 'home',
+        cart: [],
+        error: '👋 Has cerrado sesión exitosamente.',
+        categoryDropdownOpen: false,
+        adminMenuOpen: false,
+        currentCategory: 'all'
+    });
+}
+
+async function handleLogin(e) {
+    e.preventDefault();
+    const form = document.getElementById('login-form');
+    const username = form.elements.username.value;
+    const password = form.elements.password.value;
+    
+    if (!username || !password) {
+        setState({ error: '❌ Por favor, introduce correo y contraseña.' });
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+        if (data.success) {
+            const user = { id: data.user.id, name: data.user.nombre, role: data.user.rol };
+            localStorage.setItem('parfum_user', JSON.stringify(user));
+
+            let mensajeBienvenida = data.user.rol === 'admin' 
+                ? `👑 ¡Bienvenido al panel de control, ${data.user.nombre}!` 
+                : `✨ ¡Qué gusto verte de nuevo, ${data.user.nombre}!`;
+
+            setState({
+                currentUser: user,
+                isLoggedIn: true,
+                currentPage: data.user.rol === 'admin' ? 'admin' : 'catalog',
+                error: mensajeBienvenida
+            });
+            
+            history.pushState({ loggedIn: true }, '', window.location.href);
+
+            fetchCart(data.user.id);
+            if (data.user.rol === 'admin') {
+                fetchSalesFromDB();
+                fetchUsersFromDB();
+            }
+        } else {
+            setState({ error: '❌ ' + data.message });
+        }
+    } catch (error) {
+        console.error('Error login:', error);
+        setState({ error: '⚠️ Error de conexión con el servidor.' });
+    }
+}
+
+async function handleRegister(e) {
+    e.preventDefault();
+    const form = document.getElementById('register-form');
+    const name = form.elements.name.value;
+    const email = form.elements.email.value;
+    const password = form.elements.password.value;
+    const confirmPassword = form.elements.confirmPassword.value;
+    
+    if (password !== confirmPassword) {
+        setState({ error: '🚨 Las contraseñas no coinciden. Por favor, verifica.' });
+        return;
+    }
+    if (!name || !email || !password) {
+        setState({ error: '⚠️ Por favor, completa todos los campos.' });
+        return;
+    }
+    try {
+        const response = await fetch('/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, password })
+        });
+        const data = await response.json();
+        if (data.success) {
+            const user = { id: data.userId, name: name, role: 'usuario' };
+            localStorage.setItem('parfum_user', JSON.stringify(user));
+            setState({
+                currentUser: user,
+                isLoggedIn: true,
+                currentPage: 'catalog',
+                error: `🎉 ¡Cuenta creada con éxito! Bienvenido, ${name}.`
+            });
+
+            history.pushState({ loggedIn: true }, '', window.location.href);
+        } else {
+            setState({ error: '❌ ' + data.message });
+        }
+    } catch (error) {
+        console.error(error);
+        setState({ error: '⚠️ Error de conexión al registrarse.' });
+    }
+}
+
+async function handleContact(e) {
+    e.preventDefault();
+    const form = document.getElementById('contact-form');
+    
+    const contactName = form.elements.contactName.value;
+    const contactEmail = form.elements.contactEmail.value;
+    const contactMessage = form.elements.contactMessage.value;
+    const destinationEmail = form.elements.destinationEmail.value;
+
+    if (!contactName || !contactEmail || !contactMessage) {
+        setState({ error: '⚠️ Por favor completa todos los campos.' });
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/contact', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contactName, contactEmail, contactMessage, destinationEmail })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            setState({ 
+                error: `✅ ¡Gracias ${contactName}! Tu mensaje ha sido enviado a nuestro equipo.`, 
+                currentPage: 'home' 
+            });
+            form.reset();
+        } else {
+            setState({ error: '❌ ' + (data.message || 'Error al enviar el mensaje.') });
+        }
+    } catch (error) {
+        console.error(error);
+        setState({ error: '⚠️ Error de conexión al intentar enviar el mensaje.' });
+    }
+}
+
+function mostrarNotificacion(titulo, subtitulo = '') {
+    let contenedor = document.getElementById('toast-container');
+    if (!contenedor) {
+        contenedor = document.createElement('div');
+        contenedor.id = 'toast-container';
+        contenedor.className = 'fixed bottom-5 right-5 z-50 flex flex-col gap-3 pointer-events-none';
+        // FASE 4: aria-live en el contenedor de toasts para NVDA/VoiceOver
+        contenedor.setAttribute('aria-live', 'polite');
+        contenedor.setAttribute('aria-atomic', 'false');
+        document.body.appendChild(contenedor);
+    }
+
+    const toast = document.createElement('div');
+    // FASE 4: role=status hace que NVDA anuncie el toast cuando sea polite
+    toast.setAttribute('role', 'status');
+    toast.className = 'glass-dark border border-amber-400/30 px-6 py-4 rounded-xl shadow-2xl flex items-center gap-4 transform translate-y-10 opacity-0 transition-all duration-500 ease-out';
+
+    toast.innerHTML = `
+        <div class="bg-amber-500/20 p-2 rounded-full text-amber-400" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20 6L9 17l-5-5"/>
+            </svg>
+        </div>
+        <div>
+            <p class="font-bold text-amber-100 text-sm tracking-wide">${titulo}</p>
+            ${subtitulo ? `<p class="text-amber-200/60 text-xs mt-0.5">${subtitulo}</p>` : ''}
+        </div>
+    `;
+
+    contenedor.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.remove('translate-y-10', 'opacity-0');
+    }, 50);
+
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-x-10');
+        setTimeout(() => toast.remove(), 500);
+    }, 3000);
+}
+
+async function addToCart(productId) {
+    const product = state.products.find(p => p.id === productId);
+    if (!state.isLoggedIn || !state.currentUser) {
+        setState({ currentPage: 'login', error: '🔒 Debes iniciar sesión para comprar.' });
+        return;
+    }
+    try {
+        const response = await fetch('/api/cart/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: state.currentUser.id, productId: productId, quantity: 1 })
+        });
+        if (response.ok) {
+            await fetchCart(state.currentUser.id);
+            const nombreProd = product ? product.name : 'Producto';
+            mostrarNotificacion('AÑADIDO AL CARRITO', nombreProd);
+            // FASE 4: anunciar al lector de pantalla (polite — no interrumpe)
+            anunciarEstado(`${nombreProd} añadido al carrito.`);
+            renderApp();
+        }
+    } catch (error) {
+        console.error(error);
+        anunciarAlerta('Error al añadir el producto al carrito.');
+    }
+}
+
+async function removeFromCart(productId) {
+    if (!state.currentUser) return;
+    const item = state.cart.find(i => i.id === productId);
+    const nombreProd = item ? item.name : 'Producto';
+    try {
+        const response = await fetch('/api/cart/remove', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: state.currentUser.id, productId })
+        });
+        if (response.ok) {
+            await fetchCart(state.currentUser.id);
+            // FASE 4: confirmar eliminación al lector (polite)
+            anunciarEstado(`${nombreProd} eliminado del carrito.`);
+        }
+    } catch (error) {
+        console.error(error);
+        anunciarAlerta('Error al eliminar el producto del carrito.');
+    }
+}
+
+async function updateQuantity(productId, newQuantity) {
+    if (!state.currentUser) return;
+    const quantity = parseInt(newQuantity);
+    try {
+        const response = await fetch('/api/cart/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: state.currentUser.id, productId, quantity })
+        });
+        if (response.ok) {
+            await fetchCart(state.currentUser.id);
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+async function checkout() {
+    if (!state.currentUser || !state.currentUser.id) {
+        setState({ error: '❌ Error: No se pudo identificar al usuario.' });
+        return;
+    }
+    const total = state.cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    try {
+        setState({ loading: true }); 
+        const response = await fetch('/api/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: state.currentUser.id,
+                cart: state.cart,
+                total: total
+            })
+        });
+        const data = await response.json();
+        if (data.success && data.url) {
+            window.location.href = data.url;
+        } else {
+            setState({ error: '❌ ' + data.message, loading: false });
+        }
+    } catch (error) {
+        console.error(error);
+        setState({ error: '⚠️ Error de conexión al procesar el pago.', loading: false });
+    }
+}
+
+function NotificationBanner() {
+    if (!state.error) return '';
+    return html` 
+        <div id="notification-banner" role="alert" aria-live="assertive" aria-atomic="true"
+             class="notification-banner fixed top-0 left-1/2 transform -translate-x-1/2 mt-4 p-3 rounded-xl shadow-2xl z-[100] max-w-sm w-full mx-4
+            ${state.error.includes('❌') || state.error.includes('🚨') || state.error.includes('⚠️') || state.error.includes('🗑️') || state.error.includes('🔒') 
+                ? 'bg-red-800'    /* #991b1b | blanco sobre este fondo = 7.5:1 ✅ WebAIM AA */
+                : 'bg-green-800'} /* #166534 | blanco sobre este fondo = 7.2:1 ✅ WebAIM AA */
+            text-white font-semibold flex items-center gap-3 border border-white/20">
+            <!-- FASE 2: type=button + aria-label para el botón de cierre de notificación -->
+            <button type="button" class="text-xl flex-shrink-0" aria-label="Cerrar notificación" onclick="setState({error: null})">
+                <svg class="icon" width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+            <span class="flex-1 text-sm md:text-base">${state.error}</span>
+        </div>
+    `;
+}
+
+function CategoryDropdown() {
+    const categories = [
+        { name: 'Todos los Productos', key: 'all' },
+        { name: 'Para Hombre', key: 'hombre' },
+        { name: 'Para Mujer', key: 'mujer' },
+        { name: 'Nicho', key: 'nicho' },
+        { name: 'Más Populares', key: 'popular' },
+        { name: 'De Diseñador', key: 'designer' }
+    ];
+    const activeCategory = categories.find(cat => cat.key === state.currentCategory) || categories[0];
+    return html`
+        <div class="relative">
+            <!-- FASE 3: aria-haspopup + aria-expanded + aria-controls para NVDA/VoiceOver -->
+            <button type="button"
+                    id="cat-dropdown-btn"
+                    aria-haspopup="true"
+                    aria-expanded="${state.categoryDropdownOpen ? 'true' : 'false'}"
+                    aria-controls="cat-dropdown-menu"
+                    onclick="setState({categoryDropdownOpen: !state.categoryDropdownOpen})"
+                    class="flex items-center text-amber-200 hover:text-amber-400 transition-all font-semibold tracking-wide">
+                ${activeCategory.name.toUpperCase()}
+                <svg class="icon ml-1 transition-transform ${state.categoryDropdownOpen ? 'rotate-180' : ''}" width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            ${state.categoryDropdownOpen ? html`
+                <div id="cat-dropdown-menu" role="menu" aria-labelledby="cat-dropdown-btn"
+                     class="absolute left-1/2 transform -translate-x-1/2 mt-3 w-56 glass-dark rounded-xl shadow-2xl border border-amber-400/30 overflow-hidden z-50 animate-fadeInUp">
+                    ${categories.map(cat => html`
+                        <button type="button" role="menuitem"
+                           onclick="setCategoryFilter('${cat.key}')"
+                           aria-current="${cat.key === state.currentCategory ? 'true' : 'false'}"
+                           class="w-full text-left block px-4 py-3 text-sm text-amber-200 ${cat.key === state.currentCategory ? 'bg-amber-500/50 font-bold' : 'hover:bg-amber-500/30'} transition-colors">${cat.name}</button>
+                    `).join('')}
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+function AdminNavbarDropdown() {
+    return html`
+        <!-- FASE 6: type=button + aria-label en botón de navegación admin -->
+        <button type="button"
+                aria-label="Ir al Panel de Administración"
+                onclick="setState({currentPage: 'admin', categoryDropdownOpen: false})"
+                class="flex items-center text-red-400 hover:text-red-500 transition-all font-bold tracking-wide">
+            PANEL ADMIN
+        </button>
+    `;
+}
+
+function Navbar() {
+    const cartCount = state.cart.reduce((total, item) => total + item.quantity, 0);
+    const isAdmin = state.currentUser && state.currentUser.role === 'admin';
+    return html`
+        <!-- FASE 1: role="banner" identifica el encabezado principal para NVDA/VoiceOver -->
+        <header role="banner" class="glass sticky top-0 z-50 border-b border-amber-400/30 shadow-2xl">
+            <div class="container mx-auto px-4">
+                <div class="flex items-center justify-between py-4">
+                    <!-- Logo: convertido a <button> para ser focusable con Tab -->
+                    <button type="button"
+                        aria-label="Parfum - Ir al inicio"
+                        onclick="setState({currentPage: state.isLoggedIn ? 'catalog' : 'home', categoryDropdownOpen: false, adminMenuOpen: false, currentCategory: 'all'})"
+                        class="flex items-center gap-3 group bg-transparent border-0 cursor-pointer focus-custom">
+                        <div class="gradient-gold p-3 rounded-2xl shadow-xl transform group-hover:rotate-12 transition-all duration-300">
+                          ${icons.Perfume(30, 'text-gray-900')}  
+                        </div>
+                        <div>
+                            <span class="text-xl md:text-3xl font-display font-bold bg-gradient-to-r from-amber-300 via-amber-200 to-amber-400 bg-clip-text text-transparent">Parfum</span>
+                            <p class="hidden md:block text-xs text-amber-300 font-light tracking-[0.2em] uppercase">Luxury Fragrances</p>
+                        </div>
+                    </button>
+                    <!-- FASE 1: role="navigation" + aria-label para NVDA tecla D -->
+                    <nav role="navigation" aria-label="Navegación principal" class="hidden lg:flex items-center gap-8 text-sm font-semibold tracking-wide">
+                        ${isAdmin ? AdminNavbarDropdown() : html`
+                            <button type="button" onclick="setCategoryFilter('all')" class="text-amber-200 hover:text-amber-400 transition-all">CATÁLOGO</button>
+                            ${CategoryDropdown()}
+                            <button type="button" onclick="setState({currentPage: 'about', categoryDropdownOpen: false})" class="text-amber-200 hover:text-amber-400 transition-all">NOSOTROS</button>
+                            <button type="button" onclick="setState({currentPage: 'location', categoryDropdownOpen: false})" class="text-amber-200 hover:text-amber-400 transition-all">UBICACIÓN</button>
+                            <button type="button" onclick="setState({currentPage: 'contact', categoryDropdownOpen: false})" class="text-amber-200 hover:text-amber-400 transition-all">CONTACTO</button>
+                        `}
+                    </nav>
+                    <div class="flex items-center gap-4">
+                        ${!isAdmin ? html`
+                            <!-- FASE 1: aria-label describe acción + cantidad para lector -->
+                            <button type="button"
+                                onclick="setState({currentPage: 'cart', menuOpen: false, categoryDropdownOpen: false})"
+                                aria-label="Carrito de compras${cartCount > 0 ? `, ${cartCount} producto${cartCount > 1 ? 's' : ''}` : ', vacío'}"
+                                class="relative group">
+                                <div class="glass-dark p-3 rounded-xl hover:bg-amber-500/20 transition-all shadow-lg">
+                                    <!-- SVG decorativo: aria-hidden porque aria-label del botón ya lo describe -->
+                                    <svg class="icon text-amber-300 group-hover:text-amber-400" width="26" height="26" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                                    ${cartCount > 0 ? html`<span class="absolute -top-2 -right-2 bg-yellow-400 text-gray-900 text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center border-2 border-gray-900" aria-hidden="true">${cartCount}</span>` : ''}
+                                </div>
+                            </button>
+                        ` : ''}
+                        ${state.isLoggedIn ? html`
+                           <div class="flex items-center gap-2">
+                            <!-- FASE 1: <div> → <button> con aria-label para accesibilidad -->
+                            <button type="button"
+                                onclick="setState({currentPage: 'profile', categoryDropdownOpen: false})"
+                                aria-label="Mi perfil"
+                                class="hidden md:block glass-dark p-3 rounded-xl shadow-lg hover:bg-amber-500/20 transition-all">
+                                <svg class="icon text-amber-300" width="26" height="26" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            </button>
+                            <button type="button" onclick="setState({currentPage: isAdmin ? 'admin' : 'history', categoryDropdownOpen: false})" class="hidden md:block text-amber-100 font-medium glass-dark px-4 py-3 rounded-xl hover:bg-amber-500/20 transition-all">
+                                ${isAdmin ? 'ADMIN' : 'HISTORIAL'}
+                            </button>
+                        </div>
+                            <!-- FASE 1: aria-label explícito en botón logout -->
+                            <button type="button" onclick="logout()"
+                                aria-label="Cerrar sesión"
+                                class="glass-dark p-3 rounded-xl hover:bg-red-500/20 transition-all group shadow-lg">
+                                <svg class="icon text-amber-300 group-hover:text-red-400" width="22" height="22" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                            </button>
+                        ` : html`
+                            <div class="flex items-center gap-2">
+                                <!-- FASE 1: <div> → <button> para ser focusable -->
+                                <button type="button"
+                                    onclick="setState({currentPage: 'login', categoryDropdownOpen: false})"
+                                    aria-label="Iniciar sesión"
+                                    class="hidden md:block glass-dark p-3 rounded-xl shadow-lg hover:bg-amber-500/20 transition-all">
+                                    <svg class="icon text-amber-300" width="26" height="26" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                </button>
+                                <button type="button" onclick="setState({currentPage: 'login', categoryDropdownOpen: false})" class="gradient-gold text-gray-900 px-4 md:px-8 py-2 md:py-3 rounded-full font-bold shadow-2xl transition-all transform hover:scale-105 btn-premium text-sm md:text-base">
+                                    INGRESAR
+                                </button>
+                            </div>
+                        `}
+                        <!-- FASE 1: aria-label dinámico según estado del menú -->
+                        <button type="button"
+                            class="lg:hidden glass-dark p-3 rounded-xl shadow-lg"
+                            aria-label="${state.menuOpen ? 'Cerrar menú de navegación' : 'Abrir menú de navegación'}"
+                            aria-expanded="${state.menuOpen ? 'true' : 'false'}"
+                            aria-controls="mobile-nav-menu"
+                            onclick="setState({menuOpen: !state.menuOpen, categoryDropdownOpen: false})">
+                            <svg class="icon text-amber-300" width="26" height="26" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false">${state.menuOpen ? '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>' : '<line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/>'}</svg>
+                        </button>
+                    </div>
+                </div>
+                ${state.menuOpen ? html`
+                    <!-- FASE 1: id vinculado a aria-controls del botón hamburguesa -->
+                    <div id="mobile-nav-menu" class="lg:hidden pb-4 animate-fadeInUp">
+                        <nav role="navigation" aria-label="Menú móvil" class="flex flex-col gap-2">
+                            ${isAdmin ? html`
+                                <button type="button" onclick="setState({currentPage: 'admin', menuOpen: false})" class="text-red-400 font-bold py-2 text-left">PANEL ADMIN</button>
+                            ` : html`
+                                <button type="button" onclick="setState({currentPage: 'catalog', menuOpen: false})" class="text-amber-200 hover:text-amber-400 py-2 text-left">CATÁLOGO</button>
+                                <button type="button" onclick="setState({currentPage: 'about', menuOpen: false})" class="text-amber-200 hover:text-amber-400 py-2 text-left">NOSOTROS</button>
+                                <button type="button" onclick="setState({currentPage: 'location', menuOpen: false})" class="text-amber-200 hover:text-amber-400 py-2 text-left">UBICACIÓN</button>
+                                <button type="button" onclick="setState({currentPage: 'contact', menuOpen: false})" class="text-amber-200 hover:text-amber-400 py-2 text-left">CONTACTO</button>
+                            `}
+                        </nav>
+                    </div>
+                ` : ''}
+            </div>
+        </header>
+    `;
+}
+
+function Footer() {
+    return html`
+        <!-- FASE 1: role="contentinfo" identifica el footer para NVDA (tecla D) -->
+        <footer role="contentinfo" class="glass-dark border-t border-amber-400/30 mt-16">
+            <div class="container mx-auto px-4 py-12">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-8">
+                    <div class="col-span-1 md:col-span-1">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="gradient-gold p-2 rounded-xl">${icons.Package(24, 'text-gray-900')}</div>
+                            <span class="text-2xl font-display font-bold text-amber-300">Parfum</span>
+                        </div>
+                        <p class="text-amber-200/70 text-sm">Fragancias de lujo exclusivas.</p>
+                    </div>
+
+                    <div>
+                        <h4 class="text-amber-400 font-semibold mb-4">Enlaces</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="#" onclick="setState({currentPage: 'catalog'})" class="text-amber-200/70 hover:text-amber-400 transition">Catálogo</a></li>
+                            <li><a href="#" onclick="setState({currentPage: 'about'})" class="text-amber-200/70 hover:text-amber-400 transition">Quiénes Somos</a></li>
+                            <li><a href="#" onclick="setState({currentPage: 'location'})" class="text-amber-200/70 hover:text-amber-400 transition">Ubicación</a></li>
+                            <li><a href="#" onclick="setState({currentPage: 'contact'})" class="text-amber-200/70 hover:text-amber-400 transition">Contacto</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="col-span-1 md:col-span-1">
+                        <h4 class="text-amber-400 font-semibold mb-4">Contáctanos</h4>
+                        <ul class="space-y-3 text-sm text-amber-200/70">
+                            <li class="flex items-center gap-3">${icons.MapPin(18, 'text-amber-400')} Av. Reforma 123, CDMX</li>
+                            <li class="flex items-center gap-3">${icons.Phone(18, 'text-amber-400')} +52 55 1234 5678</li>
+                            <li class="flex items-center gap-3 break-all">${icons.Mail(18, 'text-amber-400')} info@parfum.com</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="col-span-1 md:col-span-2">
+                         <h4 class="text-amber-400 font-semibold mb-4">Horario</h4>
+                         <ul class="space-y-3 text-sm text-amber-200/70 mb-6">
+                            <li class="flex items-center gap-3">${icons.Clock(18, 'text-amber-400')} Lunes a Viernes: 10:00 - 20:00</li>
+                            <li class="flex items-center gap-3">${icons.Clock(18, 'text-amber-400')} Sábado: 11:00 - 18:00</li>
+                        </ul>
+
+                        <h4 class="text-amber-400 font-semibold mb-4">Síguenos</h4>
+                        <div class="flex gap-4">
+                            <!-- FASE 3: aria-label informa que abre en nueva pestaña (WCAG 3.2.2) -->
+                            <a href="https://instagram.com/tu_perfil"
+                               aria-label="Parfum en Instagram (abre en nueva pestaña)"
+                               class="group glass p-2 rounded-xl hover:bg-gradient-to-br from-purple-500 to-pink-500 transition-all"
+                               target="_blank" rel="noopener noreferrer">
+                                <svg class="icon text-amber-300 group-hover:text-white" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+                            </a>
+                            <a href="https://facebook.com/tu_perfil"
+                               aria-label="Parfum en Facebook (abre en nueva pestaña)"
+                               class="group glass p-2 rounded-xl hover:bg-gradient-to-r from-blue-500 to-blue-600 transition-all"
+                               target="_blank" rel="noopener noreferrer">
+                                <svg class="icon text-amber-300 group-hover:text-white" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                            </a>
+                            <a href="https://twitter.com/tu_perfil"
+                               aria-label="Parfum en Twitter / X (abre en nueva pestaña)"
+                               class="group glass p-2 rounded-xl hover:bg-gradient-to-r from-sky-400 to-sky-500 transition-all"
+                               target="_blank" rel="noopener noreferrer">
+                                <svg class="icon text-amber-300 group-hover:text-white" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center py-4 border-t border-amber-400/20">
+                <!-- FASE 2: amber-200/50 (4.33:1 ❌) → text-amber-400 (#fbbf24 = 10:1 ✅ WebAIM AA) -->
+                <p class="text-xs text-amber-400">© 2024 Parfum Luxury Fragrances. Todos los derechos reservados.</p>
+            </div>
+        </footer>
+    `;
+}
+
+function HomePage() {
+    return html`
+        <div class="container mx-auto px-4 py-16 text-center">
+            <h1 class="text-4xl md:text-6xl font-display font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent">Bienvenido a Parfum</h1>
+            <p class="text-lg md:text-xl text-amber-200/80 mt-4 max-w-3xl mx-auto">Sumérgete en el mundo de las fragancias de lujo.</p>
+            <div id="carousel" class="mt-8 md:mt-12" aria-label="Galería de fragancias" aria-live="off">
+                <div class="glass-dark rounded-3xl overflow-hidden border border-amber-400/30 h-64 md:h-96 flex items-center justify-center">
+                    <!-- FASE 3: alt dinámico basado en ruta de imagen; aria-live=off evita anuncios repetitivos -->
+                    <img src="${state.carouselImages[state.carouselIndex]}"
+                         alt="Fragancia destacada: ${state.carouselImages[state.carouselIndex].replace(/^.*\/|\.[^/.]+$/g,'').replace(/-/g,' ')}"
+                         class="w-full h-full object-cover opacity-80 transition-opacity duration-1000"/>
+                </div>
+            </div>
+            <!-- FASE 6: type=button + aria-label descriptivo -->
+            <button type="button"
+                    aria-label="Explorar toda la colección de fragancias"
+                    onclick="setCategoryFilter('all')"
+                    class="mt-8 md:mt-12 gradient-gold text-gray-900 px-8 md:px-10 py-3 md:py-4 rounded-full font-bold shadow-2xl transition-all transform hover:scale-105 btn-premium text-lg md:text-xl">
+                <svg class="icon mr-2" width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9"/><path d="M12 3c4.97 0 9 4.03 9 9"/><path d="m15 6-3-3-3 3"/></svg>
+                Explorar Colección
+            </button>
+        </div>
+    `;
+}
+
+function LoginPage() {
+    return html`
+        <div class="flex items-center justify-center min-h-screen bg-gray-900/90 py-12 px-4">
+            <div class="glass-dark p-8 md:p-12 rounded-3xl shadow-2xl border border-amber-400/30 w-full max-w-md animate-fadeInUp relative">
+                <!-- FASE 6: type=button + aria-label reemplaza title para NVDA -->
+                <button type="button"
+                        onclick="setState({currentPage: 'home'})"
+                        aria-label="Regresar al inicio"
+                        class="absolute top-6 left-6 text-amber-400 hover:text-amber-200 transition-transform hover:-translate-x-1">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                        <path d="M19 12H5"></path>
+                        <path d="M12 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <h2 class="text-3xl font-display font-bold text-amber-300 mb-6 text-center">Ingresar a Mi Cuenta</h2>
+                <form id="login-form" onsubmit="handleLogin(event)">
+                    <div class="mb-5">
+                        <!-- FASE 3: for/id vinculan label e input para NVDA -->
+                        <label for="login-email" class="block text-sm font-medium text-amber-300 mb-2">Correo electrónico</label>
+                        <input type="email" id="login-email" name="username" required
+                               aria-required="true"
+                               autocomplete="email"
+                               class="w-full px-4 py-3 glass rounded-xl text-white input-border-a11y"
+                               placeholder="ejemplo@correo.com"/>
+                    </div>
+                    <div class="mb-6">
+                        <label for="login-password" class="block text-sm font-medium text-amber-300 mb-2">Contraseña</label>
+                        <input type="password" id="login-password" name="password" required
+                               aria-required="true"
+                               autocomplete="current-password"
+                               class="w-full px-4 py-3 glass rounded-xl text-white input-border-a11y"
+                               placeholder="••••••"/>
+                    </div>
+                    <button type="submit" class="w-full gradient-gold text-gray-900 px-8 py-4 rounded-full font-bold shadow-2xl transition-all hover:scale-105 btn-premium text-lg">ACCEDER</button>
+                </form>
+                <p class="text-center text-amber-200/70 mt-6">
+                    ¿No tienes cuenta? <button type="button" onclick="setState({currentPage: 'register'})" aria-label="Ir a la página de registro" class="text-amber-400 font-bold hover:underline">Regístrate</button>
+                </p>
+            </div>
+        </div>
+    `;
+}
+
+function RegisterPage() {
+    return html`
+        <div class="flex items-center justify-center min-h-screen bg-gray-900/90 py-12 px-4">
+            <div class="glass-dark p-8 md:p-12 rounded-3xl shadow-2xl border border-amber-400/30 w-full max-w-lg animate-fadeInUp">
+                <h2 class="text-3xl font-display font-bold text-amber-300 mb-6 text-center">Crear Nueva Cuenta</h2>
+                <form id="register-form" onsubmit="handleRegister(event)">
+                    <div class="mb-5">
+                        <label for="reg-name" class="block text-sm font-medium text-amber-300 mb-2">Nombre completo</label>
+                        <input type="text" id="reg-name" name="name" required
+                               aria-required="true" autocomplete="name"
+                               class="w-full px-4 py-3 glass rounded-xl text-white input-border-a11y"/>
+                    </div>
+                    <div class="mb-5">
+                        <label for="reg-email" class="block text-sm font-medium text-amber-300 mb-2">Correo electrónico</label>
+                        <input type="email" id="reg-email" name="email" required
+                               aria-required="true" autocomplete="email"
+                               class="w-full px-4 py-3 glass rounded-xl text-white input-border-a11y"/>
+                    </div>
+                    <div class="mb-5">
+                        <label for="reg-password" class="block text-sm font-medium text-amber-300 mb-2">Contraseña</label>
+                        <input type="password" id="reg-password" name="password" required
+                               aria-required="true" autocomplete="new-password"
+                               class="w-full px-4 py-3 glass rounded-xl text-white input-border-a11y"/>
+                    </div>
+                    <div class="mb-6">
+                        <label for="reg-confirm" class="block text-sm font-medium text-amber-300 mb-2">Confirmar contraseña</label>
+                        <input type="password" id="reg-confirm" name="confirmPassword" required
+                               aria-required="true" autocomplete="new-password"
+                               class="w-full px-4 py-3 glass rounded-xl text-white input-border-a11y"/>
+                    </div>
+                    <button type="submit" class="w-full gradient-gold text-gray-900 px-8 py-4 rounded-full font-bold shadow-2xl transition-all hover:scale-105 btn-premium text-lg">REGISTRARSE</button>
+                </form>
+                <p class="text-center text-amber-200/70 mt-6">
+                    ¿Ya tienes cuenta? <button type="button" onclick="setState({currentPage: 'login'})" aria-label="Ir a la página de inicio de sesión" class="text-amber-400 font-bold hover:underline">Ingresa</button>
+                </p>
+            </div>
+        </div>
+    `;
+}
+function SkeletonCard() {
+    return html`
+        <div class="glass-dark rounded-2xl p-6 shadow-2xl border border-amber-400/10 flex flex-col animate-pulse" aria-hidden="true">
+            <div class="w-full h-56 bg-gray-600/30 rounded-xl mb-4"></div>
+            <div class="h-6 bg-gray-600/30 rounded w-3/4 mb-3"></div>
+            <div class="h-5 bg-amber-900/20 rounded w-1/3 mb-4"></div>
+            <div class="flex gap-1 mb-4"></div>
+            <div class="mt-auto w-full h-12 bg-gray-600/20 rounded-full"></div>
+        </div>
+    `;
+}
+
+function ProductCard(product) {
+    // FASE 3: aria-label dinámico para las estrellas
+    const ratingLabel = `${product.rating.toFixed(1)} de 5 estrellas`;
+    const starIcons = Array(5).fill().map((_, i) =>
+        i < Math.floor(product.rating) ? `<svg class="icon text-yellow-400" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>` :
+        i < product.rating ? `<svg class="icon text-yellow-400" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="opacity:.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>` :
+        `<svg class="icon text-gray-600" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
+    ).join('');
+
+    const buttonAction = state.isLoggedIn
+        ? `addToCart(${product.id})`
+        : `setState({ currentPage: 'login', error: '🔒 Debes iniciar sesión para añadir productos al carrito.' })`;
+    const buttonText = state.isLoggedIn ? 'Añadir al Carrito' : 'Iniciar Sesión';
+    const buttonClasses = state.isLoggedIn ? 'gradient-gold hover:ring-2 hover:ring-yellow-400' : 'bg-red-500 hover:bg-red-600 text-white';
+    const buttonIcon = state.isLoggedIn
+        ? `<svg class="icon text-gray-900" width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`
+        : `<svg class="icon text-gray-900" width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+
+    return html`
+        <div class="glass-dark rounded-2xl p-6 shadow-2xl border border-amber-400/30 flex flex-col transform hover:scale-[1.02] transition-all duration-300">
+            <div class="relative mb-4">
+                <img src="${product.image}" alt="${product.name}" class="w-full h-56 object-cover rounded-xl shadow-lg"/>
+                ${product.badge ? html`<span class="absolute top-3 right-3 bg-yellow-400 text-gray-900 text-xs font-bold px-3 py-1 rounded-full shadow-md" aria-label="Etiqueta: ${product.badge}">${product.badge}</span>` : ''}
+            </div>
+            <h3 class="text-xl font-bold text-amber-200">${product.name}</h3>
+            <p class="text-amber-300 font-semibold text-lg mt-1">$${ product.price.toLocaleString('es-MX')}</p>
+            <!-- FASE 3: group con aria-label anuncia la calificación como texto -->
+            <div class="flex items-center mt-2 mb-4" role="group" aria-label="Calificación: ${ratingLabel}">
+                ${starIcons}
+                <span class="text-sm text-amber-200/70 ml-2" aria-hidden="true">(${product.rating.toFixed(1)})</span>
+            </div>
+            <!-- FASE 3: aria-label describe producto + acción para NVDA -->
+            <button type="button" onclick="${buttonAction}"
+                    aria-label="${buttonText}: ${product.name}, $${product.price.toLocaleString('es-MX')}"
+                    class="mt-auto w-full text-gray-900 px-4 py-3 rounded-full font-bold shadow-md transition-all flex items-center justify-center gap-2 ${buttonClasses}">
+                ${buttonIcon} ${buttonText}
+            </button>
+        </div>
+    `;
+}
+
+
+function CatalogPage() {
+    // NUEVO ESTADO DE CARGA PREMIUM (SKELETONS)
+    if (state.loading) {
+        return html`
+            <div class="container mx-auto px-4 py-16">
+                <div class="text-center mb-12 flex justify-center">
+                    <div class="h-10 bg-gray-600/30 rounded-lg w-64 animate-pulse"></div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                    ${Array(8).fill().map(() => SkeletonCard()).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    let filteredProducts = state.products;
+    let title = 'Catálogo de Fragancias';
+    
+    switch (state.currentCategory) {
+        case 'hombre': filteredProducts = state.products.filter(p => p.gender === 'hombre'); title = 'Para Hombre'; break;
+        case 'mujer': filteredProducts = state.products.filter(p => p.gender === 'mujer'); title = 'Para Mujer'; break;
+        case 'nicho': filteredProducts = state.products.filter(p => p.type === 'niche'); title = 'Fragancias Nicho'; break;
+        case 'popular': filteredProducts = state.products.filter(p => p.isPopular === true); title = 'Más Populares'; break;
+        case 'designer': filteredProducts = state.products.filter(p => p.type === 'designer'); title = 'De Diseñador'; break;
+        default: break;
+    }
+
+    return html`
+        <div class="container mx-auto px-4 py-16">
+            <div class="text-center mb-12">
+                <h1 class="text-3xl md:text-5xl font-display font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-4">${title}</h1>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                ${filteredProducts.map(ProductCard).join('')}
+            </div>
+        </div>
+    `;
+}
+
+function CartPage() {
+    const subtotal = state.cart.reduce((total, item) => total + item.price * item.quantity, 0);
+    return html`
+        <div class="container mx-auto px-4 py-16">
+            <h1 class="text-3xl md:text-5xl font-display font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-12">Tu Carrito</h1>
+            ${state.cart.length === 0 ? html`<p class="text-center text-amber-200">Tu carrito está vacío.</p>` :
+            html`<div class="grid lg:grid-cols-3 gap-12">
+                <div class="lg:col-span-2 space-y-6">
+                    ${state.cart.map(item => html`
+                        <div class="glass-dark p-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-6 border border-amber-400/30">
+                            <div class="flex items-center gap-6 w-full sm:w-auto">
+                                <!-- FASE 3: alt con nombre del producto -->
+                                <img src="${item.image}" alt="${item.name}" class="w-20 h-20 object-cover rounded-xl"/>
+                                <div><h3 class="text-amber-200 font-bold">${item.name}</h3><p class="text-amber-300">$${ item.price.toLocaleString('es-MX')}</p></div>
+                            </div>
+                            <div class="flex items-center gap-4 w-full sm:w-auto justify-end">
+                                <!-- FASE 3: label sr-only + aria-label en input de cantidad -->
+                                <label for="qty-${item.id}" class="sr-only">Cantidad de ${item.name}</label>
+                                <input type="number" id="qty-${item.id}" value="${item.quantity}"
+                                       min="1" aria-label="Cantidad de ${item.name}"
+                                       onchange="updateQuantity(${item.id}, this.value)"
+                                       class="w-16 px-2 py-1 glass text-white rounded input-border-a11y"/>
+                                <!-- FASE 3: aria-label describe qué se elimina -->
+                                <button type="button" onclick="removeFromCart(${item.id})"
+                                        aria-label="Eliminar ${item.name} del carrito"
+                                        class="text-red-400">
+                                    <svg class="icon" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="glass-dark p-8 rounded-3xl border border-amber-400/30 h-fit">
+                    <h2 class="text-2xl text-amber-300 mb-4">Total: $${subtotal.toLocaleString('es-MX')}</h2>
+                    <button type="button" onclick="checkout()" class="w-full gradient-gold text-gray-900 px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform mb-4">PAGAR CON TARJETA</button>
+                    <div class="relative z-0">
+                        <div id="paypal-button-container" class="w-full"></div>
+                    </div>
+                </div>
+            </div>`}
+        </div>
+    `;
+}
+
+function AboutUsPage() {
+    const values = [
+        { name: 'Excelencia', icon: icons.Award(20) },
+        { name: 'Pasión', icon: icons.Heart(20) },
+        { name: 'Servicio', icon: icons.User(20) },
+        { name: 'Autenticidad', icon: icons.Sparkles(20) },
+    ];
+
+    return html`
+        <div class="container mx-auto px-4 py-16">
+            <h1 class="text-3xl md:text-5xl text-center font-display font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-12">Quiénes Somos</h1>
+            
+            <div class="grid lg:grid-cols-2 gap-12 items-start">
+                
+                <div class="space-y-8">
+                    <div class="glass-dark p-4 rounded-3xl border border-amber-400/30 shadow-2xl">
+                        <!-- FASE 3: video con aria-label; muted+autoplay es decorativo, pero necesita contexto -->
+                        <video src="video.mp4" autoplay loop muted playsinline
+                               aria-label="Video corporativo de Parfum: fragrancias de lujo"
+                               class="w-full h-full object-cover rounded-2xl shadow-2xl border border-amber-400/20">
+                            <p>Tu navegador no soporta vídeo HTML5. <a href="video.mp4" class="text-amber-400">Descarga el vídeo</a></p>
+                        </video>
+                    </div>
+                    
+                    <div class="glass-dark p-6 rounded-2xl border border-amber-400/30 shadow-xl">
+                        <h2 class="text-3xl font-bold text-amber-300 mb-3">Nuestra Historia</h2>
+                        <p class="text-amber-200/80">
+                            Parfum nació en 2018 con la visión de elevar la experiencia de compra de fragancias en México. Lo que comenzó como un pequeño proyecto de curaduría de perfumes nicho, se ha convertido en una boutique digital líder, dedicada a conectar a nuestros clientes con las esencias más exclusivas del mundo.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="space-y-8">
+                    <h2 class="text-3xl md:text-4xl font-bold text-amber-300">Nuestra Filosofía</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="glass-dark p-6 rounded-2xl border border-amber-400/30 hover:border-amber-400/60 transition-all card-luxury">
+                            <div class="gradient-gold w-12 h-12 rounded-xl flex items-center justify-center mb-4">
+                                ${icons.Target(24, 'text-gray-900')}
+                            </div>
+                            <h3 class="text-xl font-bold text-amber-200 mb-2">Nuestra Misión</h3>
+                            <p class="text-amber-200/70 text-sm">
+                                Ser el puente de acceso a las fragancias más exclusivas del mercado, brindando un servicio personalizado y de primera clase.
+                            </p>
+                        </div>
+
+                        <div class="glass-dark p-6 rounded-2xl border border-amber-400/30 hover:border-amber-400/60 transition-all card-luxury">
+                            <div class="gradient-gold w-12 h-12 rounded-xl flex items-center justify-center mb-4">
+                                ${icons.Eye(24, 'text-gray-900')}
+                            </div>
+                            <h3 class="text-xl font-bold text-amber-200 mb-2">Nuestra Visión</h3>
+                            <p class="text-amber-200/70 text-sm">
+                                Liderar el mercado de perfumes de lujo en Latinoamérica, expandiendo nuestra presencia con la misma esencia artesanal y trato personal.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="glass-dark p-6 rounded-2xl border border-amber-400/30 shadow-xl">
+                        <h3 class="text-2xl font-bold text-amber-300 mb-4">Nuestros Valores</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            ${values.map(val => html`
+                                <div class="flex items-center text-amber-200 font-semibold text-base gap-2">
+                                    <span class="text-amber-400">${val.icon}</span>
+                                    ${val.name}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function LocationPage() {
+    return html`
+        <div class="container mx-auto px-4 py-16 text-center">
+            <h1 class="text-3xl md:text-5xl font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-12">Ubicación</h1>
+            <div class="glass-dark p-6 md:p-12 rounded-3xl inline-block border border-amber-400/30 w-full max-w-4xl">
+                ${icons.MapPin(48, 'text-amber-400 mx-auto mb-4')}
+                <p class="text-amber-200 text-xl mb-8">Av. Paseo de la Reforma 123, CDMX</p>
+                <div class="w-full h-64 md:h-96 rounded-2xl overflow-hidden border border-amber-400/30">
+                    <!-- FASE 3: title en iframe es obligatorio para NVDA (anuncia: 'Mapa Parfum') -->
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3762.470878579899!2d-99.16278438509327!3d19.435200386882855!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85d1f92b75aa014d%3A0x17d745a3372b3892!2sP.%C2%BA%20de%20la%20Reforma%20123%2C%20Ju%C3%A1rez%2C%20Cuauht%C3%A9moc%2C%2006600%20Ciudad%20de%20M%C3%A9xico%2C%20CDMX!5e0!3m2!1ses!2smx!4v1684900000000!5m2!1ses!2smx"
+                            width="100%" height="100%" style="border:0;"
+                            title="Mapa de ubicación de Parfum en Av. Paseo de la Reforma 123, Ciudad de México"
+                            allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function ContactPage() {
+    return html`
+        <div class="container mx-auto px-4 py-16">
+            <h1 class="text-3xl md:text-5xl text-center font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-12">Contáctanos</h1>
+            <div class="max-w-2xl mx-auto glass-dark p-8 rounded-3xl border border-amber-400/30">
+                <form id="contact-form" onsubmit="handleContact(event)">
+                    <input type="hidden" name="destinationEmail" value="djassojimenez@gmail.com"/>
+                    <div class="mb-4">
+                        <label for="contactName" class="block text-amber-300 mb-1">Nombre <span aria-hidden="true">*</span></label>
+                        <input id="contactName" name="contactName" required
+                               aria-required="true" autocomplete="name"
+                               class="w-full glass rounded p-2 text-white input-border-a11y"
+                               placeholder="Tu nombre"/>
+                    </div>
+                    <div class="mb-4">
+                        <label for="contactEmail" class="block text-amber-300 mb-1">Correo electrónico <span aria-hidden="true">*</span></label>
+                        <input type="email" id="contactEmail" name="contactEmail" required
+                               aria-required="true" autocomplete="email"
+                               class="w-full glass rounded p-2 text-white input-border-a11y"
+                               placeholder="tu@correo.com"/>
+                    </div>
+                    <div class="mb-4">
+                        <label for="contactMessage" class="block text-amber-300 mb-1">Mensaje <span aria-hidden="true">*</span></label>
+                        <textarea id="contactMessage" name="contactMessage" required
+                                  aria-required="true"
+                                  class="w-full glass rounded p-2 text-white h-32 input-border-a11y"
+                                  placeholder="Escribe aquí tus quejas o sugerencias detalladas..."></textarea>
+                    </div>
+                    <button type="submit" class="gradient-gold px-6 py-2 rounded-full font-bold hover:scale-105 transition-transform">Enviar</button>
+                </form>
+                <!-- FASE 2: amber-200/50 (4.33:1 text-xs ❌) → text-amber-400 (10:1 ✅) -->
+                <p class="text-center text-amber-400 text-xs mt-6">
+                    Tus comentarios serán recibidos directamente en djassojimenez@gmail.com
+                </p>
+            </div>
+        </div>
+    `;
+}
+
+function filterAdminProducts() {
+    if (!state.adminSearchQuery) return state.products;
+    return state.products.filter(p => p.name.toLowerCase().includes(state.adminSearchQuery.toLowerCase()));
+}
+
+function prepareEditProduct(product) {
+    setState({ editingProduct: product });
+}
+
+function cancelEditProduct() {
+    setState({ editingProduct: null });
+    state.newProductForm = { name: '', price: '', stock: '', image: '', gender: 'hombre', type: 'designer' };
+}
+
+async function saveProduct(e) {
+    e.preventDefault();
+    const form = document.getElementById('product-form');
+    
+    const name = document.getElementById('prod-name').value;
+    const price = parseFloat(document.getElementById('prod-price').value);
+    const image = document.getElementById('prod-image').value;
+    const stock = parseInt(document.getElementById('prod-stock').value);
+    const gender = document.getElementById('prod-gender').value;
+    const type = document.getElementById('prod-type').value;
+
+    const productData = {
+        name, price, image, stock, gender, type,
+        rating: state.editingProduct ? state.editingProduct.rating : 5.0,
+        badge: '', 
+        isPopular: false 
+    };
+
+    const url = state.editingProduct 
+        ? `/api/admin/products/${state.editingProduct.id}`
+        : '/api/admin/products';
+    
+    const method = state.editingProduct ? 'PUT' : 'POST';
+
+    try {
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(productData)
+        });
+
+        const data = await response.json();
+
+        if (data.success || response.ok) {
+            setState({ error: state.editingProduct ? '✅ Producto actualizado' : '✅ Producto creado' });
+            fetchProductsFromDB();
+            cancelEditProduct();
+        } else {
+            setState({ error: '❌ Error al guardar: ' + (data.message || 'Error desconocido') });
+        }
+    } catch (error) {
+        console.error(error);
+        setState({ error: '⚠️ Error de conexión' });
+    }
+}
+
+async function deleteProduct(id) {
+    if (!confirm('¿Estás seguro de eliminar este producto del catálogo?')) return;
+
+    try {
+        const response = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
+        if (response.ok) {
+            setState({ error: '🗑️ Producto eliminado' });
+            fetchProductsFromDB();
+        } else {
+            setState({ error: '❌ No se pudo eliminar el producto' });
+        }
+    } catch (error) {
+        console.error(error);
+        setState({ error: '⚠️ Error al eliminar' });
+    }
+}
+
+function AdminPage() {
+    if (!state.currentUser || state.currentUser.role !== 'admin') {
+        return html`<div class="text-center p-20 text-red-400 font-bold text-2xl">🚫 Acceso Denegado</div>`;
+    }
+
+    const totalRevenue = state.sales.reduce((acc, sale) => {
+        const amount = parseFloat(sale.total.replace(/[^0-9.-]+/g,""));
+        return acc + amount;
+    }, 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
+
+    const filteredProducts = filterAdminProducts();
+    const filteredAdmins = filterAdminUsers();
+    const filteredClients = filterClients();
+
+    const productData = state.editingProduct || state.newProductForm;
+    const userData = state.editingUser || state.newUserForm;
+
+    return html`
+        <div class="container mx-auto px-4 py-16">
+            <h1 class="text-3xl md:text-4xl text-amber-400 font-bold mb-8 flex items-center gap-3">
+                ${icons.Sparkles(32)} Panel de Administración
+            </h1>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div class="glass-dark p-6 rounded-2xl border border-amber-400/30">
+                    <h3 class="text-amber-200 text-sm font-bold uppercase">Usuarios Registrados</h3>
+                    <p class="text-4xl font-bold text-white mt-2">${state.users.length}</p>
+                </div>
+                <div class="glass-dark p-6 rounded-2xl border border-amber-400/30">
+                    <h3 class="text-amber-200 text-sm font-bold uppercase">Ventas Totales</h3>
+                    <p class="text-4xl font-bold text-green-400 mt-2">${state.sales.length}</p>
+                </div>
+                <div class="glass-dark p-6 rounded-2xl border border-amber-400/30">
+                    <h3 class="text-amber-200 text-sm font-bold uppercase">Ingresos</h3>
+                    <p class="text-4xl font-bold text-amber-400 mt-2">${totalRevenue}</p>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-8 mb-12">
+                <div class="glass-dark p-6 rounded-2xl border border-green-400/30 h-fit">
+                    <h2 class="text-xl md:text-2xl text-green-400 mb-6 font-bold flex items-center gap-2">
+                        ${icons.ShoppingCart(24)} Historial de Ventas
+                    </h2>
+                    <div class="overflow-x-auto max-h-96">
+                        <table class="w-full text-left text-sm text-gray-300 min-w-[600px]" aria-label="Historial de ventas">
+                            <!-- FASE 5: caption describe la tabla para NVDA -->
+                            <caption class="sr-only">Historial de ventas: lista de todas las transacciones registradas con ID, cliente, monto, estado y fecha.</caption>
+                            <thead class="text-xs uppercase bg-green-900/30 text-green-300 sticky top-0">
+                                <tr>
+                                    <!-- FASE 5: scope="col" vincula cada th con su columna -->
+                                    <th scope="col" class="p-3">ID</th>
+                                    <th scope="col" class="p-3">Cliente</th>
+                                    <th scope="col" class="p-3">Total</th>
+                                    <th scope="col" class="p-3">Estado</th>
+                                    <th scope="col" class="p-3">Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-700">
+                                ${state.sales.length === 0 ?
+                                    html`<tr><td colspan="5" class="p-4 text-center text-gray-500">No hay ventas registradas aún.</td></tr>` :
+                                    state.sales.map(sale => html`
+                                    <tr class="hover:bg-white/5 transition">
+                                        <!-- FASE 5: scope="row" en la celda de identificador -->
+                                        <td scope="row" class="p-3 font-mono text-green-200">#${sale.id}</td>
+                                        <td class="p-3 font-medium text-white">${sale.client}</td>
+                                        <td class="p-3 text-amber-300 font-bold">${sale.total}</td>
+                                        <td class="p-3">
+                                            <span class="px-2 py-1 rounded text-xs font-bold ${sale.status === 'Pagado' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}">
+                                                ${sale.status}
+                                            </span>
+                                        </td>
+                                        <td class="p-3 text-xs text-gray-400">${sale.date}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="glass-dark p-6 rounded-2xl border border-blue-400/30 h-fit">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                        <h2 class="text-xl md:text-2xl text-blue-400 font-bold flex items-center gap-2">
+                            <svg class="icon" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Clientes
+                        </h2>
+                        <div class="relative w-full md:w-48">
+                            <!-- FASE 5: label sr-only en input de búsqueda -->
+                            <label for="client-search" class="sr-only">Buscar cliente por nombre o email</label>
+                            <span class="absolute left-2 top-2 text-gray-400" aria-hidden="true">${icons.Search(14)}</span>
+                            <input type="text"
+                                id="client-search"
+                                aria-label="Buscar cliente por nombre o email"
+                                placeholder="Buscar cliente..."
+                                value="${state.clientSearchQuery}"
+                                oninput="setState({clientSearchQuery: this.value})"
+                                class="w-full pl-8 pr-2 py-1 text-sm rounded-lg bg-black/40 text-white border border-blue-400/20 focus:border-blue-400 outline-none input-border-a11y"
+                            />
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto max-h-96">
+                        <table class="w-full text-left text-sm text-gray-300 min-w-[500px]" aria-label="Lista de clientes registrados">
+                            <!-- FASE 5: caption describe el propósito de la tabla -->
+                            <caption class="sr-only">Clientes registrados en Parfum: nombre, correo electrónico y acciones disponibles.</caption>
+                            <thead class="text-xs uppercase bg-blue-900/30 text-blue-300 sticky top-0">
+                                <tr>
+                                    <th scope="col" class="p-3">Nombre</th>
+                                    <th scope="col" class="p-3">Email</th>
+                                    <th scope="col" class="p-3 text-right">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-700">
+                                ${filteredClients.length === 0 ? html`<tr><td colspan="3" class="p-4 text-center text-gray-500">No se encontraron clientes.</td></tr>` : ''}
+                                ${filteredClients.map(u => html`
+                                    <tr class="hover:bg-white/5 transition">
+                                        <!-- FASE 5: scope="row" en celda de nombre (identificador de fila) -->
+                                        <td scope="row" class="p-3 font-medium text-white">${u.name}</td>
+                                        <td class="p-3 text-gray-400">${u.email}</td>
+                                        <td class="p-3 text-right flex justify-end gap-2">
+                                            <!-- FASE 5: aria-label contextual incluye el nombre del cliente -->
+                                            <button type="button" onclick="prepareEditUser('${u.id}')"
+                                                aria-label="Editar cliente: ${u.name}"
+                                                class="text-blue-400 hover:text-blue-300 hover:scale-110 transition">
+                                                <svg class="icon" width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                            </button>
+                                            <button type="button" onclick="deleteUser('${u.id}')"
+                                                aria-label="Eliminar cliente: ${u.name}"
+                                                class="text-red-400 hover:text-red-300 hover:scale-110 transition">
+                                                <svg class="icon" width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-dark p-6 md:p-8 rounded-2xl border border-amber-400/30 mb-12 relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">${icons.Package(100, 'text-amber-400')}</div>
+                <h3 class="text-xl md:text-2xl text-amber-200 font-bold mb-6 flex items-center gap-2">📦 Gestión de Inventario</h3>
+                
+                <div class="grid lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1 glass p-6 rounded-xl border border-white/10">
+                        <h4 class="text-xl text-amber-300 font-bold mb-4">${state.editingProduct ? '✏️ Editando Producto' : '✨ Agregar Nuevo Producto'}</h4>
+                        <form id="product-form" onsubmit="saveProduct(event)" class="space-y-4">
+                            <div>
+                                <!-- FASE 5: for/id en todos los campos del formulario de producto -->
+                                <label for="prod-name" class="text-xs text-amber-200 uppercase font-bold block mb-1">Nombre del producto</label>
+                                <input id="prod-name" type="text" required
+                                    aria-required="true"
+                                    value="${productData.name}"
+                                    oninput="handleProductInput('name', this.value)"
+                                    class="w-full p-2 rounded bg-black/40 text-white input-border-a11y"/>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label for="prod-price" class="text-xs text-amber-200 uppercase font-bold block mb-1">Precio ($)</label>
+                                    <input id="prod-price" type="number" step="0.01" required
+                                        aria-required="true"
+                                        value="${productData.price}"
+                                        oninput="handleProductInput('price', this.value)"
+                                        class="w-full p-2 rounded bg-black/40 text-white input-border-a11y"/>
+                                </div>
+                                <div>
+                                    <label for="prod-stock" class="text-xs text-amber-200 uppercase font-bold block mb-1">Stock</label>
+                                    <input id="prod-stock" type="number" required
+                                        aria-required="true"
+                                        value="${productData.stock}"
+                                        oninput="handleProductInput('stock', this.value)"
+                                        class="w-full p-2 rounded bg-black/40 text-white input-border-a11y"/>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="prod-image" class="text-xs text-amber-200 uppercase font-bold block mb-1">URL de imagen</label>
+                                <input id="prod-image" type="text" required
+                                    aria-required="true"
+                                    value="${productData.image}"
+                                    oninput="handleProductInput('image', this.value)"
+                                    class="w-full p-2 rounded bg-black/40 text-white input-border-a11y"/>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label for="prod-gender" class="text-xs text-amber-200 uppercase font-bold block mb-1">Género</label>
+                                    <select id="prod-gender" class="w-full p-2 rounded bg-black/40 text-white input-border-a11y"
+                                        onchange="handleProductInput('gender', this.value)">
+                                        <option value="hombre" ${productData.gender === 'hombre' ? 'selected' : ''}>Hombre</option>
+                                        <option value="mujer" ${productData.gender === 'mujer' ? 'selected' : ''}>Mujer</option>
+                                        <option value="unisex" ${productData.gender === 'unisex' ? 'selected' : ''}>Unisex</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="prod-type" class="text-xs text-amber-200 uppercase font-bold block mb-1">Tipo</label>
+                                    <select id="prod-type" class="w-full p-2 rounded bg-black/40 text-white input-border-a11y"
+                                        onchange="handleProductInput('type', this.value)">
+                                        <option value="designer" ${productData.type === 'designer' ? 'selected' : ''}>Diseñador</option>
+                                        <option value="niche" ${productData.type === 'niche' ? 'selected' : ''}>Nicho</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-2 pt-2">
+                                <button type="submit" class="flex-1 gradient-gold text-gray-900 font-bold py-2 rounded shadow-lg hover:scale-105 transition">
+                                    ${state.editingProduct ? 'ACTUALIZAR' : 'GUARDAR'}
+                                </button>
+                                ${state.editingProduct ? html`
+                                    <button type="button" onclick="cancelEditProduct()" class="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/50 rounded hover:bg-red-500/40 transition">
+                                        ${icons.X(20)}
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="lg:col-span-2 flex flex-col h-[500px]">
+                        <div class="mb-4 flex gap-2">
+                            <div class="relative flex-1">
+                                <!-- FASE 5: label sr-only en búsqueda de productos -->
+                                <label for="prod-search" class="sr-only">Buscar producto por nombre</label>
+                                <span class="absolute left-3 top-2.5 text-gray-400" aria-hidden="true">${icons.Search(18)}</span>
+                                <input type="text"
+                                    id="prod-search"
+                                    aria-label="Buscar producto por nombre"
+                                    placeholder="Buscar producto por nombre..."
+                                    value="${state.adminSearchQuery}"
+                                    oninput="setState({adminSearchQuery: this.value})"
+                                    class="w-full pl-10 pr-4 py-2 rounded-lg bg-black/40 text-white border border-amber-400/20 focus:border-amber-400 outline-none transition-all input-border-a11y"
+                                />
+                            </div>
+                        </div>
+
+                        <div class="flex-1 overflow-y-auto pr-2 space-y-2 custom-scrollbar">
+                            ${filteredProducts.length === 0 ? html`<p class="text-center text-gray-500 py-10">No se encontraron productos.</p>` : ''}
+                            ${filteredProducts.map(p => html`
+                                <div class="glass p-3 rounded-lg border border-white/5 flex items-center gap-4 hover:bg-white/5 transition group">
+                                    <!-- FASE 5: alt con nombre del producto en inventario admin -->
+                                    <img src="${p.image}" alt="${p.name}" class="w-12 h-12 rounded object-cover border border-white/10"/>
+                                    <div class="flex-1">
+                                        <h5 class="text-amber-200 font-bold text-sm leading-tight">${p.name}</h5>
+                                        <p class="text-xs text-gray-400">$${ p.price} | Stock: ${p.stock}</p>
+                                    </div>
+                                    <div class="flex gap-2 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <!-- FASE 5: aria-label incluye el nombre del producto -->
+                                        <button type="button" onclick='prepareEditProduct(${JSON.stringify(p)})'
+                                            aria-label="Editar producto: ${p.name}"
+                                            class="p-2 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/40 transition">
+                                            <svg class="icon" width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                        </button>
+                                        <button type="button" onclick="deleteProduct(${p.id})"
+                                            aria-label="Eliminar producto: ${p.name}"
+                                            class="p-2 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40 transition">
+                                            <svg class="icon" width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-8">
+                <div class="glass-dark p-6 rounded-2xl border border-purple-400/30 h-fit">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                        <h2 class="text-xl md:text-2xl text-purple-400 font-bold flex items-center gap-2">
+                            ${icons.User(24)} Administradores
+                        </h2>
+                        <div class="relative w-full md:w-48">
+                            <span class="absolute left-2 top-2 text-gray-400">${icons.Search(14)}</span>
+                            <input type="text" 
+                                id="admin-search"
+                                placeholder="Buscar admin..." 
+                                value="${state.adminSearchQueryUsers}"
+                                oninput="setState({adminSearchQueryUsers: this.value})"
+                                class="w-full pl-8 pr-2 py-1 text-sm rounded-lg bg-black/40 text-white border border-purple-400/20 focus:border-purple-400 outline-none"
+                            />
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto max-h-64">
+                        <table class="w-full text-left text-sm text-gray-300 min-w-[500px]">
+                            <thead class="text-xs uppercase bg-purple-900/30 text-purple-300 sticky top-0">
+                                <tr>
+                                    <th class="p-3">Nombre</th>
+                                    <th class="p-3">Email</th>
+                                    <th class="p-3 text-right">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-700">
+                                ${filteredAdmins.length === 0 ? html`<tr><td colspan="3" class="p-4 text-center text-gray-500">No se encontraron administradores.</td></tr>` : ''}
+                                ${filteredAdmins.map(u => html`
+                                    <tr class="hover:bg-white/5 transition">
+                                        <td class="p-3 font-medium text-white">${u.name}</td>
+                                        <td class="p-3 text-gray-400">${u.email}</td>
+                                        <td class="p-3 text-right flex justify-end gap-2">
+                                            <!-- FASE 6: aria-label contextual en tabla de admins -->
+                                            <button type="button" onclick="prepareEditUser('${u.id}')"
+                                                aria-label="Editar administrador: ${u.name}"
+                                                class="text-blue-400 hover:text-blue-300 hover:scale-110 transition">
+                                                <svg class="icon" width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                            </button>
+                                            <button type="button" onclick="deleteUser('${u.id}')"
+                                                aria-label="Eliminar administrador: ${u.name}"
+                                                class="text-red-400 hover:text-red-300 hover:scale-110 transition">
+                                                <svg class="icon" width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="glass-dark p-6 md:p-8 rounded-2xl border border-amber-400/30 h-fit">
+                    <h3 class="text-xl md:text-2xl text-amber-200 font-bold mb-6">
+                        ${state.editingUser ? '✏️ Editar Usuario' : 'Crear Nuevo Administrador'}
+                    </h3>
+                    
+                    <form id="create-admin-form" onsubmit="saveUser(event)" class="flex flex-col gap-4">
+                        <!-- FASE 3: labels visibles vinculados a inputs del admin -->
+                        <div>
+                            <label for="user-name" class="block text-sm text-amber-300 mb-1">Nombre</label>
+                            <input type="text" id="user-name" placeholder="Nombre"
+                                value="${userData.name}"
+                                oninput="handleUserInput('name', this.value)"
+                                required aria-required="true" autocomplete="name"
+                                class="w-full p-3 rounded-lg glass text-white placeholder-gray-400 input-border-a11y"/>
+                        </div>
+                        <div>
+                            <label for="user-email" class="block text-sm text-amber-300 mb-1">Correo electrónico</label>
+                            <input type="email" id="user-email" placeholder="Correo"
+                                value="${userData.email}"
+                                oninput="handleUserInput('email', this.value)"
+                                required aria-required="true" autocomplete="email"
+                                class="w-full p-3 rounded-lg glass text-white placeholder-gray-400 input-border-a11y"/>
+                        </div>
+                        <div>
+                            <label for="user-password" class="block text-sm text-amber-300 mb-1">${state.editingUser ? 'Contraseña (dejar vacío para mantener)' : 'Contraseña'}</label>
+                            <input type="password" id="user-password" placeholder="${state.editingUser ? 'Dejar vacío para mantener' : 'Contraseña'}"
+                                oninput="handleUserInput('password', this.value)"
+                                ${state.editingUser ? '' : 'required aria-required="true"'} autocomplete="new-password"
+                                class="w-full p-3 rounded-lg glass text-white placeholder-gray-400 input-border-a11y"/>
+                        </div>
+                        
+                        <div class="flex gap-2 mt-2">
+                            <button type="submit" class="flex-1 gradient-gold text-gray-900 font-bold p-3 rounded-lg hover:scale-105 transition">
+                                ${state.editingUser ? 'Actualizar' : 'Crear Admin'}
+                            </button>
+                            ${state.editingUser ? html`
+                                <button type="button" onclick="cancelEditUser()" class="p-3 bg-red-500/20 text-red-400 border border-red-500/50 rounded-lg hover:bg-red-500/40 transition">
+                                    ${icons.X(20)}
+                                </button>
+                            ` : ''}
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    `;
+}
+
+function ProfilePage() {
+    return html`
+        <div class="container mx-auto px-4 py-16 text-center animate-fadeInUp">
+            <h1 class="text-3xl md:text-5xl font-display font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-8">Mi Perfil</h1>
+            <div class="glass-dark p-8 rounded-3xl border border-amber-400/30 max-w-md mx-auto">
+                <div class="gradient-gold w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl">
+                    ${icons.User(40, 'text-gray-900')}
+                </div>
+                <h2 class="text-2xl text-amber-200 font-bold">${state.currentUser.name}</h2>
+                <p class="text-amber-300/70 mt-2 uppercase tracking-widest text-sm">Rol: ${state.currentUser.role}</p>
+                <!-- FASE 6: type=button + aria-label en botón de cerrar sesión -->
+                <button type="button" onclick="logout()"
+                        aria-label="Cerrar sesión de mi cuenta Parfum"
+                        class="mt-8 bg-red-500/20 text-red-400 border border-red-500/50 px-6 py-2 rounded-full font-bold hover:bg-red-500/40 transition">Cerrar Sesión</button>
+            </div>
+        </div>
+    `;
+}
+
+function HistoryPage() {
+    return html`
+        <div class="container mx-auto px-4 py-16 animate-fadeInUp">
+            <h1 class="text-3xl md:text-5xl font-display font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent mb-8 text-center">Historial de Compras</h1>
+            <div class="glass-dark p-8 rounded-3xl border border-amber-400/30 max-w-4xl mx-auto text-center">
+                <div class="opacity-50 mb-4">${icons.Package(48, 'text-amber-400 mx-auto')}</div>
+                <h3 class="text-xl text-amber-200">Aún no tienes compras registradas.</h3>
+                <p class="text-amber-200/60 mt-2">¡Explora nuestro catálogo para encontrar tu fragancia ideal!</p>
+                <button type="button" onclick="setState({currentPage: 'catalog'})" aria-label="Ir al catálogo de fragancias" class="mt-6 gradient-gold text-gray-900 px-6 py-2 rounded-full font-bold hover:scale-105 transition">Ir al Catálogo</button>
+            </div>
+        </div>
+    `;
+}
+
+
+function renderApp() {
+    clearInterval(carouselInterval);
+    const appContainer = document.getElementById('app-container');
+    
+    const activeId = document.activeElement ? document.activeElement.id : null;
+    const selectionStart = document.activeElement ? document.activeElement.selectionStart : null;
+
+    let pageContent = '';
+
+    if (state.categoryDropdownOpen || state.adminMenuOpen) state.menuOpen = false;
+
+    switch (state.currentPage) {
+        case 'home': pageContent = HomePage(); break;
+        case 'login': pageContent = LoginPage(); break;
+        case 'register': pageContent = RegisterPage(); break;
+        case 'catalog': pageContent = CatalogPage(); break;
+        case 'cart': pageContent = CartPage(); break;
+        case 'admin': pageContent = AdminPage(); break;
+        case 'about': pageContent = AboutUsPage(); break;
+        case 'location': pageContent = LocationPage(); break;
+        case 'contact': pageContent = ContactPage(); break;
+        case 'profile': pageContent = ProfilePage(); break;
+        case 'history': pageContent = HistoryPage(); break;
+        default: pageContent = HomePage();
+    }
+
+    if (['login', 'register'].includes(state.currentPage)) {
+        appContainer.innerHTML = NotificationBanner() + pageContent;
+    } else if (state.currentPage === 'admin') {
+        // FASE 1: id="main-content" es el destino del skip link / role="main" para NVDA
+        appContainer.innerHTML = NotificationBanner() + Navbar() + '<main id="main-content" role="main" tabindex="-1" class="pb-16">' + pageContent + '</main>';
+    } else {
+        appContainer.innerHTML = NotificationBanner() + Navbar() + '<main id="main-content" role="main" tabindex="-1" class="pb-16">' + pageContent + '</main>' + Footer();
+    }
+
+    // FASE 4: Anunciar el cambio de vista a NVDA y VoiceOver
+    anunciarRuta(state.currentPage);
+
+    if (state.currentPage === 'home' || state.currentPage === 'admin') startCarousel();
+
+    if (state.currentPage === 'cart' && state.cart.length > 0) {
+        setTimeout(() => {
+            const container = document.getElementById('paypal-button-container');
+            if (window.paypal && container && container.innerHTML === '') {
+                window.paypal.Buttons({
+                    style: { layout: 'vertical', color: 'gold', shape: 'rect' },
+                    createOrder: function(data, actions) {
+                        const total = state.cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+                        return actions.order.create({
+                            purchase_units: [{ amount: { value: total.toString() } }]
+                        });
+                    },
+                    onApprove: function(data, actions) {
+                        return actions.order.capture().then(async function(details) {
+                            setState({ loading: true, error: '⏳ Validando pedido...' });
+                            const total = state.cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+                            try {
+                                const response = await fetch('/api/paypal/create-pending-order', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ userId: state.currentUser.id, cart: state.cart, total: total })
+                                });
+                                const resData = await response.json();
+                                if (resData.success) {
+                                    window.location.href = `/success.html?orderId=${resData.orderId}`;
+                                } else {
+                                    setState({ error: '❌ Error al registrar en BD.', loading: false });
+                                }
+                            } catch (err) {
+                                setState({ error: '⚠️ Error de conexión.', loading: false });
+                            }
+                        });
+                    }
+                }).render('#paypal-button-container');
+            }
+        }, 150); 
+    }
+
+    if (activeId) {
+        const element = document.getElementById(activeId);
+        if (element) {
+            element.focus();
+            if (selectionStart !== null) {
+                element.setSelectionRange(selectionStart, selectionStart);
+            }
+        }
+    }
+}
+
+window.onload = function() { 
+    checkSession();
+    fetchProductsFromDB();
+};
+
+window.addEventListener('popstate', (e) => {
+    if (state.isLoggedIn) {
+        logout();
+        setState({ 
+            currentPage: 'login', 
+            error: '🔒 Por seguridad, tu sesión se ha cerrado al retroceder.' 
+        });
+    }
+});
+
+window.addEventListener('pageshow', (e) => {
+    if (e.persisted && state.isLoggedIn) {
+        logout();
+        setState({ 
+            currentPage: 'login', 
+            error: '🔒 Sesión expirada por inactividad o navegación.' 
+        });
+    }
+});
+
+// ============================================================
+// FASE 4B — Gestión de Foco y Navegación por Teclado
+// WCAG 2.1.1 (Teclado), 2.4.3 (Orden de foco), 2.4.7 (Foco visible)
+// ============================================================
+
+/**
+ * Mueve el foco al contenido principal tras cada cambio de ruta.
+ * Esto es OBLIGATORIO en SPAs para NVDA/VoiceOver:
+ * sin esto, el lector de pantalla no sabe que la página cambió.
+ * Se llama desde renderApp() → anunciarRuta() ya notifica el nombre.
+ */
+function moverFocoAlMain() {
+    const main = document.getElementById('main-content');
+    if (main) {
+        // tabindex="-1" permite foco programático sin entrar en el tab order
+        main.setAttribute('tabindex', '-1');
+        main.focus({ preventScroll: true });
+    }
+}
+
+/**
+ * Cierra todos los dropdowns del navbar.
+ * Se llama con Escape o clic fuera del menú.
+ */
+function cerrarDropdowns() {
+    if (state.categoryDropdownOpen || state.adminMenuOpen || state.menuOpen) {
+        setState({
+            categoryDropdownOpen: false,
+            adminMenuOpen: false,
+            menuOpen: false
+        });
+        // Devuelve el foco al botón que abrió el dropdown
+        const btn = document.getElementById('cat-dropdown-btn');
+        if (btn) btn.focus();
+    }
+}
+
+// Listener global de teclado — WCAG 2.1.1
+document.addEventListener('keydown', (e) => {
+    // Escape: cierra dropdowns y menú móvil
+    if (e.key === 'Escape') {
+        cerrarDropdowns();
+    }
+});
+
+// Cierre de dropdown al hacer clic fuera — usabilidad
+document.addEventListener('click', (e) => {
+    if (state.categoryDropdownOpen || state.adminMenuOpen) {
+        const dropdown = document.getElementById('cat-dropdown-menu');
+        const btn = document.getElementById('cat-dropdown-btn');
+        // Si el clic NO fue dentro del dropdown ni del botón, cerrar
+        if (dropdown && btn && !dropdown.contains(e.target) && !btn.contains(e.target)) {
+            setState({ categoryDropdownOpen: false, adminMenuOpen: false });
+        }
+    }
+});
+
+/**
+ * Refuerza la gestión de foco después de que renderApp inyecta el DOM.
+ * Se llama internamente desde anunciarRuta (ya modificado en FASE 1/4).
+ * Delay de 150ms para que el DOM esté completamente pintado.
+ */
+const _anunciarRutaOriginal = anunciarRuta;
+anunciarRuta = function(pagina) {
+    _anunciarRutaOriginal(pagina);
+    // Solo mover foco si el cambio de página fue real (no solo un re-render de estado)
+    setTimeout(moverFocoAlMain, 150);
+};

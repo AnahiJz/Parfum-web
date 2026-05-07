@@ -1,0 +1,232 @@
+body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('fondo.jpg');
+    background-size: cover;
+    background-attachment: fixed; background-position: center;
+}
+
+.font-display { 
+    font-family: 'Playfair Display', serif; 
+}
+
+.icon {
+    display: inline-block;
+    vertical-align: middle;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+}
+.glass {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.glass-dark {
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.gradient-gold {
+    background: linear-gradient(135deg, #f9d423 0%, #e8a600 100%);
+    color: #1a1a2e;
+}
+
+.btn-premium {
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.btn-premium::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    transition: left 0.6s;
+}
+
+.btn-premium:hover::before { left: 100%; }
+.btn-premium:hover { transform: scale(1.05); }
+
+::-webkit-scrollbar { width: 12px; }
+::-webkit-scrollbar-track { background: #1a1a2e; }
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #f9d423 0%, #d4af37 100%);
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #d4af37 0%, #f9d423 100%);
+}
+
+.image-hover { transition: transform 0.6s ease, filter 0.6s ease; }
+.image-hover:hover {
+    transform: scale(1.1);
+    filter: brightness(1.1);
+}
+
+.admin-table th {
+    background: linear-gradient(90deg, #d4af37, #f9d423);
+    color: #1a1a2e;
+    font-weight: 700;
+}
+.admin-table td {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.text-gold-gradient {
+    background: linear-gradient(to bottom, #f9d423, #d4af37);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.animate-float {
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+}
+
+/* ============================================================
+   FASE 1 — ACCESIBILIDAD BASE
+   Implementado según WCAG 2.2 / WebAIM
+   ============================================================ */
+
+/* --- 1.1 Skip Link ---
+   Color #ffffff sobre #1a1a2e = ratio 13.6:1 (WebAIM AAA ✅)
+   Visible SOLO cuando recibe foco (Tab al cargar la página)    */
+.skip-link {
+    position: absolute;
+    top: -100%;
+    left: 0;
+    background: #1a1a2e;
+    color: #ffffff;
+    padding: 12px 20px;
+    z-index: 99999;
+    font-size: 1rem;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: 0 0 8px 0;
+    border-bottom: 3px solid #f9d423;
+    transition: top 0.2s ease;
+    outline: 3px solid #f9d423;
+    outline-offset: 2px;
+}
+.skip-link:focus {
+    top: 0;
+}
+
+/* --- 1.2 Clase .sr-only ---
+   Texto visible SOLO para NVDA/VoiceOver, oculto visualmente.
+   Patrón estándar de Bootstrap 5 / WCAG 2.2                    */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+/* Permite que .sr-only sea visible si recibe foco (para skip links dentro de contenido) */
+.sr-only-focusable:focus,
+.sr-only-focusable:focus-within {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+}
+
+/* --- 1.3 Focus Visible Global ---
+   Reemplaza el outline eliminado por outline-none en inputs.
+   Contraste: #f9d423 sobre fondos oscuros = ratio >7:1 ✅     */
+:focus-visible {
+    outline: 3px solid #f9d423 !important;
+    outline-offset: 3px !important;
+    border-radius: 4px;
+}
+/* Excepción: elementos que ya tienen su propio estilo de foco diseñado */
+.focus-custom:focus-visible {
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(249, 212, 35, 0.8);
+}
+
+/* --- 1.4 Reducir Movimiento ---
+   Respeta la preferencia del sistema operativo del usuario.
+   Desactiva animaciones para quienes tienen sensibilidad al movimiento */
+@media (prefers-reduced-motion: reduce) {
+    .animate-float,
+    .btn-premium::before,
+    .image-hover,
+    .transition-all,
+    [class*="transition"] {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* ============================================================
+   FASE 2 — CORRECCIONES DE CONTRASTE (WebAIM AA)
+   Ratios calculados para fondo efectivo oscuro ~#111111
+   Referencia: https://webaim.org/resources/contrastchecker/
+   ============================================================ */
+
+/* --- 2.1 Bordes de inputs accesibles ---
+   ANTES: border-amber-400/30 → rgba(251,191,36,0.3) → ratio ~1.2:1 ❌
+   DESPUÉS: #f59e0b (amber-500 sólido)    → ratio ~3.2:1 ✅ (UI component min 3:1)
+   En foco: #fde68a (amber-200 sólido)   → ratio ~14:1 ✅                           */
+.input-border-a11y {
+    border: 2px solid #f59e0b;          /* amber-500 | ratio 3.2:1 ✅ */
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.input-border-a11y:focus,
+.input-border-a11y:focus-visible {
+    border-color: #fde68a;              /* amber-200 | ratio ~14:1 ✅ */
+    box-shadow: 0 0 0 3px rgba(253, 230, 138, 0.35);
+    outline: none;                      /* reemplazado por box-shadow accesible */
+}
+
+/* --- 2.2 Override: texto amber-200 con opacidad baja ---
+   Afecta a .text-amber-200\/50 y .text-amber-200\/60 de Tailwind CDN
+   ANTES: /50 → ratio efectivo ~4.33:1 ❌ (falla text-xs que necesita 4.5:1)
+   DESPUÉS: color sólido → ratio >10:1 ✅                                           */
+.text-amber-200\/50 {
+    color: #fbbf24 !important;          /* amber-400 sólido | ratio ~10:1 ✅ */
+}
+.text-amber-200\/60 {
+    color: #fde68a !important;          /* amber-200 sólido | ratio ~14:1 ✅ */
+}
+
+/* --- 2.3 Estado de error en inputs ---
+   Cuando un campo tiene aria-invalid="true", aplica borde rojo con ratio correcto.
+   ANTES: solo color rojo sin referencia de ratio
+   DESPUÉS: #fca5a5 (red-300) sobre #111111 → ratio ~6.3:1 ✅                       */
+input[aria-invalid="true"],
+textarea[aria-invalid="true"],
+select[aria-invalid="true"] {
+    border-color: #fca5a5 !important;   /* red-300 | ratio ~6.3:1 ✅ */
+    box-shadow: 0 0 0 2px rgba(252, 165, 165, 0.4);
+}
+
+/* --- 2.4 Botones deshabilitados ---
+   WCAG 1.4.3 excluye componentes deshabilitados del ratio mínimo,
+   pero se recomienda indicarlo también con aria-disabled                            */
+button:disabled,
+input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

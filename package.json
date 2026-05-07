@@ -1,0 +1,25 @@
+{
+  "name": "parfumweb-main",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^16.4.5",
+    "express": "^5.1.0",
+    "express-validator": "^7.3.2",
+    "google-auth-library": "^10.5.0",
+    "googleapis": "^171.4.0",
+    "mercadopago": "^2.0.8",
+    "mysql2": "^3.15.3",
+    "nodemailer": "^8.0.5",
+    "stripe": "^20.4.1"
+  }
+}
