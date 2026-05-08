@@ -597,7 +597,7 @@ function HomePage() {
 }
 
 function LoginPage() {
-    if (state.failedLoginAttempts >= 5) {
+    if (state.failedLoginAttempts >= 3) {
         
         if (!state.captchaText) {
             state.captchaText = generateCaptchaText();
@@ -619,14 +619,14 @@ return html`
                 <form id="login-form" onsubmit="handleLogin(event)">
                     <div class="mb-5">
                         <label class="block text-sm font-medium text-amber-300 mb-2">Correo</label>
-                        <input type="email" name="username" required class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30" placeholder="ejemplo@correo.com" ${state.failedLoginAttempts >= 5 && !state.captchaVerified ? 'disabled' : ''}/>
+                        <input type="email" name="username" required class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30" placeholder="ejemplo@correo.com" ${state.failedLoginAttempts >= 3 && !state.captchaVerified ? 'disabled' : ''}/>
                     </div>
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-amber-300 mb-2">Contraseña</label>
-                        <input type="password" name="password" required class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30" placeholder="••••••" ${state.failedLoginAttempts >= 5 && !state.captchaVerified ? 'disabled' : ''}/>
+                        <input type="password" name="password" required class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30" placeholder="••••••" ${state.failedLoginAttempts >= 3 && !state.captchaVerified ? 'disabled' : ''}/>
                     </div>
 
-                    ${state.failedLoginAttempts >= 5 && !state.captchaVerified ? html`
+                    ${state.failedLoginAttempts >= 3 && !state.captchaVerified ? html`
                         <div class="mb-6 p-4 border border-red-500/50 bg-red-500/10 rounded-xl animate-fadeInUp">
                             <p class="text-red-400 text-xs font-bold mb-3 uppercase tracking-wider text-center">⚠️ Múltiples intentos fallidos. Verificación requerida.</p>
                             <div class="flex flex-col items-center gap-3">
