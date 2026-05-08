@@ -597,16 +597,12 @@ function HomePage() {
 }
 
 function LoginPage() {
-    // CORRECCIÓN: Separamos la lógica del CAPTCHA
     if (state.failedLoginAttempts >= 5) {
         
-        // 1. Solo generamos el texto secreto si aún no existe
         if (!state.captchaText) {
             state.captchaText = generateCaptchaText();
         }
         
-        // 2. SIEMPRE le decimos al navegador que dibuje el canvas, 
-        // sin importar cuántas veces se recargue la alerta de error.
         setTimeout(window.drawCaptcha, 50); 
     }
 
