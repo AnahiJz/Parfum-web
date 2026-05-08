@@ -27,9 +27,11 @@ const db = require('./db');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const twilio = require('twilio');
+const bcrypt = require('bcrypt');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY); 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const saltRounds = 10; // Para bcrypt
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -121,21 +123,28 @@ app.get('/api/admin/catalogs', async (req, res) => {
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     try {
-        const query = 'SELECT id, nombre, correo, rol, verificado, telefono_verificado FROM usuarios WHERE correo = ? AND contrasena_hash = ?';
-        const [rows] = await db.query(query, [username, password]);
+        const query = 'SELECT id, nombre, correo, rol, contrasena_hash, verificado, telefono_verificado FROM usuarios WHERE correo = ?';
+        const [rows] = await db.query(query, [username]);
         
         if (rows.length > 0) {
             const user = rows[0];
-            if (!user.verificado) {
-                return res.status(401).json({ success: false, message: 'Tu cuenta no ha sido verificada por correo. Por favor, revisa tu bandeja de entrada.' });
-            }
-            if (!user.telefono_verificado) {
-                return res.status(401).json({ success: false, needsPhoneVerification: true, message: 'Tu correo está verificado. Ahora, por favor verifica tu teléfono.' });
-            }
-            if (user.verificado && user.telefono_verificado) {
+            const match = await bcrypt.compare(password, user.contrasena_hash);
+
+            if (match) {
+                if (!user.verificado) {
+                    return res.status(401).json({ success: false, message: 'Tu cuenta no ha sido verificada por correo. Por favor, revisa tu bandeja de entrada.' });
+                }
+                if (!user.telefono_verificado) {
+                    return res.status(401).json({ success: false, needsPhoneVerification: true, message: 'Tu correo está verificado. Ahora, por favor verifica tu teléfono.' });
+                }
+                // Login exitoso
                 res.json({ success: true, user: { id: user.id, nombre: user.nombre, rol: user.rol } });
+            } else {
+                // Contraseña incorrecta
+                res.status(401).json({ success: false, message: 'Credenciales incorrectas' });
             }
         } else {
+            // Usuario no encontrado
             res.status(401).json({ success: false, message: 'Credenciales incorrectas' });
         }
     } catch (error) {
@@ -169,10 +178,13 @@ app.post('/api/register', async (req, res) => {
     const verificationUrl = `${protocol}://${host}/api/verify?token=${emailToken}`;
 
     try {
-        // Insertar usuario con ambos tokens
+        // Hashear la contraseña antes de guardarla
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+        // Insertar usuario con la contraseña hasheada
         const [result] = await db.query(
             'INSERT INTO usuarios (nombre, correo, contrasena_hash, telefono, rol, token_verificacion, token_expiracion, codigo_verificacion_telefono, expiracion_codigo_telefono) VALUES (?, ?, ?, ?, "usuario", ?, ?, ?, ?)',
-            [name, email, password, telefono, emailToken, emailExpiration, phoneCode, phoneCodeExpiration]
+            [name, email, hashedPassword, telefono, emailToken, emailExpiration, phoneCode, phoneCodeExpiration]
         );
 
         if (result.insertId) {
@@ -332,12 +344,16 @@ app.post('/api/resend-phone-code', async (req, res) => {
 
 app.post('/api/admin/create', async (req, res) => {
     const { name, email, password, role } = req.body;
+    if (!password) {
+        return res.status(400).json({ success: false, message: 'La contraseña es obligatoria para nuevos usuarios.' });
+    }
     try {
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
         const [result] = await db.query(
             'INSERT INTO usuarios (nombre, correo, contrasena_hash, rol) VALUES (?, ?, ?, ?)',
-            [name, email, password, role || 'admin']
+            [name, email, hashedPassword, role || 'admin']
         );
-        res.json({ success: true });
+        res.json({ success: true, userId: result.insertId });
     } catch (error) {
         console.error("🚨 Error exacto en BD al crear admin:", error);
         if (error.code === 'ER_DUP_ENTRY') {
@@ -591,13 +607,15 @@ app.put('/api/admin/users/:id', async (req, res) => {
     const { id } = req.params;
     const { name, email, password, role } = req.body;
     try {
-        let query = password && password.trim() !== '' 
-            ? 'UPDATE usuarios SET nombre = ?, correo = ?, contrasena_hash = ?, rol = ? WHERE id = ?' 
-            : 'UPDATE usuarios SET nombre = ?, correo = ?, rol = ? WHERE id = ?';
-        let values = password && password.trim() !== '' 
-            ? [name, email, password, role || 'usuario', id] 
-            : [name, email, role || 'usuario', id];
-        await db.query(query, values);
+        if (password && password.trim() !== '') {
+            const hashedPassword = await bcrypt.hash(password, saltRounds);
+            await db.query(
+                'UPDATE usuarios SET nombre = ?, correo = ?, contrasena_hash = ?, rol = ? WHERE id = ?',
+                [name, email, hashedPassword, role || 'usuario', id]
+            );
+        } else {
+            await db.query('UPDATE usuarios SET nombre = ?, correo = ?, rol = ? WHERE id = ?', [name, email, role || 'usuario', id]);
+        }
         res.json({ success: true });
     } catch (error) {
         console.error("🚨 Error al actualizar usuario:", error);

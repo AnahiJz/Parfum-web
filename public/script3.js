@@ -157,7 +157,7 @@ window.verifyCaptcha = function() {
     if (input === state.captchaText) {
         setState({ captchaVerified: true, error: '✅ Verificación exitosa. Puedes ingresar.' });
     } else {
-        setState({ error: '❌ Código incorrecto.', captchaText: '' });
+        setState({ error: '❌ Código incorrecto. Intenta de nuevo.', captchaText: generateCaptchaText() });
     }
 };
 // ==========================================
@@ -331,7 +331,20 @@ async function handleLogin(e) {
             fetchCart(data.user.id);
             if (data.user.rol === 'admin') { fetchSalesFromDB(); fetchUsersFromDB(); }
         } else {
-            setState({ error: '❌ ' + data.message });
+            // Lógica para manejar fallos de login
+            if (data.needsPhoneVerification) {
+                setState({
+                    needsPhoneVerification: true,
+                    verifyingEmail: username,
+                    error: data.message
+                });
+            } else {
+                const newAttempts = state.failedLoginAttempts + 1;
+                // Solo genera el captcha la primera vez que se llega a 3 intentos, o si ya existe uno, genera otro.
+                const newCaptchaText = (newAttempts >= 3) ? generateCaptchaText() : state.captchaText;
+                
+                setState({ error: '❌ ' + data.message, failedLoginAttempts: newAttempts, captchaText: newCaptchaText, captchaVerified: false });
+            }
         }
     } catch (error) { 
         setState({ error: '⚠️ Error de conexión con el servidor.' }); 
