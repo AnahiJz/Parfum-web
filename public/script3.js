@@ -1,19 +1,9 @@
 const icons = {
     Perfume: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Perfume logo">
-        <polygon points="60,4 100,22 116,60 100,98 60,116 20,98 4,60 20,22"
-            fill="none" stroke="currentColor" stroke-width="4.5"/>
-        <circle cx="60" cy="60" r="40"
-            fill="none" stroke="currentColor" stroke-width="3"/>
-        <text x="42" y="78"
-            font-family="Georgia, 'Times New Roman', serif"
-            font-size="52" font-weight="normal"
-            fill="currentColor" stroke="none"
-            text-anchor="middle">P</text>
-        <text x="75" y="78"
-            font-family="Georgia, 'Times New Roman', serif"
-            font-size="52" font-weight="normal"
-            fill="none" stroke="currentColor" stroke-width="4.5"
-            text-anchor="middle">W</text>
+        <polygon points="60,4 100,22 116,60 100,98 60,116 20,98 4,60 20,22" fill="none" stroke="currentColor" stroke-width="4.5"/>
+        <circle cx="60" cy="60" r="40" fill="none" stroke="currentColor" stroke-width="3"/>
+        <text x="42" y="78" font-family="Georgia, 'Times New Roman', serif" font-size="52" font-weight="normal" fill="currentColor" stroke="none" text-anchor="middle">P</text>
+        <text x="75" y="78" font-family="Georgia, 'Times New Roman', serif" font-size="52" font-weight="normal" fill="none" stroke="currentColor" stroke-width="4.5" text-anchor="middle">W</text>
         <circle cx="60" cy="14" r="4" fill="currentColor"/>
         <circle cx="60" cy="106" r="4" fill="currentColor"/>
     </svg>`,
@@ -58,6 +48,10 @@ let state = {
         'ParfumH/L1212.jpg', 'ParfumH/savage.jpg', 'ParfumM/tomfordm.jpg'
     ],
     currentCategory: 'all',
+    sortOrder: 'default',
+    failedLoginAttempts: 0, // NUEVO: Rastreador de fallos
+    captchaText: '',        // NUEVO: Texto del captcha actual
+    captchaVerified: false, // NUEVO: Estado de validación
     products: [], 
     users: [],
     admins: [],
@@ -74,7 +68,6 @@ let state = {
 };
 
 let carouselInterval;
-
 let errorTimeout;
 
 function setState(newState) {
@@ -90,7 +83,6 @@ function setState(newState) {
             }
         }, 3000); 
     }
-    
 }
 
 function html(strings, ...values) {
@@ -102,93 +94,109 @@ function html(strings, ...values) {
     return result;
 }
 
+// ==========================================
+// SEGURIDAD: MOTOR CAPTCHA CANVAS
+// ==========================================
+function generateCaptchaText() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%&*?';
+    let captcha = '';
+    for (let i = 0; i < 6; i++) {
+        captcha += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return captcha;
+}
+
+window.drawCaptcha = function() {
+    const canvas = document.getElementById('captcha-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = '#1f2937'; 
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Ruido visual (Líneas)
+    for (let i = 0; i < 8; i++) {
+        ctx.strokeStyle = ['#f59e0b', '#ef4444', '#3b82f6', '#10b981'][Math.floor(Math.random()*4)];
+        ctx.lineWidth = Math.random() * 2;
+        ctx.beginPath();
+        ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
+        ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height);
+        ctx.stroke();
+    }
+
+    // Texto rotado
+    ctx.font = 'bold 32px Georgia';
+    ctx.textBaseline = 'middle';
+    const text = state.captchaText;
+    
+    for (let i = 0; i < text.length; i++) {
+        ctx.save();
+        ctx.translate(30 * i + 25, canvas.height / 2);
+        const angle = (Math.random() - 0.5) * 1.0; 
+        ctx.rotate(angle);
+        ctx.fillStyle = '#fcd34d'; 
+        ctx.fillText(text[i], -10, 0);
+        ctx.restore();
+    }
+
+    // Ruido visual (Puntos)
+    for (let i = 0; i < 60; i++) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.beginPath();
+        ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() * 2, 0, Math.PI * 2);
+        ctx.fill();
+    }
+};
+
+window.verifyCaptcha = function() {
+    const input = document.getElementById('captcha-input').value;
+    if (input === state.captchaText) {
+        setState({ captchaVerified: true, error: '✅ Verificación exitosa. Puedes ingresar.' });
+    } else {
+        setState({ error: '❌ Código incorrecto.', captchaText: '' });
+    }
+};
+// ==========================================
+
+
 function checkSession() {
     const savedUser = localStorage.getItem('parfum_user');
     if (savedUser) {
         const user = JSON.parse(savedUser);
-        let saludoRecarga = user.role === 'admin'
-            ? `👑 ¡Hola de nuevo, Admin ${user.name}!`
-            : `👋 ¡Hola de nuevo, ${user.name}!`;
-
-        setState({
-            currentUser: user,
-            isLoggedIn: true,
-            error: saludoRecarga
-        });
+        let saludoRecarga = user.role === 'admin' ? `👑 ¡Hola de nuevo, Admin ${user.name}!` : `👋 ¡Hola de nuevo, ${user.name}!`;
+        setState({ currentUser: user, isLoggedIn: true, error: saludoRecarga });
         fetchCart(user.id);
-        if (user.role === 'admin') {
-            fetchSalesFromDB();
-            fetchUsersFromDB();
-        }
+        if (user.role === 'admin') { fetchSalesFromDB(); fetchUsersFromDB(); }
     }
 }
 
 async function fetchUsersFromDB() {
     try {
         const response = await fetch('/api/users');
-        if (!response.ok) {
-            throw new Error('Error al obtener los usuarios');
-        }
+        if (!response.ok) throw new Error('Error al obtener los usuarios');
         const dbUsers = await response.json();
-        
-        const mappedUsers = dbUsers.map(u => ({
-            id: u.id,
-            name: u.nombre,
-            email: u.correo,
-            role: u.rol
-        }));
-
-        const admins = mappedUsers.filter(u => u.role === 'admin');
-        const clients = mappedUsers.filter(u => u.role !== 'admin');
-
-        setState({ 
-            users: clients, 
-            admins: admins 
-        });
-        
+        const mappedUsers = dbUsers.map(u => ({ id: u.id, name: u.nombre, email: u.correo, role: u.rol }));
+        setState({ users: mappedUsers.filter(u => u.role !== 'admin'), admins: mappedUsers.filter(u => u.role === 'admin') });
         return mappedUsers;
-    } catch (error) {
-        console.error(error);
-    }
+    } catch (error) { console.error(error); }
 }
 
 async function fetchProductsFromDB() {
     try {
         const response = await fetch('/api/products');
-        
         const textRaw = await response.text();
-        
         let dbProducts;
-        try {
-            dbProducts = JSON.parse(textRaw); 
-        } catch (e) {
-            console.error("🚨 EL SERVIDOR DEVOLVIÓ ESTO EN LUGAR DE JSON:\n", textRaw);
-            throw new Error("El servidor devolvió un error HTML. Presiona F12 y revisa la consola.");
-        }
-
-        if (!response.ok) {
-            throw new Error(dbProducts.error || 'Error del servidor al obtener productos');
-        }
-
+        try { dbProducts = JSON.parse(textRaw); } catch (e) { throw new Error("El servidor devolvió un error HTML. Presiona F12 y revisa la consola."); }
+        if (!response.ok) throw new Error(dbProducts.error || 'Error del servidor al obtener productos');
         const mappedProducts = dbProducts.map(p => ({
-            id: p.id,
-            name: p.nombre || 'Sin nombre',
-            price: parseFloat(p.precio) || 0,
-            image: p.imagen_principal || '',
-            gender: p.genero_id === 1 ? 'hombre' : (p.genero_id === 2 ? 'mujer' : 'unisex'),
-            badge: p.texto_insignia || '',
-            rating: parseFloat(p.calificacion) || 5.0,
-            type: p.tipo_id === 2 ? 'niche' : 'designer',
-            isPopular: p.es_popular === 1,
-            isNiche: p.tipo_id === 2,
-            stock: p.stock || 0
+            id: p.id, name: p.nombre || 'Sin nombre', price: parseFloat(p.precio) || 0, image: p.imagen_principal || '',
+            gender: p.genero_id === 1 ? 'hombre' : (p.genero_id === 2 ? 'mujer' : 'unisex'), badge: p.texto_insignia || '',
+            rating: parseFloat(p.calificacion) || 5.0, type: p.tipo_id === 2 ? 'niche' : 'designer',
+            isPopular: p.es_popular === 1, isNiche: p.tipo_id === 2, stock: p.stock || 0
         }));
-        
         setState({ products: mappedProducts, loading: false });
-    } catch (error) {
-        console.error("Error cargando productos:", error);
-        setState({ error: '❌ ' + error.message, loading: false });
-    }
+    } catch (error) { setState({ error: '❌ ' + error.message, loading: false }); }
 }
 
 async function fetchSalesFromDB() {
@@ -197,18 +205,12 @@ async function fetchSalesFromDB() {
         if (!response.ok) throw new Error('Error al obtener ventas');
         const dbSales = await response.json();
         const mappedSales = dbSales.map(s => ({
-            id: s.id,
-            client: s.cliente,
-            total: parseFloat(s.total).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
+            id: s.id, client: s.cliente, total: parseFloat(s.total).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
             status: s.estado.charAt(0).toUpperCase() + s.estado.slice(1), 
-            date: new Date(s.fecha_creacion).toLocaleDateString('es-MX', { 
-                day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' 
-            })
+            date: new Date(s.fecha_creacion).toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
         }));
         setState({ sales: mappedSales });
-    } catch (error) {
-        console.error("Error ventas:", error);
-    }
+    } catch (error) { console.error("Error ventas:", error); }
 }
 
 async function fetchCart(userId) {
@@ -216,63 +218,31 @@ async function fetchCart(userId) {
         const response = await fetch(`/api/cart/${userId}`);
         if (response.ok) {
             const cartItems = await response.json();
-            const parsedItems = cartItems.map(item => ({
-                ...item,
-                price: parseFloat(item.price)
-            }));
+            const parsedItems = cartItems.map(item => ({ ...item, price: parseFloat(item.price) }));
             setState({ cart: parsedItems });
         }
-    } catch (error) {
-        console.error(error);
-    }
+    } catch (error) { console.error(error); }
 }
 
 function filterAdminUsers() {
     if (!state.adminSearchQueryUsers) return state.admins;
-    return state.admins.filter(u => 
-        u.name.toLowerCase().includes(state.adminSearchQueryUsers.toLowerCase()) || 
-        u.email.toLowerCase().includes(state.adminSearchQueryUsers.toLowerCase())
-    );
+    return state.admins.filter(u => u.name.toLowerCase().includes(state.adminSearchQueryUsers.toLowerCase()) || u.email.toLowerCase().includes(state.adminSearchQueryUsers.toLowerCase()));
 }
 
 function filterClients() {
     if (!state.clientSearchQuery) return state.users;
-    return state.users.filter(u => 
-        u.name.toLowerCase().includes(state.clientSearchQuery.toLowerCase()) || 
-        u.email.toLowerCase().includes(state.clientSearchQuery.toLowerCase())
-    );
+    return state.users.filter(u => u.name.toLowerCase().includes(state.clientSearchQuery.toLowerCase()) || u.email.toLowerCase().includes(state.clientSearchQuery.toLowerCase()));
 }
 
 function prepareEditUser(userId) {
     const idStr = String(userId);
     const userToEdit = state.users.find(u => String(u.id) === idStr) || state.admins.find(u => String(u.id) === idStr);
-    if (userToEdit) {
-        setState({ editingUser: userToEdit });
-        const form = document.getElementById('create-admin-form');
-        if (form) form.scrollIntoView({ behavior: 'smooth' });
-    }
+    if (userToEdit) { setState({ editingUser: userToEdit }); const form = document.getElementById('create-admin-form'); if (form) form.scrollIntoView({ behavior: 'smooth' }); }
 }
 
-function cancelEditUser() {
-    setState({ editingUser: null });
-    state.newUserForm = { name: '', email: '', password: '' };
-}
-
-function handleProductInput(field, value) {
-    if (state.editingProduct) {
-        state.editingProduct[field] = value;
-    } else {
-        state.newProductForm[field] = value;
-    }
-}
-
-function handleUserInput(field, value) {
-    if (state.editingUser) {
-        state.editingUser[field] = value;
-    } else {
-        state.newUserForm[field] = value;
-    }
-}
+function cancelEditUser() { setState({ editingUser: null }); state.newUserForm = { name: '', email: '', password: '' }; }
+function handleProductInput(field, value) { state.editingProduct ? state.editingProduct[field] = value : state.newProductForm[field] = value; }
+function handleUserInput(field, value) { state.editingUser ? state.editingUser[field] = value : state.newUserForm[field] = value; }
 
 async function saveUser(e) {
     e.preventDefault();
@@ -280,57 +250,26 @@ async function saveUser(e) {
     const email = document.getElementById('user-email').value;
     const password = document.getElementById('user-password').value;
 
-    if (!name || !email) {
-        setState({ error: '⚠️ Completa nombre y correo' });
-        return;
-    }
-    if (!state.editingUser && !password) {
-        setState({ error: '⚠️ La contraseña es obligatoria para nuevos usuarios' });
-        return;
-    }
+    if (!name || !email) return setState({ error: '⚠️ Completa nombre y correo' });
+    if (!state.editingUser && !password) return setState({ error: '⚠️ La contraseña es obligatoria para nuevos usuarios' });
 
-    const url = state.editingUser 
-        ? `/api/admin/users/${state.editingUser.id}`
-        : '/api/admin/create';
-    
+    const url = state.editingUser ? `/api/admin/users/${state.editingUser.id}` : '/api/admin/create';
     const method = state.editingUser ? 'PUT' : 'POST';
     const bodyData = { name, email };
-    
     if (password) bodyData.password = password;
-    
-    if (!state.editingUser) {
-        bodyData.role = 'admin'; 
-    } else {
-        bodyData.role = state.editingUser.privileges === 'Control Total' ? 'admin' : 'usuario';
-    }
+    bodyData.role = !state.editingUser ? 'admin' : (state.editingUser.privileges === 'Control Total' ? 'admin' : 'usuario');
 
     try {
-        const response = await fetch(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(bodyData)
-        });
-
+        const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bodyData) });
         const contentType = response.headers.get("content-type");
         if (contentType && contentType.includes("application/json")) {
             const data = await response.json();
-            
             if (data.success || response.ok) {
                 setState({ error: state.editingUser ? '✅ Usuario actualizado' : '✅ Administrador creado exitosamente' });
-                fetchUsersFromDB(); 
-                cancelEditUser();
-            } else {
-                setState({ error: '❌ ' + (data.message || 'Error en la operación') });
-            }
-        } else {
-            const text = await response.text();
-            console.error("Respuesta no JSON del servidor:", text);
-            setState({ error: '⚠️ El servidor falló (revisa los logs).' });
-        }
-    } catch (error) {
-        console.error("Fetch falló:", error);
-        setState({ error: '⚠️ Error de red: No se pudo conectar con el servidor.' });
-    }
+                fetchUsersFromDB(); cancelEditUser();
+            } else { setState({ error: '❌ ' + (data.message || 'Error en la operación') }); }
+        } else { setState({ error: '⚠️ El servidor falló (revisa los logs).' }); }
+    } catch (error) { setState({ error: '⚠️ Error de red: No se pudo conectar con el servidor.' }); }
 }
 
 async function deleteUser(id) {
@@ -338,48 +277,23 @@ async function deleteUser(id) {
     try {
         const response = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
         const data = await response.json();
-        if (data.success) {
-            setState({ error: '🗑️ Usuario eliminado' });
-            fetchUsersFromDB(); 
-        } else {
-            setState({ error: '❌ ' + data.message });
-        }
-    } catch (error) {
-        console.error(error);
-        setState({ error: '⚠️ Error al eliminar usuario' });
-    }
+        if (data.success) { setState({ error: '🗑️ Usuario eliminado' }); fetchUsersFromDB(); } 
+        else { setState({ error: '❌ ' + data.message }); }
+    } catch (error) { setState({ error: '⚠️ Error al eliminar usuario' }); }
 }
 
 function startCarousel() {
     clearInterval(carouselInterval);
     if (state.currentPage === 'admin') return; 
-    carouselInterval = setInterval(() => {
-        setState({ carouselIndex: (state.carouselIndex + 1) % state.carouselImages.length });
-    }, 4500);
+    carouselInterval = setInterval(() => { setState({ carouselIndex: (state.carouselIndex + 1) % state.carouselImages.length }); }, 4500);
 }
 
-function setCategoryFilter(categoryKey) {
-    setState({
-        currentPage: 'catalog',
-        currentCategory: categoryKey,
-        categoryDropdownOpen: false
-    });
-}
+function setCategoryFilter(categoryKey) { setState({ currentPage: 'catalog', currentCategory: categoryKey, categoryDropdownOpen: false, sortOrder: 'default' }); }
 
 function logout() {
     localStorage.removeItem('parfum_user');
     fetch('/api/logout', { method: 'POST' }).catch(err => console.error(err));
-    
-    setState({
-        isLoggedIn: false,
-        currentUser: null,
-        currentPage: 'home',
-        cart: [],
-        error: '👋 Has cerrado sesión exitosamente.',
-        categoryDropdownOpen: false,
-        adminMenuOpen: false,
-        currentCategory: 'all'
-    });
+    setState({ isLoggedIn: false, currentUser: null, currentPage: 'home', cart: [], error: '👋 Has cerrado sesión exitosamente.', categoryDropdownOpen: false, adminMenuOpen: false, currentCategory: 'all', sortOrder: 'default', failedLoginAttempts: 0, captchaVerified: false });
 }
 
 async function handleLogin(e) {
@@ -388,47 +302,29 @@ async function handleLogin(e) {
     const username = form.elements.username.value;
     const password = form.elements.password.value;
     
-    if (!username || !password) {
-        setState({ error: '❌ Por favor, introduce correo y contraseña.' });
-        return;
-    }
+    if (!username || !password) return setState({ error: '❌ Por favor, introduce correo y contraseña.' });
 
     try {
-        const response = await fetch('/api/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
+        const response = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
         const data = await response.json();
         if (data.success) {
+            // LOGIN EXITOSO: Limpiamos los fallos y captcha
+            state.failedLoginAttempts = 0;
+            state.captchaVerified = false;
+
             const user = { id: data.user.id, name: data.user.nombre, role: data.user.rol };
             localStorage.setItem('parfum_user', JSON.stringify(user));
-
-            let mensajeBienvenida = data.user.rol === 'admin' 
-                ? `👑 ¡Bienvenido al panel de control, ${data.user.nombre}!` 
-                : `✨ ¡Qué gusto verte de nuevo, ${data.user.nombre}!`;
-
-            setState({
-                currentUser: user,
-                isLoggedIn: true,
-                currentPage: data.user.rol === 'admin' ? 'admin' : 'catalog',
-                error: mensajeBienvenida
-            });
-            
+            let mensajeBienvenida = data.user.rol === 'admin' ? `👑 ¡Bienvenido al panel de control, ${data.user.nombre}!` : `✨ ¡Qué gusto verte de nuevo, ${data.user.nombre}!`;
+            setState({ currentUser: user, isLoggedIn: true, currentPage: data.user.rol === 'admin' ? 'admin' : 'catalog', error: mensajeBienvenida });
             history.pushState({ loggedIn: true }, '', window.location.href);
-
             fetchCart(data.user.id);
-            if (data.user.rol === 'admin') {
-                fetchSalesFromDB();
-                fetchUsersFromDB();
-            }
+            if (data.user.rol === 'admin') { fetchSalesFromDB(); fetchUsersFromDB(); }
         } else {
+            // LOGIN FALLIDO: Sumamos el intento
+            state.failedLoginAttempts++;
             setState({ error: '❌ ' + data.message });
         }
-    } catch (error) {
-        console.error('Error login:', error);
-        setState({ error: '⚠️ Error de conexión con el servidor.' });
-    }
+    } catch (error) { setState({ error: '⚠️ Error de conexión con el servidor.' }); }
 }
 
 async function handleRegister(e) {
@@ -437,57 +333,32 @@ async function handleRegister(e) {
     const name = form.elements.name.value;
     const email = form.elements.email.value;
     const password = form.elements.password.value;
-    const confirmPassword = form.elements.confirmPassword.value;
     
-    if (password !== confirmPassword) {
-        setState({ error: '🚨 Las contraseñas no coinciden. Por favor, verifica.' });
-        return;
-    }
-    if (!name || !email || !password) {
-        setState({ error: '⚠️ Por favor, completa todos los campos.' });
-        return;
-    }
+    if (password !== form.elements.confirmPassword.value) return setState({ error: '🚨 Las contraseñas no coinciden. Por favor, verifica.' });
+    if (!name || !email || !password) return setState({ error: '⚠️ Por favor, completa todos los campos.' });
+
     try {
-        const response = await fetch('/api/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, password })
-        });
+        const response = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, password }) });
         const data = await response.json();
         if (data.success) {
             const user = { id: data.userId, name: name, role: 'usuario' };
             localStorage.setItem('parfum_user', JSON.stringify(user));
-            setState({
-                currentUser: user,
-                isLoggedIn: true,
-                currentPage: 'catalog',
-                error: `🎉 ¡Cuenta creada con éxito! Bienvenido, ${name}.`
-            });
-
+            setState({ currentUser: user, isLoggedIn: true, currentPage: 'catalog', error: `🎉 ¡Cuenta creada con éxito! Bienvenido, ${name}.` });
             history.pushState({ loggedIn: true }, '', window.location.href);
-        } else {
-            setState({ error: '❌ ' + data.message });
-        }
-    } catch (error) {
-        console.error(error);
-        setState({ error: '⚠️ Error de conexión al registrarse.' });
-    }
+        } else { setState({ error: '❌ ' + data.message }); }
+    } catch (error) { setState({ error: '⚠️ Error de conexión al registrarse.' }); }
 }
 
 async function handleContact(e) {
     e.preventDefault();
     const form = document.getElementById('contact-form');
-    
     const contactName = form.elements.contactName.value;
     const contactEmail = form.elements.contactEmail.value;
     const contactMessage = form.elements.contactMessage.value;
     const destinationEmail = form.elements.destinationEmail.value;
     const honeypot = form.elements.honeypot.value;
 
-    if (!contactName || !contactEmail || !contactMessage) {
-        setState({ error: '⚠️ Por favor completa todos los campos.' });
-        return;
-    }
+    if (!contactName || !contactEmail || !contactMessage) return setState({ error: '⚠️ Por favor completa todos los campos.' });
 
     try {
         const response = await fetch('/api/contact', {
@@ -495,22 +366,12 @@ async function handleContact(e) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ contactName, contactEmail, contactMessage, destinationEmail, honeypot })
         });
-
         const data = await response.json();
-
         if (data.success) {
-            setState({ 
-                error: `✅ ¡Gracias ${contactName}! Tu mensaje ha sido enviado a nuestro equipo.`, 
-                currentPage: 'home' 
-            });
+            setState({ error: `✅ ¡Gracias ${contactName}! Tu mensaje ha sido enviado a nuestro equipo.`, currentPage: 'home' });
             form.reset();
-        } else {
-            setState({ error: '❌ ' + (data.message || 'Error al enviar el mensaje.') });
-        }
-    } catch (error) {
-        console.error(error);
-        setState({ error: '⚠️ Error de conexión al intentar enviar el mensaje.' });
-    }
+        } else { setState({ error: '❌ ' + (data.message || 'Error al enviar el mensaje.') }); }
+    } catch (error) { setState({ error: '⚠️ Error de conexión al intentar enviar el mensaje.' }); }
 }
 
 function mostrarNotificacion(titulo, subtitulo = '') {
@@ -521,117 +382,56 @@ function mostrarNotificacion(titulo, subtitulo = '') {
         contenedor.className = 'fixed bottom-5 right-5 z-50 flex flex-col gap-3 pointer-events-none';
         document.body.appendChild(contenedor);
     }
-
     const toast = document.createElement('div');
     toast.className = 'glass-dark border border-amber-400/30 px-6 py-4 rounded-xl shadow-2xl flex items-center gap-4 transform translate-y-10 opacity-0 transition-all duration-500 ease-out';
-
     toast.innerHTML = `
-        <div class="bg-amber-500/20 p-2 rounded-full text-amber-400">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 6L9 17l-5-5"/>
-            </svg>
-        </div>
-        <div>
-            <p class="font-bold text-amber-100 text-sm tracking-wide">${titulo}</p>
-            ${subtitulo ? `<p class="text-amber-200/60 text-xs mt-0.5">${subtitulo}</p>` : ''}
-        </div>
+        <div class="bg-amber-500/20 p-2 rounded-full text-amber-400"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
+        <div><p class="font-bold text-amber-100 text-sm tracking-wide">${titulo}</p>${subtitulo ? `<p class="text-amber-200/60 text-xs mt-0.5">${subtitulo}</p>` : ''}</div>
     `;
-
     contenedor.appendChild(toast);
-
-    setTimeout(() => {
-        toast.classList.remove('translate-y-10', 'opacity-0');
-    }, 50);
-
-    setTimeout(() => {
-        toast.classList.add('opacity-0', 'translate-x-10');
-        setTimeout(() => toast.remove(), 500);
-    }, 3000);
+    setTimeout(() => { toast.classList.remove('translate-y-10', 'opacity-0'); }, 50);
+    setTimeout(() => { toast.classList.add('opacity-0', 'translate-x-10'); setTimeout(() => toast.remove(), 500); }, 3000);
 }
 
 async function addToCart(productId) {
     const product = state.products.find(p => p.id === productId);
-    if (!state.isLoggedIn || !state.currentUser) {
-        setState({ currentPage: 'login', error: '🔒 Debes iniciar sesión para comprar.' });
-        return;
-    }
+    if (!state.isLoggedIn || !state.currentUser) return setState({ currentPage: 'login', error: '🔒 Debes iniciar sesión para comprar.' });
     try {
-        const response = await fetch('/api/cart/add', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: state.currentUser.id, productId: productId, quantity: 1 })
-        });
+        const response = await fetch('/api/cart/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: state.currentUser.id, productId: productId, quantity: 1 }) });
         if (response.ok) {
             await fetchCart(state.currentUser.id);
-            const nombreProd = product ? product.name : 'Producto';
-            mostrarNotificacion('AÑADIDO AL CARRITO', nombreProd);
+            mostrarNotificacion('AÑADIDO AL CARRITO', product ? product.name : 'Producto');
             renderApp();
         }
-    } catch (error) {
-        console.error(error);
-    }
+    } catch (error) { console.error(error); }
 }
 
 async function removeFromCart(productId) {
     if (!state.currentUser) return;
     try {
-        const response = await fetch('/api/cart/remove', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: state.currentUser.id, productId })
-        });
-        if (response.ok) {
-            await fetchCart(state.currentUser.id);
-        }
-    } catch (error) {
-        console.error(error);
-    }
+        const response = await fetch('/api/cart/remove', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: state.currentUser.id, productId }) });
+        if (response.ok) await fetchCart(state.currentUser.id);
+    } catch (error) { console.error(error); }
 }
 
 async function updateQuantity(productId, newQuantity) {
     if (!state.currentUser) return;
-    const quantity = parseInt(newQuantity);
     try {
-        const response = await fetch('/api/cart/update', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: state.currentUser.id, productId, quantity })
-        });
-        if (response.ok) {
-            await fetchCart(state.currentUser.id);
-        }
-    } catch (error) {
-        console.error(error);
-    }
+        const response = await fetch('/api/cart/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: state.currentUser.id, productId, quantity: parseInt(newQuantity) }) });
+        if (response.ok) await fetchCart(state.currentUser.id);
+    } catch (error) { console.error(error); }
 }
 
 async function checkout() {
-    if (!state.currentUser || !state.currentUser.id) {
-        setState({ error: '❌ Error: No se pudo identificar al usuario.' });
-        return;
-    }
+    if (!state.currentUser || !state.currentUser.id) return setState({ error: '❌ Error: No se pudo identificar al usuario.' });
     const total = state.cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
     try {
         setState({ loading: true }); 
-        const response = await fetch('/api/checkout', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                userId: state.currentUser.id,
-                cart: state.cart,
-                total: total
-            })
-        });
+        const response = await fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: state.currentUser.id, cart: state.cart, total: total }) });
         const data = await response.json();
-        if (data.success && data.url) {
-            window.location.href = data.url;
-        } else {
-            setState({ error: '❌ ' + data.message, loading: false });
-        }
-    } catch (error) {
-        console.error(error);
-        setState({ error: '⚠️ Error de conexión al procesar el pago.', loading: false });
-    }
+        if (data.success && data.url) window.location.href = data.url;
+        else setState({ error: '❌ ' + data.message, loading: false });
+    } catch (error) { setState({ error: '⚠️ Error de conexión al procesar el pago.', loading: false }); }
 }
 
 function NotificationBanner() {
@@ -648,42 +448,27 @@ function NotificationBanner() {
 
 function CategoryDropdown() {
     const categories = [
-        { name: 'Todos los Productos', key: 'all' },
-        { name: 'Para Hombre', key: 'hombre' },
-        { name: 'Para Mujer', key: 'mujer' },
-        { name: 'Nicho', key: 'nicho' },
-        { name: 'Más Populares', key: 'popular' },
-        { name: 'De Diseñador', key: 'designer' }
+        { name: 'Todos los Productos', key: 'all' }, { name: 'Para Hombre', key: 'hombre' },
+        { name: 'Para Mujer', key: 'mujer' }, { name: 'Nicho', key: 'nicho' },
+        { name: 'Más Populares', key: 'popular' }, { name: 'De Diseñador', key: 'designer' }
     ];
-    
     const activeCategory = categories.find(cat => cat.key === state.currentCategory) || categories[0];
 
     return html`
         <div class="relative">
-            <button onclick="setState({categoryDropdownOpen: !state.categoryDropdownOpen})" 
-                    class="flex items-center text-amber-200 hover:text-amber-400 transition-all font-semibold tracking-wide">
+            <button onclick="setState({categoryDropdownOpen: !state.categoryDropdownOpen})" class="flex items-center text-amber-200 hover:text-amber-400 transition-all font-semibold tracking-wide">
                 ${activeCategory.name.toUpperCase()} ${icons.ChevronDown(18, 'ml-1 transition-transform ' + (state.categoryDropdownOpen ? 'rotate-180' : ''))}
             </button>
             ${state.categoryDropdownOpen ? html`
                 <div class="absolute left-1/2 transform -translate-x-1/2 mt-3 w-56 glass-dark rounded-xl shadow-2xl border border-amber-400/30 overflow-hidden z-50 animate-fadeInUp">
-                    ${categories.map(cat => html`
-                        <a href="#" onclick="setCategoryFilter('${cat.key}')"
-                           class="block px-4 py-3 text-sm text-amber-200 ${cat.key === state.currentCategory ? 'bg-amber-500/50 font-bold' : 'hover:bg-amber-500/30'} transition-colors">${cat.name}</a>
-                    `).join('')}
+                    ${categories.map(cat => html`<a href="#" onclick="setCategoryFilter('${cat.key}')" class="block px-4 py-3 text-sm text-amber-200 ${cat.key === state.currentCategory ? 'bg-amber-500/50 font-bold' : 'hover:bg-amber-500/30'} transition-colors">${cat.name}</a>`).join('')}
                 </div>
             ` : ''}
         </div>
     `;
 }
 
-function AdminNavbarDropdown() {
-    return html`
-        <button onclick="setState({currentPage: 'admin', categoryDropdownOpen: false})" 
-                class="flex items-center text-red-400 hover:text-red-500 transition-all font-bold tracking-wide">
-            PANEL ADMIN
-        </button>
-    `;
-}
+function AdminNavbarDropdown() { return html`<button onclick="setState({currentPage: 'admin', categoryDropdownOpen: false})" class="flex items-center text-red-400 hover:text-red-500 transition-all font-bold tracking-wide">PANEL ADMIN</button>`; }
 
 function Navbar() {
     const cartCount = state.cart.reduce((total, item) => total + item.quantity, 0);
@@ -693,13 +478,8 @@ function Navbar() {
             <div class="container mx-auto px-4">
                 <div class="flex items-center justify-between py-4">
                     <div class="flex items-center gap-3 cursor-pointer group" onclick="setState({currentPage: state.isLoggedIn ? 'catalog' : 'home', categoryDropdownOpen: false, adminMenuOpen: false, currentCategory: 'all'})">
-                        <div class="gradient-gold p-3 rounded-2xl shadow-xl transform group-hover:rotate-12 transition-all duration-300 animate-pulse-glow">
-                          ${icons.Perfume(30, 'text-gray-900')}  
-                        </div>
-                        <div>
-                            <span class="text-xl md:text-3xl font-display font-bold bg-gradient-to-r from-amber-300 via-amber-200 to-amber-400 bg-clip-text text-transparent">Parfum</span>
-                            <p class="hidden md:block text-xs text-amber-300 font-light tracking-[0.2em] uppercase">Luxury Fragrances</p>
-                        </div>
+                        <div class="gradient-gold p-3 rounded-2xl shadow-xl transform group-hover:rotate-12 transition-all duration-300 animate-pulse-glow">${icons.Perfume(30, 'text-gray-900')}</div>
+                        <div><span class="text-xl md:text-3xl font-display font-bold bg-gradient-to-r from-amber-300 via-amber-200 to-amber-400 bg-clip-text text-transparent">Parfum</span><p class="hidden md:block text-xs text-amber-300 font-light tracking-[0.2em] uppercase">Luxury Fragrances</p></div>
                     </div>
                     <nav class="hidden lg:flex items-center gap-8 text-sm font-semibold tracking-wide">
                         ${isAdmin ? AdminNavbarDropdown() : html`
@@ -721,24 +501,14 @@ function Navbar() {
                         ` : ''}
                         ${state.isLoggedIn ? html`
                            <div class="flex items-center gap-2">
-    <div onclick="setState({currentPage: 'profile', categoryDropdownOpen: false})" class="hidden md:block glass-dark p-3 rounded-xl shadow-lg cursor-pointer hover:bg-amber-500/20 transition-all" title="Mi Perfil">
-        ${icons.User(26, 'text-amber-300')}
-    </div>
-    <button onclick="setState({currentPage: isAdmin ? 'admin' : 'history', categoryDropdownOpen: false})" class="hidden md:block text-amber-100 font-medium glass-dark px-4 py-3 rounded-xl hover:bg-amber-500/20 transition-all">
-        ${isAdmin ? 'ADMIN' : 'HISTORIAL'}
-    </button>
-</div>
-                            <button onclick="logout()" class="glass-dark p-3 rounded-xl hover:bg-red-500/20 transition-all group shadow-lg">
-                                ${icons.LogOut(22, 'text-amber-300 group-hover:text-red-400')}
-                            </button>
+                                <div onclick="setState({currentPage: 'profile', categoryDropdownOpen: false})" class="hidden md:block glass-dark p-3 rounded-xl shadow-lg cursor-pointer hover:bg-amber-500/20 transition-all" title="Mi Perfil">${icons.User(26, 'text-amber-300')}</div>
+                                <button onclick="setState({currentPage: isAdmin ? 'admin' : 'history', categoryDropdownOpen: false})" class="hidden md:block text-amber-100 font-medium glass-dark px-4 py-3 rounded-xl hover:bg-amber-500/20 transition-all">${isAdmin ? 'ADMIN' : 'HISTORIAL'}</button>
+                            </div>
+                            <button onclick="logout()" class="glass-dark p-3 rounded-xl hover:bg-red-500/20 transition-all group shadow-lg">${icons.LogOut(22, 'text-amber-300 group-hover:text-red-400')}</button>
                         ` : html`
                             <div class="flex items-center gap-2">
-                                <div onclick="setState({currentPage: 'login', categoryDropdownOpen: false})" class="hidden md:block glass-dark p-3 rounded-xl shadow-lg cursor-pointer hover:bg-amber-500/20 transition-all">
-                                    ${icons.User(26, 'text-amber-300')}
-                                </div>
-                                <button onclick="setState({currentPage: 'login', categoryDropdownOpen: false})" class="gradient-gold text-gray-900 px-4 md:px-8 py-2 md:py-3 rounded-full font-bold shadow-2xl transition-all transform hover:scale-105 btn-premium text-sm md:text-base">
-                                    INGRESAR
-                                </button>
+                                <div onclick="setState({currentPage: 'login', categoryDropdownOpen: false})" class="hidden md:block glass-dark p-3 rounded-xl shadow-lg cursor-pointer hover:bg-amber-500/20 transition-all">${icons.User(26, 'text-amber-300')}</div>
+                                <button onclick="setState({currentPage: 'login', categoryDropdownOpen: false})" class="gradient-gold text-gray-900 px-4 md:px-8 py-2 md:py-3 rounded-full font-bold shadow-2xl transition-all transform hover:scale-105 btn-premium text-sm md:text-base">INGRESAR</button>
                             </div>
                         `}
                         <button class="lg:hidden glass-dark p-3 rounded-xl shadow-lg" onclick="setState({menuOpen: !state.menuOpen, categoryDropdownOpen: false})">
@@ -749,9 +519,7 @@ function Navbar() {
                 ${state.menuOpen ? html`
                     <div class="lg:hidden pb-4 animate-fadeInUp">
                         <nav class="flex flex-col gap-2">
-                            ${isAdmin ? html`
-                                <button onclick="setState({currentPage: 'admin', menuOpen: false})" class="text-red-400 font-bold py-2 text-left">PANEL ADMIN</button>
-                            ` : html`
+                            ${isAdmin ? html`<button onclick="setState({currentPage: 'admin', menuOpen: false})" class="text-red-400 font-bold py-2 text-left">PANEL ADMIN</button>` : html`
                                 <button onclick="setState({currentPage: 'catalog', menuOpen: false})" class="text-amber-200 hover:text-amber-400 py-2 text-left">CATÁLOGO</button>
                                 <button onclick="setState({currentPage: 'about', menuOpen: false})" class="text-amber-200 hover:text-amber-400 py-2 text-left">NOSOTROS</button>
                                 <button onclick="setState({currentPage: 'location', menuOpen: false})" class="text-amber-200 hover:text-amber-400 py-2 text-left">UBICACIÓN</button>
@@ -771,13 +539,9 @@ function Footer() {
             <div class="container mx-auto px-4 py-12">
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-8">
                     <div class="col-span-1 md:col-span-1">
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="gradient-gold p-2 rounded-xl">${icons.Package(24, 'text-gray-900')}</div>
-                            <span class="text-2xl font-display font-bold text-amber-300">Parfum</span>
-                        </div>
+                        <div class="flex items-center gap-3 mb-4"><div class="gradient-gold p-2 rounded-xl">${icons.Package(24, 'text-gray-900')}</div><span class="text-2xl font-display font-bold text-amber-300">Parfum</span></div>
                         <p class="text-amber-200/70 text-sm">Fragancias de lujo exclusivas.</p>
                     </div>
-
                     <div>
                         <h4 class="text-amber-400 font-semibold mb-4">Enlaces</h4>
                         <ul class="space-y-2 text-sm">
@@ -787,7 +551,6 @@ function Footer() {
                             <li><a href="#" onclick="setState({currentPage: 'contact'})" class="text-amber-200/70 hover:text-amber-400 transition">Contacto</a></li>
                         </ul>
                     </div>
-
                     <div class="col-span-1 md:col-span-1">
                         <h4 class="text-amber-400 font-semibold mb-4">Contáctanos</h4>
                         <ul class="space-y-3 text-sm text-amber-200/70">
@@ -796,32 +559,22 @@ function Footer() {
                             <li class="flex items-center gap-3 break-all">${icons.Mail(18, 'text-amber-400')} info@parfum.com</li>
                         </ul>
                     </div>
-                    
                     <div class="col-span-1 md:col-span-2">
                          <h4 class="text-amber-400 font-semibold mb-4">Horario</h4>
                          <ul class="space-y-3 text-sm text-amber-200/70 mb-6">
                             <li class="flex items-center gap-3">${icons.Clock(18, 'text-amber-400')} Lunes a Viernes: 10:00 - 20:00</li>
                             <li class="flex items-center gap-3">${icons.Clock(18, 'text-amber-400')} Sábado: 11:00 - 18:00</li>
                         </ul>
-
                         <h4 class="text-amber-400 font-semibold mb-4">Síguenos</h4>
                         <div class="flex gap-4">
-                            <a href="https://instagram.com/tu_perfil" class="group glass p-2 rounded-xl hover:bg-gradient-to-br from-purple-500 to-pink-500 transition-all" target="_blank">
-                                ${icons.Instagram(24, 'text-amber-300 group-hover:text-white')}
-                            </a>
-                            <a href="https://facebook.com/tu_perfil" class="group glass p-2 rounded-xl hover:bg-gradient-to-r from-blue-500 to-blue-600 transition-all" target="_blank">
-                                ${icons.Facebook(24, 'text-amber-300 group-hover:text-white')}
-                            </a>
-                            <a href="https://twitter.com/tu_perfil" class="group glass p-2 rounded-xl hover:bg-gradient-to-r from-sky-400 to-sky-500 transition-all" target="_blank">
-                                ${icons['Twitter'](24, 'text-amber-300 group-hover:text-white')}
-                            </a>
+                            <a href="https://instagram.com/tu_perfil" class="group glass p-2 rounded-xl hover:bg-gradient-to-br from-purple-500 to-pink-500 transition-all" target="_blank">${icons.Instagram(24, 'text-amber-300 group-hover:text-white')}</a>
+                            <a href="https://facebook.com/tu_perfil" class="group glass p-2 rounded-xl hover:bg-gradient-to-r from-blue-500 to-blue-600 transition-all" target="_blank">${icons.Facebook(24, 'text-amber-300 group-hover:text-white')}</a>
+                            <a href="https://twitter.com/tu_perfil" class="group glass p-2 rounded-xl hover:bg-gradient-to-r from-sky-400 to-sky-500 transition-all" target="_blank">${icons['Twitter'](24, 'text-amber-300 group-hover:text-white')}</a>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="text-center py-4 border-t border-amber-400/20">
-                <p class="text-xs text-amber-200/50">© 2024 Parfum Luxury Fragrances. Todos los derechos reservados.</p>
-            </div>
+            <div class="text-center py-4 border-t border-amber-400/20"><p class="text-xs text-amber-200/50">© 2024 Parfum Luxury Fragrances. Todos los derechos reservados.</p></div>
         </footer>
     `;
 }
@@ -844,26 +597,44 @@ function HomePage() {
 }
 
 function LoginPage() {
+    if (state.failedLoginAttempts >= 5 && !state.captchaText) {
+        state.captchaText = generateCaptchaText();
+        setTimeout(window.drawCaptcha, 50); 
+    }
+
     return html`
         <div class="flex items-center justify-center min-h-screen bg-gray-900/90 py-12 px-4">
             <div class="glass-dark p-8 md:p-12 rounded-3xl shadow-2xl border border-amber-400/30 w-full max-w-md animate-fadeInUp relative">
                 <button onclick="setState({currentPage: 'home'})" class="absolute top-6 left-6 text-amber-400 hover:text-amber-200 transition-transform hover:-translate-x-1" title="Regresar al inicio">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M19 12H5"></path>
-                        <path d="M12 19l-7-7 7-7"></path>
+                        <path d="M19 12H5"></path><path d="M12 19l-7-7 7-7"></path>
                     </svg>
                 </button>
                 <h2 class="text-3xl font-display font-bold text-amber-300 mb-6 text-center">Ingresar a Mi Cuenta</h2>
+                
                 <form id="login-form" onsubmit="handleLogin(event)">
                     <div class="mb-5">
                         <label class="block text-sm font-medium text-amber-300 mb-2">Correo</label>
-                        <input type="email" name="username" required class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30" placeholder="ejemplo@correo.com"/>
+                        <input type="email" name="username" required class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30" placeholder="ejemplo@correo.com" ${state.failedLoginAttempts >= 5 && !state.captchaVerified ? 'disabled' : ''}/>
                     </div>
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-amber-300 mb-2">Contraseña</label>
-                        <input type="password" name="password" required class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30" placeholder="••••••"/>
+                        <input type="password" name="password" required class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30" placeholder="••••••" ${state.failedLoginAttempts >= 5 && !state.captchaVerified ? 'disabled' : ''}/>
                     </div>
-                    <button type="submit" class="w-full gradient-gold text-gray-900 px-8 py-4 rounded-full font-bold shadow-2xl transition-all hover:scale-105 btn-premium text-lg">ACCEDER</button>
+
+                    ${state.failedLoginAttempts >= 5 && !state.captchaVerified ? html`
+                        <div class="mb-6 p-4 border border-red-500/50 bg-red-500/10 rounded-xl">
+                            <p class="text-red-400 text-xs font-bold mb-3 uppercase tracking-wider text-center">⚠️ Múltiples intentos fallidos. Verificación requerida.</p>
+                            <div class="flex flex-col items-center gap-3">
+                                <canvas id="captcha-canvas" width="220" height="70" class="rounded-lg shadow-inner border border-amber-400/20"></canvas>
+                                <button type="button" onclick="setState({captchaText: ''})" class="text-xs text-amber-300 hover:text-amber-100 underline">↻ Generar otro código</button>
+                                <input type="text" id="captcha-input" class="w-full px-4 py-2 glass rounded-xl text-white text-center tracking-widest font-mono" placeholder="Ingresa los símbolos" autocomplete="off"/>
+                                <button type="button" onclick="window.verifyCaptcha()" class="w-full bg-amber-500 text-gray-900 px-4 py-2 rounded-xl font-bold hover:bg-amber-400 transition">Verificar Seguridad</button>
+                            </div>
+                        </div>
+                    ` : html`
+                        <button type="submit" class="w-full gradient-gold text-gray-900 px-8 py-4 rounded-full font-bold shadow-2xl transition-all hover:scale-105 btn-premium text-lg">ACCEDER</button>
+                    `}
                 </form>
                 <p class="text-center text-amber-200/70 mt-6">
                     ¿No tienes cuenta? <button onclick="setState({currentPage: 'register'})" class="text-amber-400 font-bold hover:underline">Regístrate</button>
@@ -953,7 +724,6 @@ function ProductCard(product) {
 }
 
 function CatalogPage() {
-    // NUEVO ESTADO DE CARGA PREMIUM (SKELETONS)
     if (state.loading) {
         return html`
             <div class="container mx-auto px-4 py-16">
