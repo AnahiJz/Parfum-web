@@ -597,12 +597,20 @@ function HomePage() {
 }
 
 function LoginPage() {
-    if (state.failedLoginAttempts >= 5 && !state.captchaText) {
-        state.captchaText = generateCaptchaText();
+    // CORRECCIÓN: Separamos la lógica del CAPTCHA
+    if (state.failedLoginAttempts >= 5) {
+        
+        // 1. Solo generamos el texto secreto si aún no existe
+        if (!state.captchaText) {
+            state.captchaText = generateCaptchaText();
+        }
+        
+        // 2. SIEMPRE le decimos al navegador que dibuje el canvas, 
+        // sin importar cuántas veces se recargue la alerta de error.
         setTimeout(window.drawCaptcha, 50); 
     }
 
-    return html`
+return html`
         <div class="flex items-center justify-center min-h-screen bg-gray-900/90 py-12 px-4">
             <div class="glass-dark p-8 md:p-12 rounded-3xl shadow-2xl border border-amber-400/30 w-full max-w-md animate-fadeInUp relative">
                 <button onclick="setState({currentPage: 'home'})" class="absolute top-6 left-6 text-amber-400 hover:text-amber-200 transition-transform hover:-translate-x-1" title="Regresar al inicio">
@@ -623,7 +631,7 @@ function LoginPage() {
                     </div>
 
                     ${state.failedLoginAttempts >= 5 && !state.captchaVerified ? html`
-                        <div class="mb-6 p-4 border border-red-500/50 bg-red-500/10 rounded-xl">
+                        <div class="mb-6 p-4 border border-red-500/50 bg-red-500/10 rounded-xl animate-fadeInUp">
                             <p class="text-red-400 text-xs font-bold mb-3 uppercase tracking-wider text-center">⚠️ Múltiples intentos fallidos. Verificación requerida.</p>
                             <div class="flex flex-col items-center gap-3">
                                 <canvas id="captcha-canvas" width="220" height="70" class="rounded-lg shadow-inner border border-amber-400/20"></canvas>
