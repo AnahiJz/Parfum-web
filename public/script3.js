@@ -313,7 +313,7 @@ async function handleLogin(e) {
         const data = await response.json();
         
         if (data.success) {
-            // LOGIN EXITOSO: Limpiamos los fallos y captcha
+            // LOGIN EXITOSO: Limpiamos todo
             state.failedLoginAttempts = 0;
             state.captchaVerified = false;
             state.captchaText = '';
@@ -326,12 +326,19 @@ async function handleLogin(e) {
             fetchCart(data.user.id);
             if (data.user.rol === 'admin') { fetchSalesFromDB(); fetchUsersFromDB(); }
         } else {
-            // LOGIN FALLIDO: Sumamos el intento
-            state.failedLoginAttempts++;
+            // LOGIN FALLIDO
             
-            // EL PARCHE DE SEGURIDAD: 
-            // Revocamos la verificación anterior y borramos el texto viejo 
-            // para obligar al sistema a generar un CAPTCHA nuevo e inmediato.
+            // LA MAGIA DE UX: Si el usuario acaba de resolver el CAPTCHA correctamente,
+            // le perdonamos el historial y le damos 3 intentos nuevos.
+            // Este fallo actual cuenta como su intento número 1.
+            if (state.captchaVerified) {
+                state.failedLoginAttempts = 1;
+            } else {
+                // Si es un fallo normal sin CAPTCHA de por medio, solo sumamos
+                state.failedLoginAttempts++;
+            }
+            
+            // Revocamos la verificación para que el ciclo sea seguro
             state.captchaVerified = false;
             state.captchaText = ''; 
             
