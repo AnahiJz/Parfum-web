@@ -1,5 +1,26 @@
 require('dotenv').config();
-console.log("LLAVE STRIPE:", process.env.STRIPE_SECRET_KEY);
+
+// Verificación de Variables de Entorno Esenciales al Inicio
+const requiredEnvVars = [
+    'STRIPE_SECRET_KEY',
+    'TWILIO_ACCOUNT_SID',
+    'TWILIO_AUTH_TOKEN',
+    'TWILIO_PHONE_NUMBER',
+    'EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_USER', 'EMAIL_PASS',
+    'MYSQLHOST', 'MYSQLUSER', 'MYSQLPASSWORD', 'MYSQLDATABASE', 'MYSQLPORT'
+];
+
+const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingVars.length > 0) {
+    console.error('❌ ERROR FATAL: Faltan variables de entorno requeridas para iniciar la aplicación.');
+    console.error('Las siguientes variables no están definidas:', missingVars.join(', '));
+    console.error('Por favor, configúralas en el panel de Railway y vuelve a desplegar.');
+    process.exit(1); // Detiene la aplicación si faltan variables críticas
+}
+
+console.log("✅ Todas las variables de entorno requeridas están presentes.");
+
 const express = require('express');
 const path = require('path');
 const db = require('./db');

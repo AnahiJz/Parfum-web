@@ -1,12 +1,13 @@
+require('dotenv').config();
 const mysql = require('mysql2/promise');
 const fs = require('fs');
 
 const config = {
-    host: 'shortline.proxy.rlwy.net',
-    port: 59357,
-    user: 'root',
-    password: 'mjwfMXWdctSyvlUjQSkeUNZXmCgimGaZ',
-    database: 'railway',
+    host: process.env.RAILWAY_HOST,
+    port: process.env.RAILWAY_PORT,
+    user: process.env.RAILWAY_USER,
+    password: process.env.RAILWAY_PASSWORD,
+    database: process.env.RAILWAY_DATABASE,
     multipleStatements: true,
     ssl: { rejectUnauthorized: false }
 };
