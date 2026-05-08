@@ -323,55 +323,14 @@ async function handleLogin(e) {
 
             const user = { id: data.user.id, name: data.user.nombre, role: data.user.rol };
             localStorage.setItem('parfum_user', JSON.stringify(user));
-<<<<<<< Updated upstream
-            let mensajeBienvenida = data.user.rol === 'admin' ? `👑 ¡Bienvenido al panel de control, ${data.user.nombre}!` : `✨ ¡Qué gusto verte de nuevo, ${data.user.nombre}!`;
-            setState({ currentUser: user, isLoggedIn: true, currentPage: data.user.rol === 'admin' ? 'admin' : 'catalog', error: mensajeBienvenida });
-=======
-
-            let mensajeBienvenida = data.user.rol === 'admin' 
-                ? `👑 ¡Bienvenido, ${data.user.nombre}!` 
-                : `✨ ¡Hola de nuevo, ${data.user.nombre}!`;
-
-            setState({
-                currentUser: user,
-                isLoggedIn: true,
-                currentPage: data.user.rol === 'admin' ? 'admin' : 'catalog',
-                error: mensajeBienvenida,
+            let mensajeBienvenida = data.user.rol === 'admin' ? `👑 ¡Bienvenido, ${data.user.nombre}!` : `✨ ¡Hola de nuevo, ${data.user.nombre}!`;
+            setState({ currentUser: user, isLoggedIn: true, currentPage: data.user.rol === 'admin' ? 'admin' : 'catalog', error: mensajeBienvenida,
                 needsPhoneVerification: false,
-                verifyingEmail: ''
-            });
-            
->>>>>>> Stashed changes
+                verifyingEmail: '' });
             history.pushState({ loggedIn: true }, '', window.location.href);
             fetchCart(data.user.id);
             if (data.user.rol === 'admin') { fetchSalesFromDB(); fetchUsersFromDB(); }
         } else {
-<<<<<<< Updated upstream
-            // LOGIN FALLIDO
-            
-            // LA MAGIA DE UX: Si el usuario acaba de resolver el CAPTCHA correctamente,
-            // le perdonamos el historial y le damos 3 intentos nuevos.
-            // Este fallo actual cuenta como su intento número 1.
-            if (state.captchaVerified) {
-                state.failedLoginAttempts = 1;
-            } else {
-                // Si es un fallo normal sin CAPTCHA de por medio, solo sumamos
-                state.failedLoginAttempts++;
-            }
-            
-            // Revocamos la verificación para que el ciclo sea seguro
-            state.captchaVerified = false;
-            state.captchaText = ''; 
-            
-=======
-            if (data.needsPhoneVerification) {
-                setState({
-                    needsPhoneVerification: true,
-                    verifyingEmail: username,
-                    error: data.message
-                });
-            }
->>>>>>> Stashed changes
             setState({ error: '❌ ' + data.message });
         }
     } catch (error) { 
@@ -385,22 +344,6 @@ async function handleRegister(e) {
     const name = form.elements.name.value;
     const email = form.elements.email.value;
     const password = form.elements.password.value;
-<<<<<<< Updated upstream
-    
-    if (password !== form.elements.confirmPassword.value) return setState({ error: '🚨 Las contraseñas no coinciden. Por favor, verifica.' });
-    if (!name || !email || !password) return setState({ error: '⚠️ Por favor, completa todos los campos.' });
-
-    try {
-        const response = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, password }) });
-        const data = await response.json();
-        if (data.success) {
-            const user = { id: data.userId, name: name, role: 'usuario' };
-            localStorage.setItem('parfum_user', JSON.stringify(user));
-            setState({ currentUser: user, isLoggedIn: true, currentPage: 'catalog', error: `🎉 ¡Cuenta creada con éxito! Bienvenido, ${name}.` });
-            history.pushState({ loggedIn: true }, '', window.location.href);
-        } else { setState({ error: '❌ ' + data.message }); }
-    } catch (error) { setState({ error: '⚠️ Error de conexión al registrarse.' }); }
-=======
     const telefono = form.elements.telefono.value;
     const confirmPassword = form.elements.confirmPassword.value;
     
@@ -431,7 +374,6 @@ async function handleRegister(e) {
         console.error(error);
         setState({ error: '⚠️ Error de conexión al registrarse.' });
     }
->>>>>>> Stashed changes
 }
 
 async function handleResendCode() {
@@ -736,47 +678,7 @@ function HomePage() {
 }
 
 function LoginPage() {
-<<<<<<< Updated upstream
-    if (state.failedLoginAttempts >= 3) {
-        
-        if (!state.captchaText) {
-            state.captchaText = generateCaptchaText();
-        }
-        
-        setTimeout(window.drawCaptcha, 50); 
-    }
-
-return html`
-=======
-    if (state.needsPhoneVerification) {
-        return html`
-            <div class="flex items-center justify-center min-h-screen bg-gray-900/90 py-12 px-4">
-                <div class="glass-dark p-8 md:p-12 rounded-3xl shadow-2xl border border-amber-400/30 w-full max-w-md animate-fadeInUp">
-                    <h2 class="text-3xl font-display font-bold text-amber-300 mb-2 text-center">Verificar Teléfono</h2>
-                    <p class="text-center text-amber-200/70 mb-6">Ingresa el código de 6 dígitos que enviamos a tu teléfono.</p>
-                    <form id="phone-verify-form" onsubmit="handlePhoneVerification(event)">
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-amber-300 mb-2">Código de Verificación</label>
-                            <input type="text" name="code" required class="w-full text-center tracking-[0.5em] px-4 py-3 glass rounded-xl text-white border border-amber-400/30" placeholder="123456" maxlength="6"/>
-                        </div>
-                        <button type="submit" class="w-full gradient-gold text-gray-900 px-8 py-4 rounded-full font-bold shadow-2xl transition-all hover:scale-105 btn-premium text-lg">VERIFICAR CÓDIGO</button>
-                    </form>
-                    <div class="text-center text-amber-200/70 mt-6">
-                        <p>¿No recibiste el código?</p>
-                        <button onclick="handleResendCode()" class="text-amber-400 font-bold hover:underline disabled:text-gray-500 disabled:cursor-not-allowed" ${state.resendDisabled ? 'disabled' : ''}>
-                            ${state.resendDisabled ? 'Espera 30s para reenviar' : 'Reenviar código'}
-                        </button>
-                    </div>
-                    <p class="text-center text-amber-200/70 mt-4">
-                        ¿No es tu cuenta? <button onclick="setState({needsPhoneVerification: false, verifyingEmail: ''})" class="text-amber-400 font-bold hover:underline">Regresar</button>
-                    </p>
-                </div>
-            </div>
-        `;
-    }
-
     return html`
->>>>>>> Stashed changes
         <div class="flex items-center justify-center min-h-screen bg-gray-900/90 py-12 px-4">
             <div class="glass-dark p-8 md:p-12 rounded-3xl shadow-2xl border border-amber-400/30 w-full max-w-md animate-fadeInUp relative">
                 <button onclick="setState({currentPage: 'home'})" class="absolute top-6 left-6 text-amber-400 hover:text-amber-200 transition-transform hover:-translate-x-1" title="Regresar al inicio">

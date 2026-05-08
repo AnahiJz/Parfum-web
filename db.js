@@ -1,11 +1,11 @@
 const mysql = require('mysql2/promise');
 
 const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'mysql.railway.internal',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || 'mjwfMXWdctSyvlUjQSkeUNZXmCgimGaZ',
-    database: process.env.DB_NAME || 'railway',
-    port: process.env.DB_PORT || 3306,
+    host: process.env.MYSQLHOST,
+    user: process.env.MYSQLUSER,
+    password: process.env.MYSQLPASSWORD,
+    database: process.env.MYSQLDATABASE,
+    port: process.env.MYSQLPORT,
     ssl: { rejectUnauthorized: false },
     waitForConnections: true,
     connectionLimit: 10,
