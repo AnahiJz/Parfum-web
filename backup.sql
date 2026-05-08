@@ -331,13 +331,19 @@ CREATE TABLE `usuarios` (
   `telefono` varchar(20) DEFAULT NULL,
   `rol` enum('usuario','admin') DEFAULT 'usuario',
   `fecha_creacion` datetime DEFAULT current_timestamp(),
+  `token_verificacion` varchar(255) DEFAULT NULL,
+  `token_expiracion` datetime DEFAULT NULL,
+  `codigo_verificacion_telefono` varchar(10) DEFAULT NULL,
+  `expiracion_codigo_telefono` datetime DEFAULT NULL,
+  `verificado` tinyint(1) DEFAULT 0,
+  `telefono_verificado` tinyint(1) DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY `correo` (`correo`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 set autocommit=0;
 INSERT INTO `usuarios` VALUES
-(1,'Administrador','admin@parfum.com','12345','5512345678','admin','2025-11-27 22:24:54'),
-(3,'Anahi Jiménez','djassojimenez@gmail.com','anahi0500',NULL,'usuario','2025-11-27 23:36:42'),
-(4,'Jordy Adrián','jordydark@gmail.com','2703',NULL,'usuario','2025-12-01 09:35:34');
+(1,'Administrador','admin@parfum.com','12345','5512345678','admin','2025-11-27 22:24:54',NULL,NULL,NULL,NULL,1,1),
+(3,'Anahi Jiménez','djassojimenez@gmail.com','anahi0500',NULL,'usuario','2025-11-27 23:36:42',NULL,NULL,NULL,NULL,1,1),
+(4,'Jordy Adrián','jordydark@gmail.com','2703',NULL,'usuario','2025-12-01 09:35:34',NULL,NULL,NULL,NULL,1,1);
 commit;
