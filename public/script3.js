@@ -673,8 +673,16 @@ return html`
 function RegisterPage() {
     return html`
         <div class="flex items-center justify-center min-h-screen bg-gray-900/90 py-12 px-4">
-            <div class="glass-dark p-8 md:p-12 rounded-3xl shadow-2xl border border-amber-400/30 w-full max-w-lg animate-fadeInUp">
+            <div class="glass-dark p-8 md:p-12 rounded-3xl shadow-2xl border border-amber-400/30 w-full max-w-lg animate-fadeInUp relative">
+                
+                <button onclick="setState({currentPage: 'login'})" class="absolute top-6 left-6 text-amber-400 hover:text-amber-200 transition-transform hover:-translate-x-1" title="Regresar al Login">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 12H5"></path><path d="M12 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+
                 <h2 class="text-3xl font-display font-bold text-amber-300 mb-6 text-center">Crear Nueva Cuenta</h2>
+                
                 <form id="register-form" onsubmit="handleRegister(event)">
                     <div class="mb-5">
                         <label class="block text-sm font-medium text-amber-300 mb-2">Nombre</label>
@@ -694,6 +702,7 @@ function RegisterPage() {
                     </div>
                     <button type="submit" class="w-full gradient-gold text-gray-900 px-8 py-4 rounded-full font-bold shadow-2xl transition-all hover:scale-105 btn-premium text-lg">REGISTRARSE</button>
                 </form>
+                
                 <p class="text-center text-amber-200/70 mt-6">
                     ¿Ya tienes cuenta? <button onclick="setState({currentPage: 'login'})" class="text-amber-400 font-bold hover:underline">Ingresa</button>
                 </p>
@@ -701,6 +710,7 @@ function RegisterPage() {
         </div>
     `;
 }
+
 function SkeletonCard() {
     return html`
         <div class="glass-dark rounded-2xl p-6 shadow-2xl border border-amber-400/10 flex flex-col animate-pulse">
