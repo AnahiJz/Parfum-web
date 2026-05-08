@@ -305,12 +305,18 @@ async function handleLogin(e) {
     if (!username || !password) return setState({ error: '❌ Por favor, introduce correo y contraseña.' });
 
     try {
-        const response = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
+        const response = await fetch('/api/login', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ username, password }) 
+        });
         const data = await response.json();
+        
         if (data.success) {
             // LOGIN EXITOSO: Limpiamos los fallos y captcha
             state.failedLoginAttempts = 0;
             state.captchaVerified = false;
+            state.captchaText = '';
 
             const user = { id: data.user.id, name: data.user.nombre, role: data.user.rol };
             localStorage.setItem('parfum_user', JSON.stringify(user));
@@ -322,9 +328,18 @@ async function handleLogin(e) {
         } else {
             // LOGIN FALLIDO: Sumamos el intento
             state.failedLoginAttempts++;
+            
+            // EL PARCHE DE SEGURIDAD: 
+            // Revocamos la verificación anterior y borramos el texto viejo 
+            // para obligar al sistema a generar un CAPTCHA nuevo e inmediato.
+            state.captchaVerified = false;
+            state.captchaText = ''; 
+            
             setState({ error: '❌ ' + data.message });
         }
-    } catch (error) { setState({ error: '⚠️ Error de conexión con el servidor.' }); }
+    } catch (error) { 
+        setState({ error: '⚠️ Error de conexión con el servidor.' }); 
+    }
 }
 
 async function handleRegister(e) {
