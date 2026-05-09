@@ -1,8 +1,49 @@
+:root {
+    --bg-overlay: rgba(0, 0, 0, 0.7);
+    --bg-glass: rgba(255, 255, 255, 0.08);
+    --bg-glass-dark: rgba(0, 0, 0, 0.3);
+    --text-scale: 1;
+    --text-color: #f3f4f6; /* text-gray-100 */
+    --amber-color: #fcd34d; /* text-amber-300 */
+    --gold-gradient-1: #f9d423;
+    --gold-gradient-2: #e8a600;
+}
+
+body.light-mode {
+    --bg-overlay: rgba(255, 255, 255, 0.9);
+    --bg-glass: rgba(0, 0, 0, 0.05);
+    --bg-glass-dark: rgba(255, 255, 255, 0.5);
+    --text-color: #111827; /* text-gray-900 */
+    --amber-color: #d97706; /* text-amber-600 */
+    --gold-gradient-1: #d97706;
+    --gold-gradient-2: #b45309;
+}
+
+body.high-contrast {
+    --bg-overlay: #000000;
+    --bg-glass: #000000;
+    --bg-glass-dark: #000000;
+    --text-color: #ffffff;
+    --amber-color: #ffff00;
+    --gold-gradient-1: #ffff00;
+    --gold-gradient-2: #ffff00;
+}
+
+html {
+    font-size: calc(16px * var(--text-scale));
+}
+
 body {
     font-family: 'Inter', sans-serif;
-    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('fondo.jpg');
+    background: linear-gradient(var(--bg-overlay), var(--bg-overlay)), url('fondo.jpg');
     background-size: cover;
     background-attachment: fixed; background-position: center;
+    color: var(--text-color);
+}
+
+*:focus-visible {
+    outline: 2px solid #f9d423 !important;
+    outline-offset: 2px !important;
 }
 
 .font-display { 

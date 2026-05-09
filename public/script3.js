@@ -31,6 +31,7 @@ const icons = {
     Twitter: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>`,
     Send: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>`,
     Award: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 10.15 15.83 14.1 11.88"/><line x1="12" x2="12" y1="16" y2="21"/><line x1="8.5" x2="15.5" y1="21" y2="21"/></svg>`,
+    Settings: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>`
 };
 
 let state = {
@@ -65,9 +66,9 @@ let state = {
     clientSearchQuery: '',
     newProductForm: { name: '', price: '', stock: '', image: '', gender: 'hombre', type: 'designer' },
     newUserForm: { name: '', email: '', password: '' },
-    needsPhoneVerification: false,
-    verifyingEmail: '',
-    resendDisabled: false
+    a11yOpen: false,
+    a11y: { darkMode: false, textScale: 100, voiceNarrator: false, highContrast: false, guidedReading: false },
+    verificationEmail: null
 };
 
 let carouselInterval;
@@ -95,6 +96,134 @@ function html(strings, ...values) {
         result += strings[i + 1];
     }
     return result;
+}
+
+// ==========================================
+// PANEL DE ACCESIBILIDAD
+// ==========================================
+
+function toggleA11ySetting(key, value) {
+    state.a11y[key] = value;
+    localStorage.setItem('parfum_a11y', JSON.stringify(state.a11y));
+    applyA11y();
+    setState({}); 
+}
+
+function applyA11y() {
+    if (state.a11y.darkMode) {
+        document.body.classList.add('light-mode');
+    } else {
+        document.body.classList.remove('light-mode');
+    }
+    
+    if (state.a11y.highContrast) {
+        document.body.classList.add('high-contrast');
+    } else {
+        document.body.classList.remove('high-contrast');
+    }
+
+    document.documentElement.style.setProperty('--text-scale', state.a11y.textScale / 100);
+
+    if (state.a11y.voiceNarrator) {
+        document.body.addEventListener('mouseover', handleVoiceNarrator);
+    } else {
+        document.body.removeEventListener('mouseover', handleVoiceNarrator);
+        window.speechSynthesis.cancel();
+    }
+
+    let guide = document.getElementById('guided-reading-line');
+    if (state.a11y.guidedReading) {
+        if (!guide) {
+            guide = document.createElement('div');
+            guide.id = 'guided-reading-line';
+            guide.style.position = 'fixed';
+            guide.style.left = '0';
+            guide.style.right = '0';
+            guide.style.height = '6px';
+            guide.style.backgroundColor = 'rgba(249, 212, 35, 0.4)';
+            guide.style.pointerEvents = 'none';
+            guide.style.zIndex = '9999';
+            guide.style.boxShadow = '0 0 15px rgba(0,0,0,0.5)';
+            document.body.appendChild(guide);
+            document.body.addEventListener('mousemove', handleGuidedReading);
+        }
+    } else {
+        if (guide) guide.remove();
+        document.body.removeEventListener('mousemove', handleGuidedReading);
+    }
+}
+
+function handleVoiceNarrator(e) {
+    if (!state.a11y.voiceNarrator) return;
+    const text = e.target.innerText || e.target.getAttribute('aria-label') || e.target.alt;
+    if (text && text.trim().length > 0 && ['DIV', 'SECTION', 'MAIN', 'BODY'].indexOf(e.target.tagName) === -1) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'es-ES';
+        window.speechSynthesis.speak(utterance);
+    }
+}
+
+function handleGuidedReading(e) {
+    const guide = document.getElementById('guided-reading-line');
+    if (guide) {
+        guide.style.top = (e.clientY + 20) + 'px';
+    }
+}
+
+function initA11y() {
+    const saved = localStorage.getItem('parfum_a11y');
+    if (saved) {
+        state.a11y = { ...state.a11y, ...JSON.parse(saved) };
+    }
+    applyA11y();
+}
+
+function A11yPanel() {
+    return html`
+        <button onclick="setState({a11yOpen: true})" style="z-index: 2147483647;" class="fixed bottom-5 left-5 bg-amber-500 text-gray-900 p-4 rounded-full shadow-2xl hover:scale-110 transition-transform" aria-label="Abrir configuración de accesibilidad" aria-expanded="${state.a11yOpen}">
+            ${icons.Settings(26)}
+        </button>
+
+        ${state.a11yOpen ? html`
+            <div class="fixed inset-0 bg-black/60 z-[101] backdrop-blur-sm" aria-hidden="true" onclick="setState({a11yOpen: false})"></div>
+            <div role="dialog" aria-modal="true" aria-labelledby="a11y-title" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 border border-amber-400/30 p-6 rounded-2xl z-[102] w-11/12 max-w-md shadow-2xl animate-fadeInUp">
+                <div class="flex justify-between items-center mb-6 border-b border-amber-400/20 pb-4">
+                    <h2 id="a11y-title" class="text-xl font-bold text-amber-300">⚙️ Configuración</h2>
+                    <button onclick="setState({a11yOpen: false})" class="text-amber-300 hover:text-red-400" aria-label="Cerrar configuración">
+                        ${icons.X(24)}
+                    </button>
+                </div>
+                
+                <div class="space-y-6">
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" id="a11y-dark" class="w-5 h-5 accent-amber-500" ${state.a11y.darkMode ? 'checked' : ''} onchange="toggleA11ySetting('darkMode', this.checked)"/>
+                        <label for="a11y-dark" class="text-amber-100 font-medium text-lg">Modo Nocturno / Claro</label>
+                    </div>
+
+                    <div>
+                        <label for="a11y-text" class="block text-amber-100 font-medium mb-2 text-lg">Tamaño de Texto: <span aria-live="polite" class="text-amber-400">${state.a11y.textScale}%</span></label>
+                        <input type="range" id="a11y-text" min="75" max="150" step="5" value="${state.a11y.textScale}" class="w-full accent-amber-500 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer" aria-label="Tamaño de texto" aria-valuemin="75" aria-valuemax="150" aria-valuenow="${state.a11y.textScale}" onchange="toggleA11ySetting('textScale', this.value)"/>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" id="a11y-voice" class="w-5 h-5 accent-amber-500" ${state.a11y.voiceNarrator ? 'checked' : ''} onchange="toggleA11ySetting('voiceNarrator', this.checked)"/>
+                        <label for="a11y-voice" class="text-amber-100 font-medium text-lg">🔊 Narrador de Voz</label>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" id="a11y-contrast" class="w-5 h-5 accent-amber-500" ${state.a11y.highContrast ? 'checked' : ''} onchange="toggleA11ySetting('highContrast', this.checked)"/>
+                        <label for="a11y-contrast" class="text-amber-100 font-medium text-lg">◎ Contraste Alto</label>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" id="a11y-guide" class="w-5 h-5 accent-amber-500" ${state.a11y.guidedReading ? 'checked' : ''} onchange="toggleA11ySetting('guidedReading', this.checked)"/>
+                        <label for="a11y-guide" class="text-amber-100 font-medium text-lg">👁 Lectura Guiada</label>
+                    </div>
+                </div>
+            </div>
+        ` : ''}
+    `;
 }
 
 // ==========================================
@@ -157,7 +286,7 @@ window.verifyCaptcha = function() {
     if (input === state.captchaText) {
         setState({ captchaVerified: true, error: '✅ Verificación exitosa. Puedes ingresar.' });
     } else {
-        setState({ error: '❌ Código incorrecto. Intenta de nuevo.', captchaText: generateCaptchaText() });
+        setState({ error: '❌ Código incorrecto.', captchaText: '' });
     }
 };
 // ==========================================
@@ -323,28 +452,24 @@ async function handleLogin(e) {
 
             const user = { id: data.user.id, name: data.user.nombre, role: data.user.rol };
             localStorage.setItem('parfum_user', JSON.stringify(user));
-            let mensajeBienvenida = data.user.rol === 'admin' ? `👑 ¡Bienvenido, ${data.user.nombre}!` : `✨ ¡Hola de nuevo, ${data.user.nombre}!`;
-            setState({ currentUser: user, isLoggedIn: true, currentPage: data.user.rol === 'admin' ? 'admin' : 'catalog', error: mensajeBienvenida,
-                needsPhoneVerification: false,
-                verifyingEmail: '' });
+            let mensajeBienvenida = data.user.rol === 'admin' ? `👑 ¡Bienvenido al panel de control, ${data.user.nombre}!` : `✨ ¡Qué gusto verte de nuevo, ${data.user.nombre}!`;
+            setState({ currentUser: user, isLoggedIn: true, currentPage: data.user.rol === 'admin' ? 'admin' : 'catalog', error: mensajeBienvenida });
             history.pushState({ loggedIn: true }, '', window.location.href);
             fetchCart(data.user.id);
             if (data.user.rol === 'admin') { fetchSalesFromDB(); fetchUsersFromDB(); }
         } else {
-            // Lógica para manejar fallos de login
-            if (data.needsPhoneVerification) {
-                setState({
-                    needsPhoneVerification: true,
-                    verifyingEmail: username,
-                    error: data.message
-                });
-            } else {
-                const newAttempts = state.failedLoginAttempts + 1;
-                // Solo genera el captcha la primera vez que se llega a 3 intentos, o si ya existe uno, genera otro.
-                const newCaptchaText = (newAttempts >= 3) ? generateCaptchaText() : state.captchaText;
-                
-                setState({ error: '❌ ' + data.message, failedLoginAttempts: newAttempts, captchaText: newCaptchaText, captchaVerified: false });
+            if (data.requireVerification) {
+                return setState({ error: '✉️ ' + data.message, currentPage: 'verify', verificationEmail: data.email });
             }
+            // LOGIN FALLIDO
+            if (state.captchaVerified) {
+                state.failedLoginAttempts = 1;
+            } else {
+                state.failedLoginAttempts++;
+            }
+            state.captchaVerified = false;
+            state.captchaText = ''; 
+            setState({ error: '❌ ' + data.message });
         }
     } catch (error) { 
         setState({ error: '⚠️ Error de conexión con el servidor.' }); 
@@ -357,89 +482,53 @@ async function handleRegister(e) {
     const name = form.elements.name.value;
     const email = form.elements.email.value;
     const password = form.elements.password.value;
-    const telefono = form.elements.telefono.value;
-    const confirmPassword = form.elements.confirmPassword.value;
     
-    if (password !== confirmPassword) {
-        setState({ error: '🚨 Las contraseñas no coinciden. Por favor, verifica.' });
-        return;
-    }
-    if (!name || !email || !password || !telefono) {
-        setState({ error: '⚠️ Por favor, completa todos los campos.' });
-        return;
-    }
-    try {
-        const response = await fetch('/api/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, password, telefono })
-        });
-        const data = await response.json();
-        if (data.success) {
-            setState({
-                currentPage: 'login',
-                error: data.message
-            });
-        } else {
-            setState({ error: '❌ ' + data.message });
-        }
-    } catch (error) {
-        console.error(error);
-        setState({ error: '⚠️ Error de conexión al registrarse.' });
-    }
-}
-
-async function handleResendCode() {
-    if (state.resendDisabled) return;
-
-    setState({ resendDisabled: true, error: '⏳ Reenviando código...' });
+    if (password !== form.elements.confirmPassword.value) return setState({ error: '🚨 Las contraseñas no coinciden. Por favor, verifica.' });
+    if (!name || !email || !password) return setState({ error: '⚠️ Por favor, completa todos los campos.' });
 
     try {
-        const response = await fetch('/api/resend-phone-code', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: state.verifyingEmail })
-        });
+        const response = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, password }) });
         const data = await response.json();
         if (data.success) {
-            setState({ error: `✅ ${data.message}` });
-        } else {
-            setState({ error: `❌ ${data.message}` });
-        }
-    } catch (error) {
-        setState({ error: '⚠️ Error de conexión.' });
-    }
-
-    // Cooldown for 30 seconds
-    setTimeout(() => {
-        setState({ resendDisabled: false });
-    }, 30000);
+            if (data.requireVerification) {
+                setState({ error: '✉️ Revisa tu correo. Te enviamos un código de verificación.', currentPage: 'verify', verificationEmail: data.email });
+            } else {
+                const user = { id: data.userId, name: name, role: 'usuario' };
+                localStorage.setItem('parfum_user', JSON.stringify(user));
+                setState({ currentUser: user, isLoggedIn: true, currentPage: 'catalog', error: `🎉 ¡Cuenta creada con éxito! Bienvenido, ${name}.` });
+                history.pushState({ loggedIn: true }, '', window.location.href);
+            }
+        } else { setState({ error: '❌ ' + data.message }); }
+    } catch (error) { setState({ error: '⚠️ Error de conexión al registrarse.' }); }
 }
 
-async function handlePhoneVerification(e) {
+async function handleVerify(e) {
     e.preventDefault();
-    const form = document.getElementById('phone-verify-form');
+    const form = document.getElementById('verify-form');
     const code = form.elements.code.value;
-
-    if (!code) {
-        setState({ error: '⚠️ Ingresa el código de 6 dígitos.' });
-        return;
-    }
+    
+    if (!code) return setState({ error: '❌ Ingresa el código.' });
 
     try {
-        const response = await fetch('/api/verify-phone', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: state.verifyingEmail, code })
+        const response = await fetch('/api/verify-email', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ email: state.verificationEmail, code }) 
         });
         const data = await response.json();
+        
         if (data.success) {
-            setState({ needsPhoneVerification: false, verifyingEmail: '', error: '✅ ¡Teléfono verificado! Ahora puedes iniciar sesión.' });
+            const user = { id: data.user.id, name: data.user.nombre, role: data.user.rol };
+            localStorage.setItem('parfum_user', JSON.stringify(user));
+            setState({ currentUser: user, isLoggedIn: true, currentPage: data.user.rol === 'admin' ? 'admin' : 'catalog', error: '✅ Correo verificado con éxito.', verificationEmail: null });
+            history.pushState({ loggedIn: true }, '', window.location.href);
+            fetchCart(data.user.id);
+            if (data.user.rol === 'admin') { fetchSalesFromDB(); fetchUsersFromDB(); }
         } else {
             setState({ error: '❌ ' + data.message });
         }
-    } catch (error) {
-        setState({ error: '⚠️ Error de conexión.' });
+    } catch (error) { 
+        setState({ error: '⚠️ Error de conexión con el servidor.' }); 
     }
 }
 
@@ -531,7 +620,7 @@ async function checkout() {
 function NotificationBanner() {
     if (!state.error) return '';
     return html` 
-        <div id="notification-banner" class="notification-banner fixed top-0 left-1/2 transform -translate-x-1/2 mt-4 p-3 rounded-xl shadow-2xl z-[100] max-w-sm w-full mx-4
+        <div id="notification-banner" role="alert" aria-live="assertive" class="notification-banner fixed top-0 left-1/2 transform -translate-x-1/2 mt-4 p-3 rounded-xl shadow-2xl z-[100] max-w-sm w-full mx-4
             ${state.error.includes('❌') || state.error.includes('🚨') || state.error.includes('⚠️') || state.error.includes('🗑️') || state.error.includes('🔒') ? 'bg-red-700' : 'bg-green-600'} 
             text-white font-semibold flex items-center gap-3 border border-white/20">
             <button class="text-xl" onclick="setState({error: null})">${icons.X(18, 'text-white')}</button>
@@ -571,7 +660,7 @@ function Navbar() {
         <header class="glass sticky top-0 z-50 border-b border-amber-400/30 shadow-2xl">
             <div class="container mx-auto px-4">
                 <div class="flex items-center justify-between py-4">
-                    <div class="flex items-center gap-3 cursor-pointer group" onclick="setState({currentPage: state.isLoggedIn ? 'catalog' : 'home', categoryDropdownOpen: false, adminMenuOpen: false, currentCategory: 'all'})">
+                    <div class="flex items-center gap-3 cursor-pointer group" role="button" tabindex="0" onkeydown="if(event.key==='Enter' || event.key===' ') { event.preventDefault(); this.click(); }" onclick="setState({currentPage: state.isLoggedIn ? 'catalog' : 'home', categoryDropdownOpen: false, adminMenuOpen: false, currentCategory: 'all'})">
                         <div class="gradient-gold p-3 rounded-2xl shadow-xl transform group-hover:rotate-12 transition-all duration-300 animate-pulse-glow">${icons.Perfume(30, 'text-gray-900')}</div>
                         <div><span class="text-xl md:text-3xl font-display font-bold bg-gradient-to-r from-amber-300 via-amber-200 to-amber-400 bg-clip-text text-transparent">Parfum</span><p class="hidden md:block text-xs text-amber-300 font-light tracking-[0.2em] uppercase">Luxury Fragrances</p></div>
                     </div>
@@ -595,13 +684,13 @@ function Navbar() {
                         ` : ''}
                         ${state.isLoggedIn ? html`
                            <div class="flex items-center gap-2">
-                                <div onclick="setState({currentPage: 'profile', categoryDropdownOpen: false})" class="hidden md:block glass-dark p-3 rounded-xl shadow-lg cursor-pointer hover:bg-amber-500/20 transition-all" title="Mi Perfil">${icons.User(26, 'text-amber-300')}</div>
+                                <div role="button" tabindex="0" onkeydown="if(event.key==='Enter' || event.key===' ') { event.preventDefault(); this.click(); }" onclick="setState({currentPage: 'profile', categoryDropdownOpen: false})" class="hidden md:block glass-dark p-3 rounded-xl shadow-lg cursor-pointer hover:bg-amber-500/20 transition-all" title="Mi Perfil">${icons.User(26, 'text-amber-300')}</div>
                                 <button onclick="setState({currentPage: isAdmin ? 'admin' : 'history', categoryDropdownOpen: false})" class="hidden md:block text-amber-100 font-medium glass-dark px-4 py-3 rounded-xl hover:bg-amber-500/20 transition-all">${isAdmin ? 'ADMIN' : 'HISTORIAL'}</button>
                             </div>
                             <button onclick="logout()" class="glass-dark p-3 rounded-xl hover:bg-red-500/20 transition-all group shadow-lg">${icons.LogOut(22, 'text-amber-300 group-hover:text-red-400')}</button>
                         ` : html`
                             <div class="flex items-center gap-2">
-                                <div onclick="setState({currentPage: 'login', categoryDropdownOpen: false})" class="hidden md:block glass-dark p-3 rounded-xl shadow-lg cursor-pointer hover:bg-amber-500/20 transition-all">${icons.User(26, 'text-amber-300')}</div>
+                                <div role="button" tabindex="0" onkeydown="if(event.key==='Enter' || event.key===' ') { event.preventDefault(); this.click(); }" onclick="setState({currentPage: 'login', categoryDropdownOpen: false})" class="hidden md:block glass-dark p-3 rounded-xl shadow-lg cursor-pointer hover:bg-amber-500/20 transition-all">${icons.User(26, 'text-amber-300')}</div>
                                 <button onclick="setState({currentPage: 'login', categoryDropdownOpen: false})" class="gradient-gold text-gray-900 px-4 md:px-8 py-2 md:py-3 rounded-full font-bold shadow-2xl transition-all transform hover:scale-105 btn-premium text-sm md:text-base">INGRESAR</button>
                             </div>
                         `}
@@ -691,7 +780,16 @@ function HomePage() {
 }
 
 function LoginPage() {
-    return html`
+    if (state.failedLoginAttempts >= 3) {
+        
+        if (!state.captchaText) {
+            state.captchaText = generateCaptchaText();
+        }
+        
+        setTimeout(window.drawCaptcha, 50); 
+    }
+
+return html`
         <div class="flex items-center justify-center min-h-screen bg-gray-900/90 py-12 px-4">
             <div class="glass-dark p-8 md:p-12 rounded-3xl shadow-2xl border border-amber-400/30 w-full max-w-md animate-fadeInUp relative">
                 <button onclick="setState({currentPage: 'home'})" class="absolute top-6 left-6 text-amber-400 hover:text-amber-200 transition-transform hover:-translate-x-1" title="Regresar al inicio">
@@ -703,12 +801,12 @@ function LoginPage() {
                 
                 <form id="login-form" onsubmit="handleLogin(event)">
                     <div class="mb-5">
-                        <label class="block text-sm font-medium text-amber-300 mb-2">Correo</label>
-                        <input type="email" name="username" required class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30" placeholder="ejemplo@correo.com" ${state.failedLoginAttempts >= 3 && !state.captchaVerified ? 'disabled' : ''}/>
+                        <label for="login-email" class="block text-sm font-medium text-amber-300 mb-2">Correo</label>
+                        <input type="email" id="login-email" name="username" required aria-required="true" autocomplete="email" class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30" placeholder="ejemplo@correo.com" ${state.failedLoginAttempts >= 3 && !state.captchaVerified ? 'disabled' : ''}/>
                     </div>
                     <div class="mb-6">
-                        <label class="block text-sm font-medium text-amber-300 mb-2">Contraseña</label>
-                        <input type="password" name="password" required class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30" placeholder="••••••" ${state.failedLoginAttempts >= 3 && !state.captchaVerified ? 'disabled' : ''}/>
+                        <label for="login-password" class="block text-sm font-medium text-amber-300 mb-2">Contraseña</label>
+                        <input type="password" id="login-password" name="password" required aria-required="true" autocomplete="current-password" class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30" placeholder="••••••" ${state.failedLoginAttempts >= 3 && !state.captchaVerified ? 'disabled' : ''}/>
                     </div>
 
                     ${state.failedLoginAttempts >= 3 && !state.captchaVerified ? html`
@@ -748,24 +846,20 @@ function RegisterPage() {
                 
                 <form id="register-form" onsubmit="handleRegister(event)">
                     <div class="mb-5">
-                        <label class="block text-sm font-medium text-amber-300 mb-2">Nombre</label>
-                        <input type="text" name="name" required class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30"/>
+                        <label for="reg-name" class="block text-sm font-medium text-amber-300 mb-2">Nombre</label>
+                        <input type="text" id="reg-name" name="name" required aria-required="true" autocomplete="name" class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30"/>
                     </div>
                     <div class="mb-5">
-                        <label class="block text-sm font-medium text-amber-300 mb-2">Email</label>
-                        <input type="email" name="email" required class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30"/>
+                        <label for="reg-email" class="block text-sm font-medium text-amber-300 mb-2">Email</label>
+                        <input type="email" id="reg-email" name="email" required aria-required="true" autocomplete="email" class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30"/>
                     </div>
                     <div class="mb-5">
-                        <label class="block text-sm font-medium text-amber-300 mb-2">Teléfono</label>
-                        <input type="tel" name="telefono" required class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30" placeholder="+525512345678"/>
-                    </div>
-                    <div class="mb-5">
-                        <label class="block text-sm font-medium text-amber-300 mb-2">Contraseña</label>
-                        <input type="password" name="password" required class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30"/>
+                        <label for="reg-password" class="block text-sm font-medium text-amber-300 mb-2">Contraseña</label>
+                        <input type="password" id="reg-password" name="password" required aria-required="true" autocomplete="new-password" class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30"/>
                     </div>
                     <div class="mb-6">
-                        <label class="block text-sm font-medium text-amber-300 mb-2">Confirmar</label>
-                        <input type="password" name="confirmPassword" required class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30"/>
+                        <label for="reg-confirm" class="block text-sm font-medium text-amber-300 mb-2">Confirmar</label>
+                        <input type="password" id="reg-confirm" name="confirmPassword" required aria-required="true" autocomplete="new-password" class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30"/>
                     </div>
                     <button type="submit" class="w-full gradient-gold text-gray-900 px-8 py-4 rounded-full font-bold shadow-2xl transition-all hover:scale-105 btn-premium text-lg">REGISTRARSE</button>
                 </form>
@@ -773,6 +867,27 @@ function RegisterPage() {
                 <p class="text-center text-amber-200/70 mt-6">
                     ¿Ya tienes cuenta? <button onclick="setState({currentPage: 'login'})" class="text-amber-400 font-bold hover:underline">Ingresa</button>
                 </p>
+            </div>
+        </div>
+    `;
+}
+
+function VerifyEmailPage() {
+    return html`
+        <div class="flex items-center justify-center min-h-screen bg-gray-900/90 py-12 px-4">
+            <div class="glass-dark p-8 md:p-12 rounded-3xl shadow-2xl border border-amber-400/30 w-full max-w-md animate-fadeInUp relative">
+                <button onclick="setState({currentPage: 'login', verificationEmail: null})" class="absolute top-6 left-6 text-amber-400 hover:text-amber-200 transition-transform hover:-translate-x-1" aria-label="Regresar al Login">
+                    ${icons.X(24)}
+                </button>
+                <h2 class="text-3xl font-display font-bold text-amber-300 mb-6 text-center">Verifica tu Correo</h2>
+                <p class="text-center text-amber-100 mb-6">Hemos enviado un código de 6 dígitos a <br/><strong class="text-white">${state.verificationEmail}</strong></p>
+                <form id="verify-form" onsubmit="handleVerify(event)">
+                    <div class="mb-6">
+                        <label for="verify-code" class="block text-sm font-medium text-amber-300 mb-2 text-center">Código de Verificación</label>
+                        <input type="text" id="verify-code" name="code" required aria-required="true" maxlength="6" autocomplete="one-time-code" class="w-full px-4 py-4 glass rounded-xl text-white text-center tracking-widest font-mono text-2xl border border-amber-400/30 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400" placeholder="000000"/>
+                    </div>
+                    <button type="submit" class="w-full gradient-gold text-gray-900 px-8 py-4 rounded-full font-bold shadow-2xl transition-all hover:scale-105 btn-premium text-lg">VERIFICAR CUENTA</button>
+                </form>
             </div>
         </div>
     `;
@@ -1462,15 +1577,16 @@ function renderApp() {
         case 'contact': pageContent = ContactPage(); break;
         case 'profile': pageContent = ProfilePage(); break;
         case 'history': pageContent = HistoryPage(); break;
+        case 'verify': pageContent = VerifyEmailPage(); break;
         default: pageContent = HomePage();
     }
 
-    if (['login', 'register'].includes(state.currentPage)) {
-        appContainer.innerHTML = NotificationBanner() + pageContent;
+    if (['login', 'register', 'verify'].includes(state.currentPage)) {
+        appContainer.innerHTML = NotificationBanner() + pageContent + A11yPanel();
     } else if (state.currentPage === 'admin') {
-        appContainer.innerHTML = NotificationBanner() + Navbar() + '<main class="pb-16">' + pageContent + '</main>';
+        appContainer.innerHTML = NotificationBanner() + Navbar() + '<main class="pb-16">' + pageContent + '</main>' + A11yPanel();
     } else {
-        appContainer.innerHTML = NotificationBanner() + Navbar() + '<main class="pb-16">' + pageContent + '</main>' + Footer();
+        appContainer.innerHTML = NotificationBanner() + Navbar() + '<main class="pb-16">' + pageContent + '</main>' + Footer() + A11yPanel();
     }
 
     if (state.currentPage === 'home' || state.currentPage === 'admin') startCarousel();
@@ -1524,26 +1640,8 @@ function renderApp() {
     }
 }
 
-function checkVerificationStatus() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const verificationStatus = urlParams.get('verification');
-
-    if (verificationStatus) {
-        if (verificationStatus === 'success') {
-            setState({ error: '✅ ¡Cuenta verificada! Ahora puedes iniciar sesión.' });
-        } else if (verificationStatus === 'failed') {
-            setState({ error: '❌ Enlace de verificación inválido.' });
-        } else if (verificationStatus === 'expired') {
-            setState({ error: '⏳ Tu enlace de verificación ha expirado. Por favor, intenta registrarte de nuevo.' });
-        }
-        // Limpia la URL para que el mensaje no vuelva a aparecer al recargar
-        const newUrl = window.location.pathname + window.location.hash;
-        history.replaceState({}, document.title, newUrl);
-    }
-}
-
 window.onload = function() { 
-    checkVerificationStatus();
+    initA11y();
     checkSession();
     fetchProductsFromDB();
 };

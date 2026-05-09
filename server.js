@@ -1,46 +1,26 @@
 require('dotenv').config();
-
-// Verificación de Variables de Entorno Esenciales al Inicio
-const requiredEnvVars = [
-    'STRIPE_SECRET_KEY',
-    'TWILIO_ACCOUNT_SID',
-    'TWILIO_AUTH_TOKEN',
-    'TWILIO_PHONE_NUMBER',
-    'EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_USER', 'EMAIL_PASS',
-    'MYSQLHOST', 'MYSQLUSER', 'MYSQLPASSWORD', 'MYSQLDATABASE', 'MYSQLPORT'
-];
-
-const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
-
-if (missingVars.length > 0) {
-    console.error('❌ ERROR FATAL: Faltan variables de entorno requeridas para iniciar la aplicación.');
-    console.error('Las siguientes variables no están definidas:', missingVars.join(', '));
-    console.error('Por favor, configúralas en el panel de Railway y vuelve a desplegar.');
-    process.exit(1); // Detiene la aplicación si faltan variables críticas
-}
-
-console.log("✅ Todas las variables de entorno requeridas están presentes.");
-
+console.log("LLAVE STRIPE:", process.env.STRIPE_SECRET_KEY);
 const express = require('express');
 const path = require('path');
 const db = require('./db');
-const crypto = require('crypto');
 const nodemailer = require('nodemailer');
-const twilio = require('twilio');
-const bcrypt = require('bcrypt');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY); 
+const stripeKey = process.env.STRIPE_SECRET_KEY || 'sk_test_123';
+const stripe = require('stripe')(stripeKey); 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const saltRounds = 10; // Para bcrypt
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Configuración de Twilio
-const twilioClient = twilio(
-    process.env.TWILIO_ACCOUNT_SID,
-    process.env.TWILIO_AUTH_TOKEN
-);
+(async function initDB() {
+    try {
+        await db.query("ALTER TABLE usuarios ADD COLUMN email_verificado BOOLEAN DEFAULT FALSE;");
+        await db.query("ALTER TABLE usuarios ADD COLUMN codigo_verificacion VARCHAR(10);");
+        console.log("✅ Columnas de verificación añadidas a DB.");
+    } catch(e) {
+        if (e.code !== 'ER_DUP_FIELDNAME') console.error("⚠️ Error en initDB:", e.message);
+    }
+})();
 
 const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
@@ -123,28 +103,15 @@ app.get('/api/admin/catalogs', async (req, res) => {
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     try {
-        const query = 'SELECT id, nombre, correo, rol, contrasena_hash, verificado, telefono_verificado FROM usuarios WHERE correo = ?';
-        const [rows] = await db.query(query, [username]);
+        const query = 'SELECT id, nombre, correo, rol, email_verificado FROM usuarios WHERE correo = ? AND contrasena_hash = ?';
+        const [rows] = await db.query(query, [username, password]);
         
         if (rows.length > 0) {
-            const user = rows[0];
-            const match = await bcrypt.compare(password, user.contrasena_hash);
-
-            if (match) {
-                if (!user.verificado) {
-                    return res.status(401).json({ success: false, message: 'Tu cuenta no ha sido verificada por correo. Por favor, revisa tu bandeja de entrada.' });
-                }
-                if (!user.telefono_verificado) {
-                    return res.status(401).json({ success: false, needsPhoneVerification: true, message: 'Tu correo está verificado. Ahora, por favor verifica tu teléfono.' });
-                }
-                // Login exitoso
-                res.json({ success: true, user: { id: user.id, nombre: user.nombre, rol: user.rol } });
-            } else {
-                // Contraseña incorrecta
-                res.status(401).json({ success: false, message: 'Credenciales incorrectas' });
+            if (rows[0].email_verificado === 0) {
+                return res.status(401).json({ success: false, requireVerification: true, email: rows[0].correo, message: 'Debes verificar tu correo antes de ingresar.' });
             }
+            res.json({ success: true, user: rows[0] });
         } else {
-            // Usuario no encontrado
             res.status(401).json({ success: false, message: 'Credenciales incorrectas' });
         }
     } catch (error) {
@@ -158,73 +125,26 @@ app.post('/api/logout', (req, res) => {
 });
 
 app.post('/api/register', async (req, res) => {
-    const { name, email, password, telefono } = req.body;
-
-    if (!telefono) {
-        return res.status(400).json({ success: false, message: 'El número de teléfono es obligatorio.' });
-    }
-
-    // Generación de tokens y códigos
-    const emailToken = crypto.randomBytes(32).toString('hex');
-    const emailExpiration = new Date();
-    emailExpiration.setHours(emailExpiration.getHours() + 24); // Token de correo expira en 24 horas
-
-    const phoneCode = Math.floor(100000 + Math.random() * 900000).toString(); // Código de 6 dígitos
-    const phoneCodeExpiration = new Date();
-    phoneCodeExpiration.setMinutes(phoneCodeExpiration.getMinutes() + 10); // Código de teléfono expira en 10 minutos
-
-    const protocol = req.headers['x-forwarded-proto'] || 'http';
-    const host = req.get('host');
-    const verificationUrl = `${protocol}://${host}/api/verify?token=${emailToken}`;
-
+    const { name, email, password } = req.body;
     try {
-        // Hashear la contraseña antes de guardarla
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-        // Insertar usuario con la contraseña hasheada
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+        
         const [result] = await db.query(
-            'INSERT INTO usuarios (nombre, correo, contrasena_hash, telefono, rol, token_verificacion, token_expiracion, codigo_verificacion_telefono, expiracion_codigo_telefono) VALUES (?, ?, ?, ?, "usuario", ?, ?, ?, ?)',
-            [name, email, hashedPassword, telefono, emailToken, emailExpiration, phoneCode, phoneCodeExpiration]
+            'INSERT INTO usuarios (nombre, correo, contrasena_hash, rol, codigo_verificacion) VALUES (?, ?, ?, "usuario", ?)',
+            [name, email, password, verificationCode]
         );
-
         if (result.insertId) {
-            // Send verification email
-            const emailHtml = `
-            <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 20px;">
-                <div style="background-color: #d4af37; padding: 20px; text-align: center; color: white;">
-                    <h1 style="margin: 0;">¡Bienvenido a Parfum!</h1>
-                </div>
-                <div style="padding: 20px;">
-                    <p>Hola <strong>${name}</strong>,</p>
-                    <p>Gracias por registrarte. Por favor, haz clic en el siguiente botón para verificar tu cuenta y empezar a explorar el mundo de las fragancias de lujo.</p>
-                    <div style="text-align: center; margin: 30px 0;">
-                        <a href="${verificationUrl}" style="background-color: #d4af37; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">Verificar mi Cuenta</a>
-                    </div>
-                    <p>Si el botón no funciona, copia y pega el siguiente enlace en tu navegador:</p>
-                    <p style="word-break: break-all;">${verificationUrl}</p>
-                </div>
-            </div>
-            `;
-
-            await transporter.sendMail({
-                from: `"Parfum Luxury Fragrances" <${process.env.EMAIL_USER}>`,
-                to: email, 
-                subject: 'Verifica tu cuenta en Parfum',
-                html: emailHtml
-            });
-
-            // Enviar SMS de verificación
-            await twilioClient.messages.create({
-                body: `Tu código de verificación para Parfum es: ${phoneCode}`,
-                from: process.env.TWILIO_PHONE_NUMBER,
-                to: telefono
-            });
-
-            res.json({ 
-                success: true, 
-                message: '¡Registro exitoso! Revisa tu correo y tu teléfono para verificar tu cuenta.' 
-            });
-
+            try {
+                await transporter.sendMail({
+                    from: `"Parfum Security" <${process.env.EMAIL_USER}>`,
+                    to: email,
+                    subject: 'Verifica tu cuenta en Parfum',
+                    html: `<h2>¡Hola ${name}!</h2><p>Tu código de verificación es: <strong>${verificationCode}</strong></p>`
+                });
+            } catch (mailError) {
+                console.error("Error enviando email:", mailError);
+            }
+            res.json({ success: true, requireVerification: true, email });
         } else {
             res.status(500).json({ success: false, message: 'Error al crear usuario' });
         }
@@ -233,127 +153,35 @@ app.post('/api/register', async (req, res) => {
         if (error.code === 'ER_DUP_ENTRY') {
             return res.status(400).json({ success: false, message: 'Este correo ya está registrado.' });
         }
-        res.status(500).json({ success: false, message: 'Error al registrar. ' + error.message });
+        res.status(500).json({ success: false, message: 'Error al registrar' });
     }
 });
 
-app.get('/api/verify', async (req, res) => {
-    const { token } = req.query;
-    if (!token) return res.status(400).redirect('/?verification=failed#login');
-
-    try {
-        const [users] = await db.query('SELECT id, token_expiracion FROM usuarios WHERE token_verificacion = ?', [token]);
-
-        if (users.length === 0) {
-            return res.status(400).redirect('/?verification=failed#login');
-        }
-
-        const user = users[0];
-        const now = new Date();
-
-        if (now > new Date(user.token_expiracion)) {
-            // El token ha expirado. Opcionalmente, se puede limpiar el token de la BD.
-            await db.query('UPDATE usuarios SET token_verificacion = NULL, token_expiracion = NULL WHERE id = ?', [user.id]);
-            return res.status(400).redirect('/?verification=expired#login');
-        }
-
-        await db.query('UPDATE usuarios SET verificado = 1, token_verificacion = NULL, token_expiracion = NULL WHERE id = ?', [user.id]);
-        res.redirect('/?verification=success#login');
-    } catch (error) {
-        console.error("Error en la verificación de correo:", error);
-        res.status(500).redirect('/?verification=failed#login');
-    }
-});
-
-app.post('/api/verify-phone', async (req, res) => {
+app.post('/api/verify-email', async (req, res) => {
     const { email, code } = req.body;
-    if (!email || !code) {
-        return res.status(400).json({ success: false, message: 'Faltan datos.' });
-    }
-
     try {
-        const [users] = await db.query(
-            'SELECT id, expiracion_codigo_telefono FROM usuarios WHERE correo = ? AND codigo_verificacion_telefono = ?', 
-            [email, code]
-        );
-
-        if (users.length === 0) {
-            return res.status(400).json({ success: false, message: 'Código incorrecto.' });
+        const [rows] = await db.query('SELECT * FROM usuarios WHERE correo = ? AND codigo_verificacion = ?', [email, code]);
+        if (rows.length > 0) {
+            await db.query('UPDATE usuarios SET email_verificado = true, codigo_verificacion = NULL WHERE id = ?', [rows[0].id]);
+            const updatedUser = { id: rows[0].id, nombre: rows[0].nombre, correo: rows[0].correo, rol: rows[0].rol };
+            res.json({ success: true, user: updatedUser });
+        } else {
+            res.status(400).json({ success: false, message: 'Código incorrecto o expirado.' });
         }
-
-        const user = users[0];
-        const now = new Date();
-
-        if (now > new Date(user.expiracion_codigo_telefono)) {
-            return res.status(400).json({ success: false, message: 'El código ha expirado.' });
-        }
-
-        await db.query(
-            'UPDATE usuarios SET telefono_verificado = 1, codigo_verificacion_telefono = NULL, expiracion_codigo_telefono = NULL WHERE id = ?', 
-            [user.id]
-        );
-
-        res.json({ success: true, message: '¡Teléfono verificado con éxito!' });
-
     } catch (error) {
-        console.error("Error en la verificación de teléfono:", error);
-        res.status(500).json({ success: false, message: 'Error interno del servidor.' });
-    }
-
-});
-
-app.post('/api/resend-phone-code', async (req, res) => {
-    const { email } = req.body;
-    if (!email) {
-        return res.status(400).json({ success: false, message: 'Falta el correo electrónico.' });
-    }
-
-    try {
-        const [users] = await db.query('SELECT id, telefono, telefono_verificado FROM usuarios WHERE correo = ?', [email]);
-
-        if (users.length === 0) {
-            return res.status(404).json({ success: false, message: 'Usuario no encontrado.' });
-        }
-
-        const user = users[0];
-        if (user.telefono_verificado) {
-            return res.status(400).json({ success: false, message: 'Este teléfono ya ha sido verificado.' });
-        }
-
-        const phoneCode = Math.floor(100000 + Math.random() * 900000).toString();
-        const phoneCodeExpiration = new Date();
-        phoneCodeExpiration.setMinutes(phoneCodeExpiration.getMinutes() + 10); // Expira en 10 minutos
-
-        await db.query(
-            'UPDATE usuarios SET codigo_verificacion_telefono = ?, expiracion_codigo_telefono = ? WHERE id = ?',
-            [phoneCode, phoneCodeExpiration, user.id]
-        );
-
-        await twilioClient.messages.create({
-            body: `Tu nuevo código de verificación para Parfum es: ${phoneCode}`,
-            from: process.env.TWILIO_PHONE_NUMBER,
-            to: user.telefono
-        });
-
-        res.json({ success: true, message: 'Se ha enviado un nuevo código a tu teléfono.' });
-    } catch (error) {
-        console.error("Error reenviando el código de teléfono:", error);
-        res.status(500).json({ success: false, message: 'Error interno del servidor.' });
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Error de servidor al verificar.' });
     }
 });
 
 app.post('/api/admin/create', async (req, res) => {
     const { name, email, password, role } = req.body;
-    if (!password) {
-        return res.status(400).json({ success: false, message: 'La contraseña es obligatoria para nuevos usuarios.' });
-    }
     try {
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
         const [result] = await db.query(
             'INSERT INTO usuarios (nombre, correo, contrasena_hash, rol) VALUES (?, ?, ?, ?)',
-            [name, email, hashedPassword, role || 'admin']
+            [name, email, password, role || 'admin']
         );
-        res.json({ success: true, userId: result.insertId });
+        res.json({ success: true });
     } catch (error) {
         console.error("🚨 Error exacto en BD al crear admin:", error);
         if (error.code === 'ER_DUP_ENTRY') {
@@ -607,15 +435,13 @@ app.put('/api/admin/users/:id', async (req, res) => {
     const { id } = req.params;
     const { name, email, password, role } = req.body;
     try {
-        if (password && password.trim() !== '') {
-            const hashedPassword = await bcrypt.hash(password, saltRounds);
-            await db.query(
-                'UPDATE usuarios SET nombre = ?, correo = ?, contrasena_hash = ?, rol = ? WHERE id = ?',
-                [name, email, hashedPassword, role || 'usuario', id]
-            );
-        } else {
-            await db.query('UPDATE usuarios SET nombre = ?, correo = ?, rol = ? WHERE id = ?', [name, email, role || 'usuario', id]);
-        }
+        let query = password && password.trim() !== '' 
+            ? 'UPDATE usuarios SET nombre = ?, correo = ?, contrasena_hash = ?, rol = ? WHERE id = ?' 
+            : 'UPDATE usuarios SET nombre = ?, correo = ?, rol = ? WHERE id = ?';
+        let values = password && password.trim() !== '' 
+            ? [name, email, password, role || 'usuario', id] 
+            : [name, email, role || 'usuario', id];
+        await db.query(query, values);
         res.json({ success: true });
     } catch (error) {
         console.error("🚨 Error al actualizar usuario:", error);
