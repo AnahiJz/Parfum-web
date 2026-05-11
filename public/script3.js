@@ -228,39 +228,41 @@ function A11yPanel() {
         </button>
 
         ${state.a11yOpen ? html`
-            <div class="fixed inset-0 bg-black/60 z-[101] backdrop-blur-sm" aria-hidden="true" onclick="window.closeA11y()"></div>
-            <div id="a11y-dialog" role="dialog" aria-modal="true" aria-labelledby="a11y-title" tabindex="-1" onkeydown="window.handleA11yKeydown(event)" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 border border-amber-400/30 p-6 rounded-2xl z-[102] w-11/12 max-w-md shadow-2xl animate-fadeInUp outline-none">
-                <div class="flex justify-between items-center mb-6 border-b border-amber-400/20 pb-4">
-                    <h2 id="a11y-title" class="text-xl font-bold text-amber-300">⚙️ Configuración</h2>
-                    <button onclick="window.closeA11y()" class="text-amber-300 hover:text-red-400 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Cerrar configuración">
-                        ${icons.X(24)}
+            <div class="fixed inset-0 bg-black/40 z-[101] backdrop-blur-sm" aria-hidden="true" onclick="window.closeA11y()"></div>
+            <div id="a11y-dialog" role="dialog" aria-modal="true" aria-labelledby="a11y-title" tabindex="-1" onkeydown="window.handleA11yKeydown(event)" class="fixed bottom-4 left-4 bg-[#0f172a] border border-amber-400/30 p-5 rounded-2xl z-[102] w-80 shadow-2xl animate-fadeInUp outline-none">
+                <div class="flex justify-between items-center pb-3 border-b border-amber-400/30">
+                    <h2 id="a11y-title" class="text-lg font-bold text-amber-300 flex items-center gap-2">⚙️ Configuración</h2>
+                    <button onclick="window.closeA11y()" class="text-amber-400 hover:text-red-400 min-w-[32px] min-h-[32px] flex items-center justify-center font-bold text-xl" aria-label="Cerrar configuración">
+                        ✕
                     </button>
                 </div>
                 
-                <div class="space-y-4">
-                    <div class="flex items-center gap-3 py-2">
-                        <input type="checkbox" id="a11y-dark" class="w-5 h-5 accent-amber-500" ${state.a11y.darkMode ? 'checked' : ''} onchange="toggleA11ySetting('darkMode', this.checked)"/>
-                        <label for="a11y-dark" class="text-amber-100 font-medium text-lg">Modo Nocturno / Claro</label>
+                <div class="flex flex-col gap-1 mt-3">
+                    <div class="flex items-center gap-3 py-1.5">
+                        <input type="checkbox" id="a11y-dark" class="w-5 h-5 accent-amber-500 rounded-sm" ${state.a11y.darkMode ? 'checked' : ''} onchange="toggleA11ySetting('darkMode', this.checked)"/>
+                        <label for="a11y-dark" class="text-amber-50 font-medium text-sm cursor-pointer flex-1">Modo Nocturno / Claro</label>
                     </div>
 
-                    <div class="py-2">
-                        <label for="a11y-text" class="block text-amber-100 font-medium mb-2 text-lg">Tamaño de Texto: <span aria-live="polite" class="text-amber-400">${state.a11y.textScale}%</span></label>
-                        <input type="range" id="a11y-text" min="75" max="150" step="5" value="${state.a11y.textScale}" class="w-full accent-amber-500 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer" aria-label="Tamaño de texto" aria-valuemin="75" aria-valuemax="150" aria-valuenow="${state.a11y.textScale}" onchange="toggleA11ySetting('textScale', this.value)"/>
+                    <div class="py-2 mt-2">
+                        <label for="a11y-text" class="block text-amber-50 font-medium mb-2 text-sm">Tamaño de Texto: <span aria-live="polite" class="text-amber-400">${state.a11y.textScale}%</span></label>
+                        <input type="range" id="a11y-text" min="75" max="150" step="5" value="${state.a11y.textScale}" class="w-full accent-amber-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer" aria-label="Tamaño de texto" aria-valuemin="75" aria-valuemax="150" aria-valuenow="${state.a11y.textScale}" onchange="toggleA11ySetting('textScale', this.value)"/>
+                    </div>
+                    
+                    <hr class="border-amber-400/30 my-2" />
+
+                    <div class="flex items-center gap-3 py-1.5">
+                        <input type="checkbox" id="a11y-voice" class="w-5 h-5 accent-amber-500 rounded-sm" ${state.a11y.voiceNarrator ? 'checked' : ''} onchange="toggleA11ySetting('voiceNarrator', this.checked)"/>
+                        <label for="a11y-voice" class="text-amber-50 font-medium text-sm cursor-pointer flex-1">🔊 Narrador de Voz</label>
                     </div>
 
-                    <div class="flex items-center gap-3 py-2">
-                        <input type="checkbox" id="a11y-voice" class="w-5 h-5 accent-amber-500 min-w-[24px] min-h-[24px]" ${state.a11y.voiceNarrator ? 'checked' : ''} onchange="toggleA11ySetting('voiceNarrator', this.checked)"/>
-                        <label for="a11y-voice" class="text-amber-100 font-medium text-lg cursor-pointer flex-1">🔊 Narrador de Voz</label>
+                    <div class="flex items-center gap-3 py-1.5">
+                        <input type="checkbox" id="a11y-contrast" class="w-5 h-5 accent-amber-500 rounded-sm" ${state.a11y.highContrast ? 'checked' : ''} onchange="toggleA11ySetting('highContrast', this.checked)"/>
+                        <label for="a11y-contrast" class="text-amber-50 font-medium text-sm cursor-pointer flex-1">◎ Contraste Alto</label>
                     </div>
 
-                    <div class="flex items-center gap-3 py-2">
-                        <input type="checkbox" id="a11y-contrast" class="w-5 h-5 accent-amber-500 min-w-[24px] min-h-[24px]" ${state.a11y.highContrast ? 'checked' : ''} onchange="toggleA11ySetting('highContrast', this.checked)"/>
-                        <label for="a11y-contrast" class="text-amber-100 font-medium text-lg cursor-pointer flex-1">◎ Contraste Alto</label>
-                    </div>
-
-                    <div class="flex items-center gap-3 py-2">
-                        <input type="checkbox" id="a11y-guide" class="w-5 h-5 accent-amber-500 min-w-[24px] min-h-[24px]" ${state.a11y.guidedReading ? 'checked' : ''} onchange="toggleA11ySetting('guidedReading', this.checked)"/>
-                        <label for="a11y-guide" class="text-amber-100 font-medium text-lg cursor-pointer flex-1">👁 Lectura Guiada</label>
+                    <div class="flex items-center gap-3 py-1.5">
+                        <input type="checkbox" id="a11y-guide" class="w-5 h-5 accent-amber-500 rounded-sm" ${state.a11y.guidedReading ? 'checked' : ''} onchange="toggleA11ySetting('guidedReading', this.checked)"/>
+                        <label for="a11y-guide" class="text-amber-50 font-medium text-sm cursor-pointer flex-1">👁 Lectura Guiada</label>
                     </div>
                 </div>
             </div>
