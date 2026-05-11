@@ -171,6 +171,48 @@ function handleGuidedReading(e) {
     }
 }
 
+let a11yTriggerElement = null;
+
+window.openA11y = function() {
+    a11yTriggerElement = document.activeElement;
+    setState({a11yOpen: true});
+    setTimeout(() => {
+        const dialog = document.getElementById('a11y-dialog');
+        if(dialog) dialog.focus();
+    }, 50);
+};
+
+window.closeA11y = function() {
+    setState({a11yOpen: false});
+    if (a11yTriggerElement) {
+        setTimeout(() => a11yTriggerElement.focus(), 50);
+    }
+};
+
+window.handleA11yKeydown = function(e) {
+    if (e.key === 'Escape') {
+        window.closeA11y();
+        return;
+    }
+    if (e.key === 'Tab') {
+        const focusable = document.getElementById('a11y-dialog').querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+            if (document.activeElement === first) {
+                last.focus();
+                e.preventDefault();
+            }
+        } else {
+            if (document.activeElement === last) {
+                first.focus();
+                e.preventDefault();
+            }
+        }
+    }
+};
+
 function initA11y() {
     const saved = localStorage.getItem('parfum_a11y');
     if (saved) {
@@ -181,44 +223,44 @@ function initA11y() {
 
 function A11yPanel() {
     return html`
-        <button onclick="setState({a11yOpen: true})" style="z-index: 2147483647;" class="fixed bottom-5 left-5 bg-amber-500 text-gray-900 p-4 rounded-full shadow-2xl hover:scale-110 transition-transform" aria-label="Abrir configuración de accesibilidad" aria-expanded="${state.a11yOpen}">
+        <button onclick="window.openA11y()" style="z-index: 2147483647;" class="fixed bottom-5 left-5 bg-amber-500 text-gray-900 p-4 rounded-full shadow-2xl hover:scale-110 transition-transform" aria-label="Abrir configuración de accesibilidad" aria-expanded="${state.a11yOpen}">
             ${icons.Settings(26)}
         </button>
 
         ${state.a11yOpen ? html`
-            <div class="fixed inset-0 bg-black/60 z-[101] backdrop-blur-sm" aria-hidden="true" onclick="setState({a11yOpen: false})"></div>
-            <div role="dialog" aria-modal="true" aria-labelledby="a11y-title" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 border border-amber-400/30 p-6 rounded-2xl z-[102] w-11/12 max-w-md shadow-2xl animate-fadeInUp">
+            <div class="fixed inset-0 bg-black/60 z-[101] backdrop-blur-sm" aria-hidden="true" onclick="window.closeA11y()"></div>
+            <div id="a11y-dialog" role="dialog" aria-modal="true" aria-labelledby="a11y-title" tabindex="-1" onkeydown="window.handleA11yKeydown(event)" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900 border border-amber-400/30 p-6 rounded-2xl z-[102] w-11/12 max-w-md shadow-2xl animate-fadeInUp outline-none">
                 <div class="flex justify-between items-center mb-6 border-b border-amber-400/20 pb-4">
                     <h2 id="a11y-title" class="text-xl font-bold text-amber-300">⚙️ Configuración</h2>
-                    <button onclick="setState({a11yOpen: false})" class="text-amber-300 hover:text-red-400" aria-label="Cerrar configuración">
+                    <button onclick="window.closeA11y()" class="text-amber-300 hover:text-red-400 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Cerrar configuración">
                         ${icons.X(24)}
                     </button>
                 </div>
                 
-                <div class="space-y-6">
-                    <div class="flex items-center gap-3">
+                <div class="space-y-4">
+                    <div class="flex items-center gap-3 py-2">
                         <input type="checkbox" id="a11y-dark" class="w-5 h-5 accent-amber-500" ${state.a11y.darkMode ? 'checked' : ''} onchange="toggleA11ySetting('darkMode', this.checked)"/>
                         <label for="a11y-dark" class="text-amber-100 font-medium text-lg">Modo Nocturno / Claro</label>
                     </div>
 
-                    <div>
+                    <div class="py-2">
                         <label for="a11y-text" class="block text-amber-100 font-medium mb-2 text-lg">Tamaño de Texto: <span aria-live="polite" class="text-amber-400">${state.a11y.textScale}%</span></label>
                         <input type="range" id="a11y-text" min="75" max="150" step="5" value="${state.a11y.textScale}" class="w-full accent-amber-500 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer" aria-label="Tamaño de texto" aria-valuemin="75" aria-valuemax="150" aria-valuenow="${state.a11y.textScale}" onchange="toggleA11ySetting('textScale', this.value)"/>
                     </div>
 
-                    <div class="flex items-center gap-3">
-                        <input type="checkbox" id="a11y-voice" class="w-5 h-5 accent-amber-500" ${state.a11y.voiceNarrator ? 'checked' : ''} onchange="toggleA11ySetting('voiceNarrator', this.checked)"/>
-                        <label for="a11y-voice" class="text-amber-100 font-medium text-lg">🔊 Narrador de Voz</label>
+                    <div class="flex items-center gap-3 py-2">
+                        <input type="checkbox" id="a11y-voice" class="w-5 h-5 accent-amber-500 min-w-[24px] min-h-[24px]" ${state.a11y.voiceNarrator ? 'checked' : ''} onchange="toggleA11ySetting('voiceNarrator', this.checked)"/>
+                        <label for="a11y-voice" class="text-amber-100 font-medium text-lg cursor-pointer flex-1">🔊 Narrador de Voz</label>
                     </div>
 
-                    <div class="flex items-center gap-3">
-                        <input type="checkbox" id="a11y-contrast" class="w-5 h-5 accent-amber-500" ${state.a11y.highContrast ? 'checked' : ''} onchange="toggleA11ySetting('highContrast', this.checked)"/>
-                        <label for="a11y-contrast" class="text-amber-100 font-medium text-lg">◎ Contraste Alto</label>
+                    <div class="flex items-center gap-3 py-2">
+                        <input type="checkbox" id="a11y-contrast" class="w-5 h-5 accent-amber-500 min-w-[24px] min-h-[24px]" ${state.a11y.highContrast ? 'checked' : ''} onchange="toggleA11ySetting('highContrast', this.checked)"/>
+                        <label for="a11y-contrast" class="text-amber-100 font-medium text-lg cursor-pointer flex-1">◎ Contraste Alto</label>
                     </div>
 
-                    <div class="flex items-center gap-3">
-                        <input type="checkbox" id="a11y-guide" class="w-5 h-5 accent-amber-500" ${state.a11y.guidedReading ? 'checked' : ''} onchange="toggleA11ySetting('guidedReading', this.checked)"/>
-                        <label for="a11y-guide" class="text-amber-100 font-medium text-lg">👁 Lectura Guiada</label>
+                    <div class="flex items-center gap-3 py-2">
+                        <input type="checkbox" id="a11y-guide" class="w-5 h-5 accent-amber-500 min-w-[24px] min-h-[24px]" ${state.a11y.guidedReading ? 'checked' : ''} onchange="toggleA11ySetting('guidedReading', this.checked)"/>
+                        <label for="a11y-guide" class="text-amber-100 font-medium text-lg cursor-pointer flex-1">👁 Lectura Guiada</label>
                     </div>
                 </div>
             </div>
@@ -675,7 +717,7 @@ function Navbar() {
                     </nav>
                     <div class="flex items-center gap-4">
                         ${!isAdmin ? html`
-                            <button onclick="setState({currentPage: 'cart', menuOpen: false, categoryDropdownOpen: false})" class="relative group">
+                            <button aria-label="Ver carrito" onclick="setState({currentPage: 'cart', menuOpen: false, categoryDropdownOpen: false})" class="relative group">
                                 <div class="glass-dark p-3 rounded-xl hover:bg-amber-500/20 transition-all shadow-lg">
                                     ${icons.ShoppingCart(26, 'text-amber-300 group-hover:text-amber-400')}
                                     ${cartCount > 0 ? html`<span class="absolute -top-2 -right-2 bg-yellow-400 text-gray-900 text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center border-2 border-gray-900">${cartCount}</span>` : ''}
@@ -687,14 +729,14 @@ function Navbar() {
                                 <div role="button" tabindex="0" onkeydown="if(event.key==='Enter' || event.key===' ') { event.preventDefault(); this.click(); }" onclick="setState({currentPage: 'profile', categoryDropdownOpen: false})" class="hidden md:block glass-dark p-3 rounded-xl shadow-lg cursor-pointer hover:bg-amber-500/20 transition-all" title="Mi Perfil">${icons.User(26, 'text-amber-300')}</div>
                                 <button onclick="setState({currentPage: isAdmin ? 'admin' : 'history', categoryDropdownOpen: false})" class="hidden md:block text-amber-100 font-medium glass-dark px-4 py-3 rounded-xl hover:bg-amber-500/20 transition-all">${isAdmin ? 'ADMIN' : 'HISTORIAL'}</button>
                             </div>
-                            <button onclick="logout()" class="glass-dark p-3 rounded-xl hover:bg-red-500/20 transition-all group shadow-lg">${icons.LogOut(22, 'text-amber-300 group-hover:text-red-400')}</button>
+                            <button aria-label="Cerrar Sesión" onclick="logout()" class="glass-dark p-3 rounded-xl hover:bg-red-500/20 transition-all group shadow-lg">${icons.LogOut(22, 'text-amber-300 group-hover:text-red-400')}</button>
                         ` : html`
                             <div class="flex items-center gap-2">
                                 <div role="button" tabindex="0" onkeydown="if(event.key==='Enter' || event.key===' ') { event.preventDefault(); this.click(); }" onclick="setState({currentPage: 'login', categoryDropdownOpen: false})" class="hidden md:block glass-dark p-3 rounded-xl shadow-lg cursor-pointer hover:bg-amber-500/20 transition-all">${icons.User(26, 'text-amber-300')}</div>
                                 <button onclick="setState({currentPage: 'login', categoryDropdownOpen: false})" class="gradient-gold text-gray-900 px-4 md:px-8 py-2 md:py-3 rounded-full font-bold shadow-2xl transition-all transform hover:scale-105 btn-premium text-sm md:text-base">INGRESAR</button>
                             </div>
                         `}
-                        <button class="lg:hidden glass-dark p-3 rounded-xl shadow-lg" onclick="setState({menuOpen: !state.menuOpen, categoryDropdownOpen: false})">
+                        <button aria-label="Menú de Navegación" aria-expanded="${state.menuOpen}" class="lg:hidden glass-dark p-3 rounded-xl shadow-lg" onclick="setState({menuOpen: !state.menuOpen, categoryDropdownOpen: false})">
                             ${state.menuOpen ? icons.X(26, 'text-amber-300') : icons.Menu(26, 'text-amber-300')}
                         </button>
                     </div>
@@ -1582,7 +1624,7 @@ function renderApp() {
     }
 
     if (['login', 'register', 'verify'].includes(state.currentPage)) {
-        appContainer.innerHTML = NotificationBanner() + pageContent + A11yPanel();
+        appContainer.innerHTML = NotificationBanner() + '<main id="main-content">' + pageContent + '</main>' + A11yPanel();
     } else if (state.currentPage === 'admin') {
         appContainer.innerHTML = NotificationBanner() + Navbar() + '<main class="pb-16">' + pageContent + '</main>' + A11yPanel();
     } else {
