@@ -25,7 +25,8 @@ const icons = {
     Clock: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
     Heart: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`,
     Target: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
-    Eye: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`,
+    Eye: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`,
+    EyeOff: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>`,
     Instagram: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>`,
     Facebook: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>`,
     Twitter: (size, className = '') => `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="currentColor"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>`,
@@ -854,6 +855,15 @@ function HomePage() {
     `;
 }
 
+window.togglePassword = function(inputId, button) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+    button.innerHTML = isPassword ? icons.EyeOff(20, 'text-amber-400') : icons.Eye(20, 'text-amber-400');
+    button.setAttribute('aria-label', isPassword ? 'Ocultar contraseña' : 'Mostrar contraseña');
+};
+
 function LoginPage() {
     if (!state.captchaText) {
         state.captchaText = generateCaptchaText();
@@ -877,7 +887,12 @@ function LoginPage() {
                     </div>
                     <div class="mb-6">
                         <label for="login-password" class="block text-sm font-medium text-amber-300 mb-2">Contraseña</label>
-                        <input type="password" id="login-password" name="password" required aria-required="true" autocomplete="current-password" class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30" placeholder="••••••" />
+                        <div class="relative">
+                            <input type="password" id="login-password" name="password" required aria-required="true" autocomplete="current-password" class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30 pr-12" placeholder="••••••" />
+                            <button type="button" aria-label="Mostrar contraseña" onclick="window.togglePassword('login-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-white/10 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400">
+                                ${icons.Eye(20, 'text-amber-400')}
+                            </button>
+                        </div>
                     </div>
 
                     <div class="mb-6 p-4 border border-amber-500/50 bg-amber-500/10 rounded-xl animate-fadeInUp">
@@ -928,11 +943,21 @@ function RegisterPage() {
                     </div>
                     <div class="mb-5">
                         <label for="reg-password" class="block text-sm font-medium text-amber-300 mb-2">Contraseña</label>
-                        <input type="password" id="reg-password" name="password" required aria-required="true" autocomplete="new-password" class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30"/>
+                        <div class="relative">
+                            <input type="password" id="reg-password" name="password" required aria-required="true" autocomplete="new-password" class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30 pr-12"/>
+                            <button type="button" aria-label="Mostrar contraseña" onclick="window.togglePassword('reg-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-white/10 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400">
+                                ${icons.Eye(20, 'text-amber-400')}
+                            </button>
+                        </div>
                     </div>
                     <div class="mb-6">
                         <label for="reg-confirm" class="block text-sm font-medium text-amber-300 mb-2">Confirmar</label>
-                        <input type="password" id="reg-confirm" name="confirmPassword" required aria-required="true" autocomplete="new-password" class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30"/>
+                        <div class="relative">
+                            <input type="password" id="reg-confirm" name="confirmPassword" required aria-required="true" autocomplete="new-password" class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30 pr-12"/>
+                            <button type="button" aria-label="Mostrar contraseña" onclick="window.togglePassword('reg-confirm', this)" class="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-white/10 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400">
+                                ${icons.Eye(20, 'text-amber-400')}
+                            </button>
+                        </div>
                     </div>
                     <button type="submit" class="w-full gradient-gold text-gray-900 px-8 py-4 rounded-full font-bold shadow-2xl transition-all hover:scale-105 btn-premium text-lg">REGISTRARSE</button>
                 </form>
