@@ -1,3 +1,4 @@
+-- Active: 1778541171911@@127.0.0.1@3306@parfum_db
 require('dotenv').config();
 console.log("LLAVE STRIPE:", process.env.STRIPE_SECRET_KEY);
 const express = require('express');
