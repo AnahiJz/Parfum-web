@@ -396,12 +396,37 @@ window.drawCaptcha = function() {
     }
 };
 
+window.regenerateCaptcha = function() {
+    state.captchaText = generateCaptchaText();
+    window.drawCaptcha();
+};
+
 window.verifyCaptcha = function() {
-    const input = document.getElementById('captcha-input').value;
+    const inputEl = document.getElementById('captcha-input');
+    if (!inputEl) return;
+    const input = inputEl.value;
+    const btnVerify = document.getElementById('btn-verify-captcha');
+    const btnSubmit = document.getElementById('btn-submit-login');
+
     if (input === state.captchaText) {
-        setState({ captchaVerified: true, error: '✅ Verificación exitosa. Puedes ingresar.' });
+        state.captchaVerified = true;
+        // Actualizar DOM directamente para no destruir los inputs de usuario/contraseña (evitamos setState/innerHTML)
+        inputEl.disabled = true;
+        inputEl.value = "VERIFICADO";
+        if (btnVerify) {
+            btnVerify.outerHTML = `<div class="w-full bg-green-500 text-white px-4 py-2 rounded-xl font-bold text-center transition">✅ Verificado</div>`;
+        }
+        if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.style.opacity = '1';
+            btnSubmit.style.cursor = 'pointer';
+        }
+        mostrarNotificacion('✅ Verificación exitosa', 'Puedes ingresar.');
     } else {
-        setState({ error: '❌ Código incorrecto.', captchaText: '' });
+        state.captchaText = generateCaptchaText();
+        window.drawCaptcha();
+        inputEl.value = '';
+        mostrarNotificacion('❌ Código incorrecto', 'Intenta de nuevo.');
     }
 };
 // ==========================================
@@ -951,17 +976,17 @@ function LoginPage() {
                         <p class="text-amber-400 text-xs font-bold mb-3 uppercase tracking-wider text-center">🛡️ Verificación de Seguridad</p>
                         <div class="flex flex-col items-center gap-3">
                             <canvas id="captcha-canvas" width="220" height="70" class="rounded-lg shadow-inner border border-amber-400/20"></canvas>
-                            <button type="button" onclick="setState({captchaText: ''})" class="text-xs text-amber-300 hover:text-amber-100 underline">↻ Generar otro código</button>
+                            <button type="button" onclick="window.regenerateCaptcha()" class="text-xs text-amber-300 hover:text-amber-100 underline">↻ Generar otro código</button>
                             <input type="text" id="captcha-input" class="w-full px-4 py-2 glass rounded-xl text-white text-center tracking-widest font-mono" placeholder="Ingresa los símbolos" autocomplete="off" ${state.captchaVerified ? 'disabled value="VERIFICADO"' : 'required'}/>
                             ${!state.captchaVerified ? html`
-                                <button type="button" onclick="window.verifyCaptcha()" class="w-full bg-amber-500 text-gray-900 px-4 py-2 rounded-xl font-bold hover:bg-amber-400 transition">Verificar Seguridad</button>
+                                <button type="button" id="btn-verify-captcha" onclick="window.verifyCaptcha()" class="w-full bg-amber-500 text-gray-900 px-4 py-2 rounded-xl font-bold hover:bg-amber-400 transition">Verificar Seguridad</button>
                             ` : html`
                                 <div class="w-full bg-green-500 text-white px-4 py-2 rounded-xl font-bold text-center transition">✅ Verificado</div>
                             `}
                         </div>
                     </div>
                     
-                    <button type="submit" class="w-full gradient-gold text-gray-900 px-8 py-4 rounded-full font-bold shadow-2xl transition-all hover:scale-105 btn-premium text-lg" ${!state.captchaVerified ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>ACCEDER</button>
+                    <button type="submit" id="btn-submit-login" class="w-full gradient-gold text-gray-900 px-8 py-4 rounded-full font-bold shadow-2xl transition-all hover:scale-105 btn-premium text-lg" ${!state.captchaVerified ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>ACCEDER</button>
                 </form>
                 <p class="text-center text-amber-200/70 mt-6">
                     ¿No tienes cuenta? <button onclick="setState({currentPage: 'register'})" class="text-amber-400 font-bold hover:underline">Regístrate</button>
