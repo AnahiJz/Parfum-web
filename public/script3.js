@@ -123,6 +123,7 @@ function unlockAudio() {
         try {
             const utterance = new SpeechSynthesisUtterance('');
             utterance.volume = 0; // Comando silencioso
+            window.speechSynthesis.cancel(); // FIX: El Hack del Cancel (Limpia cola en iOS)
             window.speechSynthesis.speak(utterance);
             audioUnlocked = true;
             console.log('✅ Audio de síntesis de voz desbloqueado por interacción del usuario.');
@@ -156,8 +157,12 @@ function applyA11y() {
 
     if (state.a11y.voiceNarrator) {
         document.body.addEventListener('mouseover', handleVoiceNarrator);
+        document.body.addEventListener('click', handleVoiceNarrator);
+        document.body.addEventListener('touchstart', handleVoiceNarrator, { passive: true });
     } else {
         document.body.removeEventListener('mouseover', handleVoiceNarrator);
+        document.body.removeEventListener('click', handleVoiceNarrator);
+        document.body.removeEventListener('touchstart', handleVoiceNarrator);
         window.speechSynthesis.cancel();
     }
 
@@ -270,7 +275,7 @@ function initA11y() {
 
 function A11yPanel() {
     return html`
-        <button onclick="window.openA11y()" style="z-index: 2147483647;" class="fixed bottom-5 left-5 bg-amber-500 text-gray-900 p-4 rounded-full shadow-2xl hover:scale-110 transition-transform" aria-label="Abrir configuración de accesibilidad" aria-expanded="${state.a11yOpen}">
+        <button onclick="window.openA11y()" ontouchstart="unlockAudio()" style="z-index: 2147483647;" class="fixed bottom-5 left-5 bg-amber-500 text-gray-900 p-4 rounded-full shadow-2xl hover:scale-110 transition-transform" aria-label="Abrir configuración de accesibilidad" aria-expanded="${state.a11yOpen}">
             ${icons.Settings(26)}
         </button>
 
@@ -301,7 +306,7 @@ function A11yPanel() {
                     
                     <hr class="border-amber-400/20 my-2" />
 
-                    <label class="flex items-center gap-3 py-2 cursor-pointer group">
+                    <label class="flex items-center gap-3 py-2 cursor-pointer group" ontouchstart="unlockAudio()" onclick="unlockAudio()">
                         <div class="relative flex items-center justify-center">
                             <input type="checkbox" id="a11y-voice" class="peer sr-only" ${state.a11y.voiceNarrator ? 'checked' : ''} onchange="toggleA11ySetting('voiceNarrator', this.checked)"/>
                             <div class="w-5 h-5 border-2 border-amber-400/50 rounded peer-checked:bg-amber-500 peer-checked:border-amber-500 transition-all flex items-center justify-center bg-gray-800/50 group-hover:border-amber-400">
