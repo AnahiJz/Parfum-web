@@ -229,41 +229,60 @@ function A11yPanel() {
 
         ${state.a11yOpen ? html`
             <div class="fixed inset-0 bg-black/40 z-[101] backdrop-blur-sm" aria-hidden="true" onclick="window.closeA11y()"></div>
-            <div id="a11y-dialog" role="dialog" aria-modal="true" aria-labelledby="a11y-title" tabindex="-1" onkeydown="window.handleA11yKeydown(event)" class="fixed bottom-4 left-4 bg-[#0f172a] border border-amber-400/30 p-5 rounded-2xl z-[102] w-80 shadow-2xl animate-fadeInUp outline-none">
-                <div class="flex justify-between items-center pb-3 border-b border-amber-400/30">
-                    <h2 id="a11y-title" class="text-lg font-bold text-amber-300 flex items-center gap-2">⚙️ Configuración</h2>
-                    <button onclick="window.closeA11y()" class="text-amber-400 hover:text-red-400 min-w-[32px] min-h-[32px] flex items-center justify-center font-bold text-xl" aria-label="Cerrar configuración">
+            <div id="a11y-dialog" role="dialog" aria-modal="true" aria-labelledby="a11y-title" tabindex="-1" onkeydown="window.handleA11yKeydown(event)" class="fixed bottom-4 left-4 glass-dark border border-amber-400/30 rounded-2xl z-[102] w-80 shadow-2xl animate-fadeInUp outline-none overflow-hidden">
+                <div class="bg-amber-500 text-gray-900 px-5 py-4 flex justify-between items-center shadow-md">
+                    <h2 id="a11y-title" class="text-lg font-bold flex items-center gap-2">⚙️ Configuración</h2>
+                    <button onclick="window.closeA11y()" class="text-gray-900 hover:text-black min-w-[32px] min-h-[32px] flex items-center justify-center font-bold text-xl transition-colors" aria-label="Cerrar configuración">
                         ✕
                     </button>
                 </div>
                 
-                <div class="flex flex-col gap-1 mt-3">
-                    <div class="flex items-center gap-3 py-1.5">
-                        <input type="checkbox" id="a11y-dark" class="w-5 h-5 accent-amber-500 rounded-sm" ${state.a11y.darkMode ? 'checked' : ''} onchange="toggleA11ySetting('darkMode', this.checked)"/>
-                        <label for="a11y-dark" class="text-amber-50 font-medium text-sm cursor-pointer flex-1">Modo Nocturno / Claro</label>
-                    </div>
+                <div class="flex flex-col gap-2 p-5">
+                    <label class="flex items-center justify-between py-2 cursor-pointer group">
+                        <span class="text-amber-50 font-medium text-sm flex-1 group-hover:text-amber-300 transition-colors">Modo Nocturno / Claro</span>
+                        <div class="relative flex items-center">
+                            <input type="checkbox" id="a11y-dark" class="peer sr-only" ${state.a11y.darkMode ? 'checked' : ''} onchange="toggleA11ySetting('darkMode', this.checked)"/>
+                            <div class="block bg-gray-600 w-11 h-6 rounded-full peer-checked:bg-amber-500 transition-colors shadow-inner"></div>
+                            <div class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-300 peer-checked:translate-x-5 shadow"></div>
+                        </div>
+                    </label>
 
-                    <div class="py-2 mt-2">
-                        <label for="a11y-text" class="block text-amber-50 font-medium mb-2 text-sm">Tamaño de Texto: <span aria-live="polite" class="text-amber-400">${state.a11y.textScale}%</span></label>
-                        <input type="range" id="a11y-text" min="75" max="150" step="5" value="${state.a11y.textScale}" class="w-full accent-amber-500 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer" aria-label="Tamaño de texto" aria-valuemin="75" aria-valuemax="150" aria-valuenow="${state.a11y.textScale}" onchange="toggleA11ySetting('textScale', this.value)"/>
+                    <div class="py-2">
+                        <label for="a11y-text" class="block text-amber-50 font-medium mb-3 text-sm">Tamaño de Texto: <span aria-live="polite" class="text-amber-400 font-bold ml-1">${state.a11y.textScale}%</span></label>
+                        <input type="range" id="a11y-text" min="75" max="150" step="5" value="${state.a11y.textScale}" class="w-full accent-amber-500 h-2 bg-gray-700/50 rounded-lg appearance-none cursor-pointer shadow-inner" aria-label="Tamaño de texto" aria-valuemin="75" aria-valuemax="150" aria-valuenow="${state.a11y.textScale}" aria-valuetext="${state.a11y.textScale} por ciento" onchange="toggleA11ySetting('textScale', this.value)"/>
                     </div>
                     
-                    <hr class="border-amber-400/30 my-2" />
+                    <hr class="border-amber-400/20 my-2" />
 
-                    <div class="flex items-center gap-3 py-1.5">
-                        <input type="checkbox" id="a11y-voice" class="w-5 h-5 accent-amber-500 rounded-sm" ${state.a11y.voiceNarrator ? 'checked' : ''} onchange="toggleA11ySetting('voiceNarrator', this.checked)"/>
-                        <label for="a11y-voice" class="text-amber-50 font-medium text-sm cursor-pointer flex-1">🔊 Narrador de Voz</label>
-                    </div>
+                    <label class="flex items-center gap-3 py-2 cursor-pointer group">
+                        <div class="relative flex items-center justify-center">
+                            <input type="checkbox" id="a11y-voice" class="peer sr-only" ${state.a11y.voiceNarrator ? 'checked' : ''} onchange="toggleA11ySetting('voiceNarrator', this.checked)"/>
+                            <div class="w-5 h-5 border-2 border-amber-400/50 rounded peer-checked:bg-amber-500 peer-checked:border-amber-500 transition-all flex items-center justify-center bg-gray-800/50 group-hover:border-amber-400">
+                                <svg class="w-3.5 h-3.5 text-gray-900 opacity-0 peer-checked:opacity-100 transition-opacity absolute" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                        </div>
+                        <span class="text-amber-50 font-medium text-sm flex-1 group-hover:text-amber-300 transition-colors">🔊 Narrador de Voz</span>
+                    </label>
 
-                    <div class="flex items-center gap-3 py-1.5">
-                        <input type="checkbox" id="a11y-contrast" class="w-5 h-5 accent-amber-500 rounded-sm" ${state.a11y.highContrast ? 'checked' : ''} onchange="toggleA11ySetting('highContrast', this.checked)"/>
-                        <label for="a11y-contrast" class="text-amber-50 font-medium text-sm cursor-pointer flex-1">◎ Contraste Alto</label>
-                    </div>
+                    <label class="flex items-center gap-3 py-2 cursor-pointer group">
+                        <div class="relative flex items-center justify-center">
+                            <input type="checkbox" id="a11y-contrast" class="peer sr-only" ${state.a11y.highContrast ? 'checked' : ''} onchange="toggleA11ySetting('highContrast', this.checked)"/>
+                            <div class="w-5 h-5 border-2 border-amber-400/50 rounded peer-checked:bg-amber-500 peer-checked:border-amber-500 transition-all flex items-center justify-center bg-gray-800/50 group-hover:border-amber-400">
+                                <svg class="w-3.5 h-3.5 text-gray-900 opacity-0 peer-checked:opacity-100 transition-opacity absolute" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                        </div>
+                        <span class="text-amber-50 font-medium text-sm flex-1 group-hover:text-amber-300 transition-colors">◎ Contraste Alto</span>
+                    </label>
 
-                    <div class="flex items-center gap-3 py-1.5">
-                        <input type="checkbox" id="a11y-guide" class="w-5 h-5 accent-amber-500 rounded-sm" ${state.a11y.guidedReading ? 'checked' : ''} onchange="toggleA11ySetting('guidedReading', this.checked)"/>
-                        <label for="a11y-guide" class="text-amber-50 font-medium text-sm cursor-pointer flex-1">👁 Lectura Guiada</label>
-                    </div>
+                    <label class="flex items-center gap-3 py-2 cursor-pointer group">
+                        <div class="relative flex items-center justify-center">
+                            <input type="checkbox" id="a11y-guide" class="peer sr-only" ${state.a11y.guidedReading ? 'checked' : ''} onchange="toggleA11ySetting('guidedReading', this.checked)"/>
+                            <div class="w-5 h-5 border-2 border-amber-400/50 rounded peer-checked:bg-amber-500 peer-checked:border-amber-500 transition-all flex items-center justify-center bg-gray-800/50 group-hover:border-amber-400">
+                                <svg class="w-3.5 h-3.5 text-gray-900 opacity-0 peer-checked:opacity-100 transition-opacity absolute" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                        </div>
+                        <span class="text-amber-50 font-medium text-sm flex-1 group-hover:text-amber-300 transition-colors">👁 Lectura Guiada</span>
+                    </label>
                 </div>
             </div>
         ` : ''}
