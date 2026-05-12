@@ -102,6 +102,36 @@ function html(strings, ...values) {
 // PANEL DE ACCESIBILIDAD
 // ==========================================
 
+let speechVoices = [];
+let audioUnlocked = false;
+
+function loadVoices() {
+    if ('speechSynthesis' in window) {
+        speechVoices = window.speechSynthesis.getVoices();
+    }
+}
+
+if ('speechSynthesis' in window) {
+    loadVoices();
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = loadVoices;
+    }
+}
+
+function unlockAudio() {
+    if (!audioUnlocked && 'speechSynthesis' in window) {
+        try {
+            const utterance = new SpeechSynthesisUtterance('');
+            utterance.volume = 0; // Comando silencioso
+            window.speechSynthesis.speak(utterance);
+            audioUnlocked = true;
+            console.log('✅ Audio de síntesis de voz desbloqueado por interacción del usuario.');
+        } catch (e) {
+            console.error('❌ Error al intentar desbloquear el audio de síntesis de voz:', e);
+        }
+    }
+}
+
 function toggleA11ySetting(key, value) {
     state.a11y[key] = value;
     localStorage.setItem('parfum_a11y', JSON.stringify(state.a11y));
@@ -157,10 +187,26 @@ function handleVoiceNarrator(e) {
     if (!state.a11y.voiceNarrator) return;
     const text = e.target.innerText || e.target.getAttribute('aria-label') || e.target.alt;
     if (text && text.trim().length > 0 && ['DIV', 'SECTION', 'MAIN', 'BODY'].indexOf(e.target.tagName) === -1) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'es-ES';
-        window.speechSynthesis.speak(utterance);
+        try {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'es-ES';
+            
+            if (speechVoices.length > 0) {
+                // Fallback para seleccionar la mejor voz disponible
+                const voice = speechVoices.find(v => v.lang.startsWith('es') && (v.name.includes('Google') || v.name.includes('Microsoft'))) 
+                              || speechVoices.find(v => v.lang.startsWith('es')) 
+                              || speechVoices.find(v => v.default)
+                              || speechVoices[0]; // usar voz del sistema por defecto
+                if (voice) {
+                    utterance.voice = voice;
+                }
+            }
+
+            window.speechSynthesis.speak(utterance);
+        } catch (error) {
+            console.error('❌ El navegador rechazó la solicitud de síntesis de voz (posible falta de permisos o política estricta en móvil):', error);
+        }
     }
 }
 
@@ -174,6 +220,7 @@ function handleGuidedReading(e) {
 let a11yTriggerElement = null;
 
 window.openA11y = function() {
+    unlockAudio();
     a11yTriggerElement = document.activeElement;
     setState({a11yOpen: true});
     setTimeout(() => {
