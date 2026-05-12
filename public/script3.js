@@ -595,6 +595,26 @@ async function handleVerify(e) {
     }
 }
 
+async function handleResendCode() {
+    if (!state.verificationEmail) return;
+    try {
+        setState({ error: '⏳ Reenviando código, por favor espera...' });
+        const response = await fetch('/api/resend-verification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: state.verificationEmail })
+        });
+        const data = await response.json();
+        if (data.success) {
+            setState({ error: '✉️ ' + data.message });
+        } else {
+            setState({ error: '❌ ' + data.message });
+        }
+    } catch (error) {
+        setState({ error: '⚠️ Error de conexión al reenviar el código.' });
+    }
+}
+
 async function handleContact(e) {
     e.preventDefault();
     const form = document.getElementById('contact-form');
@@ -950,6 +970,10 @@ function VerifyEmailPage() {
                     </div>
                     <button type="submit" class="w-full gradient-gold text-gray-900 px-8 py-4 rounded-full font-bold shadow-2xl transition-all hover:scale-105 btn-premium text-lg">VERIFICAR CUENTA</button>
                 </form>
+                    <div class="mt-6 text-center">
+                        <p class="text-amber-200/70 text-sm mb-2">¿No recibiste el correo?</p>
+                        <button type="button" onclick="handleResendCode()" class="text-amber-400 font-bold hover:text-amber-300 underline transition-colors">Reenviar código</button>
+                    </div>
             </div>
         </div>
     `;
