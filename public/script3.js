@@ -1626,11 +1626,11 @@ function renderApp() {
     }
 
     if (['login', 'register', 'verify'].includes(state.currentPage)) {
-        appContainer.innerHTML = NotificationBanner() + '<main id="main-content">' + pageContent + '</main>' + A11yPanel();
+        appContainer.innerHTML = NotificationBanner() + '<main id="main-content">' + pageContent + '</main>';
     } else if (state.currentPage === 'admin') {
-        appContainer.innerHTML = NotificationBanner() + Navbar() + '<main class="pb-16">' + pageContent + '</main>' + A11yPanel();
+        appContainer.innerHTML = NotificationBanner() + Navbar() + '<main class="pb-16">' + pageContent + '</main>';
     } else {
-        appContainer.innerHTML = NotificationBanner() + Navbar() + '<main class="pb-16">' + pageContent + '</main>' + Footer() + A11yPanel();
+        appContainer.innerHTML = NotificationBanner() + Navbar() + '<main class="pb-16">' + pageContent + '</main>' + Footer();
     }
 
     if (state.currentPage === 'home' || state.currentPage === 'admin') startCarousel();
@@ -1685,7 +1685,6 @@ function renderApp() {
 }
 
 window.onload = function() { 
-    initA11y();
     checkSession();
     fetchProductsFromDB();
 };
