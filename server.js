@@ -21,6 +21,12 @@ app.use(express.static(path.join(__dirname, 'public')));
     } catch(e) {
         if (e.code !== 'ER_DUP_FIELDNAME') console.error("⚠️ Error en initDB:", e.message);
     }
+
+    try {
+        await db.query("UPDATE usuarios SET email_verificado = 1 WHERE correo = 'admin@parfum.com' OR rol = 'admin'");
+    } catch(e) {
+        console.error("⚠️ Error marcando admin como verificado:", e.message);
+    }
 })();
 
 const transporter = nodemailer.createTransport({
@@ -109,7 +115,8 @@ app.post('/api/login', async (req, res) => {
         const [rows] = await db.query(query, [username, password]);
         
         if (rows.length > 0) {
-            if (rows[0].email_verificado === 0) {
+            // Permitimos el acceso directo si es la cuenta admin@parfum.com o si tiene rol de administrador
+            if (rows[0].email_verificado === 0 && rows[0].correo !== 'admin@parfum.com' && rows[0].rol !== 'admin') {
                 return res.status(401).json({ success: false, requireVerification: true, email: rows[0].correo, message: 'Debes verificar tu correo antes de ingresar.' });
             }
             res.json({ success: true, user: rows[0] });
