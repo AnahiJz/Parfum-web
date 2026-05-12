@@ -1,5 +1,8 @@
 /*M!999999\- enable the sandbox mode */ 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+DROP TABLE IF EXISTS `calificaciones`, `carrito_items`, `carritos`, `familias_olfativas`, `favoritos`, `generos`, `imagenes_producto`, `marcas`, `mensajes_contacto`, `notificaciones`, `pedido_detalle`, `pedidos`, `productos`, `tipos_perfume`, `usuarios`;
+
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `calificaciones` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
