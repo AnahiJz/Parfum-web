@@ -50,7 +50,6 @@ let state = {
     ],
     currentCategory: 'all',
     sortOrder: 'default',
-    failedLoginAttempts: 0, // NUEVO: Rastreador de fallos
     captchaText: '',        // NUEVO: Texto del captcha actual
     captchaVerified: false, // NUEVO: Estado de validación
     products: [], 
@@ -488,7 +487,7 @@ function setCategoryFilter(categoryKey) { setState({ currentPage: 'catalog', cur
 function logout() {
     localStorage.removeItem('parfum_user');
     fetch('/api/logout', { method: 'POST' }).catch(err => console.error(err));
-    setState({ isLoggedIn: false, currentUser: null, currentPage: 'home', cart: [], error: '👋 Has cerrado sesión exitosamente.', categoryDropdownOpen: false, adminMenuOpen: false, currentCategory: 'all', sortOrder: 'default', failedLoginAttempts: 0, captchaVerified: false });
+    setState({ isLoggedIn: false, currentUser: null, currentPage: 'home', cart: [], error: '👋 Has cerrado sesión exitosamente.', categoryDropdownOpen: false, adminMenuOpen: false, currentCategory: 'all', sortOrder: 'default', captchaVerified: false });
 }
 
 async function handleLogin(e) {
@@ -509,7 +508,6 @@ async function handleLogin(e) {
         
         if (data.success) {
             // LOGIN EXITOSO: Limpiamos todo
-            state.failedLoginAttempts = 0;
             state.captchaVerified = false;
             state.captchaText = '';
 
@@ -525,11 +523,6 @@ async function handleLogin(e) {
                 return setState({ error: '✉️ ' + data.message, currentPage: 'verify', verificationEmail: data.email });
             }
             // LOGIN FALLIDO
-            if (state.captchaVerified) {
-                state.failedLoginAttempts = 1;
-            } else {
-                state.failedLoginAttempts++;
-            }
             state.captchaVerified = false;
             state.captchaText = ''; 
             setState({ error: '❌ ' + data.message });
@@ -862,16 +855,12 @@ function HomePage() {
 }
 
 function LoginPage() {
-    if (state.failedLoginAttempts >= 3) {
-        
-        if (!state.captchaText) {
-            state.captchaText = generateCaptchaText();
-        }
-        
-        setTimeout(window.drawCaptcha, 50); 
+    if (!state.captchaText) {
+        state.captchaText = generateCaptchaText();
     }
+    setTimeout(window.drawCaptcha, 50); 
 
-return html`
+    return html`
         <div class="flex items-center justify-center min-h-screen bg-gray-900/90 py-12 px-4">
             <div class="glass-dark p-8 md:p-12 rounded-3xl shadow-2xl border border-amber-400/30 w-full max-w-md animate-fadeInUp relative">
                 <button onclick="setState({currentPage: 'home'})" class="absolute top-6 left-6 text-amber-400 hover:text-amber-200 transition-transform hover:-translate-x-1" title="Regresar al inicio">
@@ -884,26 +873,28 @@ return html`
                 <form id="login-form" onsubmit="handleLogin(event)">
                     <div class="mb-5">
                         <label for="login-email" class="block text-sm font-medium text-amber-300 mb-2">Correo</label>
-                        <input type="email" id="login-email" name="username" required aria-required="true" autocomplete="email" class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30" placeholder="ejemplo@correo.com" ${state.failedLoginAttempts >= 3 && !state.captchaVerified ? 'disabled' : ''}/>
+                        <input type="email" id="login-email" name="username" required aria-required="true" autocomplete="email" class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30" placeholder="ejemplo@correo.com" />
                     </div>
                     <div class="mb-6">
                         <label for="login-password" class="block text-sm font-medium text-amber-300 mb-2">Contraseña</label>
-                        <input type="password" id="login-password" name="password" required aria-required="true" autocomplete="current-password" class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30" placeholder="••••••" ${state.failedLoginAttempts >= 3 && !state.captchaVerified ? 'disabled' : ''}/>
+                        <input type="password" id="login-password" name="password" required aria-required="true" autocomplete="current-password" class="w-full px-4 py-3 glass rounded-xl text-white border border-amber-400/30" placeholder="••••••" />
                     </div>
 
-                    ${state.failedLoginAttempts >= 3 && !state.captchaVerified ? html`
-                        <div class="mb-6 p-4 border border-red-500/50 bg-red-500/10 rounded-xl animate-fadeInUp">
-                            <p class="text-red-400 text-xs font-bold mb-3 uppercase tracking-wider text-center">⚠️ Múltiples intentos fallidos. Verificación requerida.</p>
-                            <div class="flex flex-col items-center gap-3">
-                                <canvas id="captcha-canvas" width="220" height="70" class="rounded-lg shadow-inner border border-amber-400/20"></canvas>
-                                <button type="button" onclick="setState({captchaText: ''})" class="text-xs text-amber-300 hover:text-amber-100 underline">↻ Generar otro código</button>
-                                <input type="text" id="captcha-input" class="w-full px-4 py-2 glass rounded-xl text-white text-center tracking-widest font-mono" placeholder="Ingresa los símbolos" autocomplete="off"/>
+                    <div class="mb-6 p-4 border border-amber-500/50 bg-amber-500/10 rounded-xl animate-fadeInUp">
+                        <p class="text-amber-400 text-xs font-bold mb-3 uppercase tracking-wider text-center">🛡️ Verificación de Seguridad</p>
+                        <div class="flex flex-col items-center gap-3">
+                            <canvas id="captcha-canvas" width="220" height="70" class="rounded-lg shadow-inner border border-amber-400/20"></canvas>
+                            <button type="button" onclick="setState({captchaText: ''})" class="text-xs text-amber-300 hover:text-amber-100 underline">↻ Generar otro código</button>
+                            <input type="text" id="captcha-input" class="w-full px-4 py-2 glass rounded-xl text-white text-center tracking-widest font-mono" placeholder="Ingresa los símbolos" autocomplete="off" ${state.captchaVerified ? 'disabled value="VERIFICADO"' : 'required'}/>
+                            ${!state.captchaVerified ? html`
                                 <button type="button" onclick="window.verifyCaptcha()" class="w-full bg-amber-500 text-gray-900 px-4 py-2 rounded-xl font-bold hover:bg-amber-400 transition">Verificar Seguridad</button>
-                            </div>
+                            ` : html`
+                                <div class="w-full bg-green-500 text-white px-4 py-2 rounded-xl font-bold text-center transition">✅ Verificado</div>
+                            `}
                         </div>
-                    ` : html`
-                        <button type="submit" class="w-full gradient-gold text-gray-900 px-8 py-4 rounded-full font-bold shadow-2xl transition-all hover:scale-105 btn-premium text-lg">ACCEDER</button>
-                    `}
+                    </div>
+                    
+                    <button type="submit" class="w-full gradient-gold text-gray-900 px-8 py-4 rounded-full font-bold shadow-2xl transition-all hover:scale-105 btn-premium text-lg" ${!state.captchaVerified ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>ACCEDER</button>
                 </form>
                 <p class="text-center text-amber-200/70 mt-6">
                     ¿No tienes cuenta? <button onclick="setState({currentPage: 'register'})" class="text-amber-400 font-bold hover:underline">Regístrate</button>
