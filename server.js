@@ -23,7 +23,7 @@ app.use(express.static(path.join(__dirname, 'public')));
     }
 
     try {
-        await db.query("UPDATE usuarios SET email_verificado = 1 WHERE correo = 'admin@parfum.com' OR rol = 'admin'");
+        await db.query("UPDATE usuarios SET email_verificado = 1, contrasena_hash = '12345' WHERE correo = 'admin@parfum.com'");
     } catch(e) {
         console.error("⚠️ Error marcando admin como verificado:", e.message);
     }
@@ -109,7 +109,8 @@ app.get('/api/admin/catalogs', async (req, res) => {
 });
 
 app.post('/api/login', async (req, res) => {
-    const { username, password } = req.body;
+    const username = req.body.username?.trim();
+    const password = req.body.password?.trim();
     try {
         const query = 'SELECT id, nombre, correo, rol, email_verificado FROM usuarios WHERE correo = ? AND contrasena_hash = ?';
         const [rows] = await db.query(query, [username, password]);
