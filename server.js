@@ -181,6 +181,33 @@ app.post('/api/verify-email', async (req, res) => {
     }
 });
 
+app.post('/api/resend-verification', async (req, res) => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ success: false, message: 'Correo requerido' });
+
+    try {
+        const [rows] = await db.query('SELECT nombre, email_verificado FROM usuarios WHERE correo = ?', [email]);
+        if (rows.length === 0) return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+        if (rows[0].email_verificado) return res.status(400).json({ success: false, message: 'La cuenta ya está verificada' });
+
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        await db.query('UPDATE usuarios SET codigo_verificacion = ? WHERE correo = ?', [verificationCode, email]);
+
+        await transporter.sendMail({
+            from: `"Parfum Security" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: 'Nuevo código de verificación - Parfum',
+            html: `<h2>¡Hola ${rows[0].nombre}!</h2><p>Tu nuevo código de verificación es: <strong>${verificationCode}</strong></p>`
+        });
+
+        res.json({ success: true, message: 'Código reenviado exitosamente. Revisa tu bandeja de entrada o carpeta de Spam.' });
+    } catch (error) {
+        console.error('Error reenviando código:', error);
+        res.status(500).json({ success: false, message: 'Error interno al reenviar el código' });
+    }
+});
+
 app.post('/api/admin/create', async (req, res) => {
     const { name, email, password, role } = req.body;
     try {
