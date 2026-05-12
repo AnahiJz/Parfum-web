@@ -3,9 +3,10 @@ console.log("LLAVE STRIPE:", process.env.STRIPE_SECRET_KEY);
 const express = require('express');
 const path = require('path');
 const db = require('./db');
+const crypto = require('crypto');
 const nodemailer = require('nodemailer');
-const stripeKey = process.env.STRIPE_SECRET_KEY || 'sk_test_123';
-const stripe = require('stripe')(stripeKey); 
+const stripeKey = process.env.STRIPE_SECRET_KEY || 'sk_test_dummy_key_para_evitar_crasheos';
+const stripe = require('stripe')(stripeKey);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -126,6 +127,12 @@ app.post('/api/logout', (req, res) => {
 
 app.post('/api/register', async (req, res) => {
     const { name, email, password } = req.body;
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+        return res.status(400).json({ success: false, message: 'Correo electrónico inválido' });
+    }
+
     try {
         const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
         
@@ -178,7 +185,7 @@ app.post('/api/admin/create', async (req, res) => {
     const { name, email, password, role } = req.body;
     try {
         const [result] = await db.query(
-            'INSERT INTO usuarios (nombre, correo, contrasena_hash, rol) VALUES (?, ?, ?, ?)',
+            'INSERT INTO usuarios (nombre, correo, contrasena_hash, rol, verificado) VALUES (?, ?, ?, ?, 1)',
             [name, email, password, role || 'admin']
         );
         res.json({ success: true });
@@ -464,7 +471,7 @@ app.get('/', (req, res) => {
 });
 
 app.post('/api/contact', async (req, res) => {
-    const { contactName, contactEmail, contactMessage, destinationEmail, honeypot } = req.body;
+    const { contactName, contactEmail, contactMessage, honeypot } = req.body;
 
     // Campo honeypot para detectar bots. Si tiene valor, es un bot.
     if (honeypot) {
@@ -473,8 +480,13 @@ app.post('/api/contact', async (req, res) => {
         return res.json({ success: true, message: 'Mensaje enviado correctamente' });
     }
 
-    if (!contactName || !contactEmail || !contactMessage || !destinationEmail) {
+    if (!contactName || !contactEmail || !contactMessage) {
         return res.status(400).json({ success: false, message: 'Faltan campos por completar' });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(contactEmail)) {
+        return res.status(400).json({ success: false, message: 'El correo electrónico proporcionado no es válido' });
     }
 
     try {
@@ -495,7 +507,7 @@ app.post('/api/contact', async (req, res) => {
 
         await transporter.sendMail({
             from: `"Parfum Web Contacto" <${process.env.EMAIL_USER}>`,
-            to: destinationEmail,
+            to: process.env.EMAIL_USER, // El destino ahora es manejado de forma segura en el backend
             replyTo: contactEmail,
             subject: `Nuevo mensaje de ${contactName} - Parfum Contacto`,
             html: emailHtml
